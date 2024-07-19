@@ -43,3 +43,9 @@ vec_cast_vecvec <- function(x, to, ...) {
   out <- lapply(attr(x, "v"), vec_cast, to = to, ...)
   unlist(.mapply(function(i, x) out[[i]][[x]], vec_proxy(x), NULL))
 }
+
+#' @importFrom vctrs vec_ptype2
+#' @export
+vec_ptype2.vecvec <- function(x, y, ...) {
+  new_vecvec()
+}
