@@ -37,3 +37,9 @@ vec_restore.vecvec <- function(x, to, ..., i = NULL) {
   # Restore rcrd type
   NextMethod()
 }
+
+#' @importFrom vctrs vec_cast vec_proxy
+vec_cast_vecvec <- function(x, to, ...) {
+  out <- lapply(attr(x, "v"), vec_cast, to = to, ...)
+  unlist(.mapply(function(i, x) out[[i]][[x]], vec_proxy(x), NULL))
+}
