@@ -6,7 +6,7 @@ new_vecvec <- function(...) {
       i = rep(seq_along(size), size),
       x = unlist(lapply(size, seq_len))
     ),
-    vecs = vecs,
+    v = vecs,
     class = "vecvec"
   )
 }
@@ -15,7 +15,7 @@ new_vecvec <- function(...) {
 #' @export
 #' @importFrom vctrs field
 format.vecvec <- function(x, ...) {
-  out <- lapply(attr(x, "vecs"), format)
+  out <- lapply(attr(x, "v"), format)
   unlist(mapply(function(i, x) out[[i]][[x]], field(x, "i"), field(x, "x")))
 }
 
@@ -25,8 +25,8 @@ vec_restore.vecvec <- function(x, to, ..., i = NULL) {
   g <- vec_group_loc(x[[1L]])
 
   # Update value attributes
-  attr(to, "vecs") <- .mapply(
-    function(key, loc) attr(to, "vecs")[[key]][unique(x[[2L]][loc])],
+  attr(to, "v") <- .mapply(
+    function(key, loc) attr(to, "v")[[key]][unique(x[[2L]][loc])],
     g, NULL
   )
 

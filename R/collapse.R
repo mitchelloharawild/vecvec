@@ -1,5 +1,5 @@
 collapse_vecvec <- function(x) {
-  out <- attr(x, "vecs")
+  out <- attr(x, "v")
   ptypes <- lapply(out, vctrs::vec_ptype)
   loc <- vctrs::vec_group_loc(ptypes)
   # For now only handle dropping vecvec class
