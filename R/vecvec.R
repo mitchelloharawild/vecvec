@@ -39,9 +39,14 @@ vec_restore.vecvec <- function(x, to, ..., i = NULL) {
 }
 
 #' @importFrom vctrs vec_cast vec_proxy
-vec_cast_vecvec <- function(x, to, ...) {
+vec_cast_from_vecvec <- function(x, to, ...) {
   out <- lapply(attr(x, "v"), vec_cast, to = to, ...)
   unlist(.mapply(function(i, x) out[[i]][[x]], vec_proxy(x), NULL))
+}
+
+#' @importFrom vctrs vec_cast
+vec_cast_to_vecvec <- function(x, to, ...) {
+  new_vecvec(x)
 }
 
 #' @importFrom vctrs vec_ptype2
