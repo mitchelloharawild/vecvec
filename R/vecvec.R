@@ -13,10 +13,10 @@ new_vecvec <- function(...) {
 
 
 #' @export
-#' @importFrom vctrs field
+#' @importFrom vctrs vec_proxy
 format.vecvec <- function(x, ...) {
-  out <- lapply(attr(x, "v"), format)
-  unlist(mapply(function(i, x) out[[i]][[x]], field(x, "i"), field(x, "x")))
+  out <- lapply(attr(x, "v"), format, ...)
+  unlist(.mapply(function(i, x) out[[i]][[x]], vec_proxy(x), NULL))
 }
 
 #' @importFrom vctrs vec_restore vec_group_loc
