@@ -83,3 +83,56 @@ vec_cast.vecvec.vecvec <- function(x, to, ...) {
 
   x
 }
+
+#' @importFrom vctrs vec_math
+#' @export
+vec_math.vecvec <- function(.fn, .x, ...) {
+  attr(.x, "v") <- lapply(attr(.x, "v"), .Generic, .fn = .fn, ...)
+  # Detect if all listed prototypes are compatible, then collapse if flat
+  collapse_vecvec(.x)
+}
+
+#' @importFrom vctrs vec_arith
+#' @method vec_arith vecvec
+#' @export
+vec_arith.vecvec <- function(op, x, y, ...) {
+  UseMethod("vec_arith.vecvec", y)
+}
+
+#' @importFrom vctrs vec_arith
+#' @method vec_arith.vecvec vecvec
+#' @export
+vec_arith.vecvec.vecvec <- function(op, x, y, ...) {
+  stop("Cannot yet perform arithmetic on two vecvecs")
+}
+
+#' @importFrom vctrs vec_arith vec_recycle vec_size
+#' @method vec_arith.vecvec default
+#' @export
+vec_arith.vecvec.default <- function(op, x, y, ...) {
+  # For !, unary + and unary -
+  if(identical(y, vctrs::MISSING())) {
+    attr(x, "v") <- .mapply(op, list(x = attr(x, "v")), NULL)
+    return(x)
+  }
+
+  y <- vec_recycle(y, vec_size(x))
+
+  # Apply arithmetic to each vector in the vecvec
+  g <- lengths(attr(x, "v"), y)
+  g <- rep(seq_along(g), each = g)
+
+  attr(x, "v") <- .mapply(vec_arith, list(x = attr(x, "v"), y = split(y, g)), list(op = op, ...))
+  x
+}
+
+vec_default_arith_vecvec <- function(op, x, y, ...) {
+  x <- vec_recycle(x, vec_size(y))
+
+  # Apply arithmetic to each vector in the vecvec
+  g <- lengths(attr(y, "v"), x)
+  g <- rep(seq_along(g), each = g)
+
+  attr(y, "v") <- .mapply(vec_arith, list(x = split(x, g), y = attr(y, "v")), list(op = op, ...))
+  y
+}
