@@ -120,7 +120,7 @@ vec_arith.vecvec.default <- function(op, x, y, ...) {
 
   # Apply arithmetic to each vector in the vecvec
   g <- lengths(attr(x, "v"), y)
-  g <- rep(seq_along(g), each = g)
+  g <- rep.int(seq_along(g), g)
 
   attr(x, "v") <- .mapply(vec_arith, list(x = attr(x, "v"), y = split(y, g)), list(op = op, ...))
   x
@@ -131,7 +131,7 @@ vec_default_arith_vecvec <- function(op, x, y, ...) {
 
   # Apply arithmetic to each vector in the vecvec
   g <- lengths(attr(y, "v"), x)
-  g <- rep(seq_along(g), each = g)
+  g <- rep.int(seq_along(g), g)
 
   attr(y, "v") <- .mapply(vec_arith, list(x = split(x, g), y = attr(y, "v")), list(op = op, ...))
   y
