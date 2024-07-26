@@ -99,28 +99,49 @@ vec_arith.vecvec.vecvec <- function(op, x, y, ...) {
 #' @export
 vec_arith.vecvec.default <- function(op, x, y, ...) {
   # For !, unary + and unary -
-  if(identical(y, vctrs::MISSING())) {
+  if(identical(y, MISSING())) {
     attr(x, "v") <- .mapply(op, list(x = attr(x, "v")), NULL)
     return(x)
   }
 
-  y <- vec_recycle(y, vec_size(x))
-
-  # Apply arithmetic to each vector in the vecvec
-  g <- lengths(attr(x, "v"), y)
-  g <- rep.int(seq_along(g), g)
-
-  attr(x, "v") <- .mapply(vec_arith, list(x = attr(x, "v"), y = split(y, g)), list(op = op, ...))
-  x
+  vec_default_arith_vecvec(op, x = y, y = x, ..., .xyflip = TRUE)
 }
 
-vec_default_arith_vecvec <- function(op, x, y, ...) {
+vec_default_arith_vecvec <- function(op, x, y, ..., .xyflip = FALSE) {
   x <- vec_recycle(x, vec_size(y))
 
-  # Apply arithmetic to each vector in the vecvec
-  g <- lengths(attr(y, "v"), x)
-  g <- rep.int(seq_along(g), g)
+  g <- vec_group_id(vec_proxy(y))
 
-  attr(y, "v") <- .mapply(vec_arith, list(x = split(x, g), y = attr(y, "v")), list(op = op, ...))
+  # Alternative implementation of shortcut indexing (seemingly slower)
+  # g <- vec_group_loc(vec_proxy(x))
+  # vec_chop(y, indices = g$loc)
+  # vapply(g$loc, vec_slice, integer(1L), 1L)
+
+  # Check for equivalence with y for faster result (possibly risky if length is involved in operation?)
+  y_unique <- lapply(vec_split(x, g)$val, vec_unique)
+  if (all(lengths(y_unique) == 1L)) {
+    # Match unique y values to type groups and vector indices
+    i <- vec_unique_loc(g)
+    g <- vec_slice(vec_proxy(y), i)
+
+    # If indices are strictly ordered within groups
+    x <- vec_split(vec_slice(x, i), g$i)$val
+
+    # If order matching is needed
+    # g$y <- vec_slice(y, i)
+    # g <- vec_split(g[-1L], g$i)$val
+    # y <- lapply(g, function(x) x[[2L]][x[[1L]]])
+  } else {
+    # Expand the vecvec to accommodate the new calculations
+    attr(y, "v") <- .mapply(function(key, val) attr(y, "v")[[key]][val], vec_split(field(y, "x"), field(y, "i")), NULL)
+    g <- vec_group_loc(field(y, "i"))
+    field(y, "x")[list_unchop(g$loc)] <- list_unchop(lapply(g$loc, seq_along))
+    x <- vec_chop(x, indices = g$loc)
+  }
+
+  # Apply calculation
+  xyargs <- list(x = x, y = attr(y, "v"))
+  if(.xyflip) names(xyargs) <- c("y", "x")
+  attr(y, "v") <- .mapply(vec_arith, xyargs, list(op = op, ...))
   y
 }
