@@ -20,37 +20,61 @@ knitr::opts_chunk$set(
 [![CRAN status](https://www.r-pkg.org/badges/version/vecvec)](https://CRAN.R-project.org/package=vecvec)
 <!-- badges: end -->
 
-The goal of vecvec is to ...
+The vecvec package allows you to create vectors of mixed classes. It works similarly to `factor()`, in which the values of a vector (levels of a factor) are stored in the attributes. This also allows for efficient computation when the values are replicated, since operations apply to the unique values of the vector.
 
 ## Installation
 
 You can install the development version of vecvec like so:
 
 ``` r
-# FILL THIS IN! HOW CAN PEOPLE INSTALL YOUR DEV PACKAGE?
+remotes::install_github("mitchelloharawild/vecvec")
 ```
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+Use `new_vecvec()` to create a vecvec. Here we combine three vectors of different types.
 
-```{r example}
+```{r construction}
 library(vecvec)
-## basic example code
+
+x <- new_vecvec(Sys.Date(), Sys.time(), rnorm(10))
+x
 ```
 
-What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
+Internally, the vectors are stored separately in the attributes.
 
-```{r cars}
-summary(cars)
+```{r internals}
+str(x)
 ```
 
-You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this.
+Operations apply to all vector types.
 
-You can also embed plots, for example:
-
-```{r pressure, echo = FALSE}
-plot(pressure)
+```{r arith}
+x + 1
 ```
 
-In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.
+When subsetting, unused values are dropped.
+
+```{r subset}
+x[1]
+str(x[1])
+```
+
+When a vecvec is replicated, only the indexing is replicated.
+
+```{r replicated}
+str(rep(x, each = 10))
+str(x[c(1,1,1,3,2,2)])
+```
+
+The values in the attribute are unchanged, which allows for efficient computation since operations apply to the attributes (which are not replicated).
+
+```{r efficient}
+str(rep(x, each = 10) + 100)
+```
+
+If the arguments is differ across replicated indices, the resulting vecvec is [*expanded*](https://github.com/mitchelloharawild/vecvec/issues/2)
+
+```{r expansion}
+str(rep(x, each = 10) + 1:120)
+```
