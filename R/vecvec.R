@@ -12,6 +12,20 @@ new_vecvec <- function(...) {
   )
 }
 
+#' Convert a vecvec object into its underlying vector type
+#'
+#' `r lifecycle::badge('experimental')`
+#'
+#' @param x A vecvec to unvecvec (convert to its underlying vector type)
+#' @inheritParams vctrs::list_unchop
+#' @export
+unvecvec <- function(x, ..., ptype = NULL) {
+  if (is.null(ptype)) ptype <- do.call(vec_ptype_common, attr(x, "v"))
+  attr(x, "v") <- lapply(attr(x, "v"), vec_cast, to = ptype)
+
+  out <- .mapply(function(key, val) attr(x, "v")[[key]][val], vec_split(field(x, "x"), field(x, "i")), NULL)
+  unsplit(out, field(x, "i"))
+}
 
 #' @export
 format.vecvec <- function(x, ...) {
