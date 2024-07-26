@@ -11,6 +11,7 @@ knitr::opts_chunk$set(
   fig.path = "man/figures/README-",
   out.width = "100%"
 )
+set.seed(0)
 ```
 
 # vecvec
@@ -78,3 +79,4 @@ If the arguments is differ across replicated indices, the resulting vecvec is [*
 ```{r expansion}
 str(rep(x, each = 10) + 1:120)
 ```
+
