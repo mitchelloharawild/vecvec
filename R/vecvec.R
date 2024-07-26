@@ -1,3 +1,4 @@
+#' @export
 new_vecvec <- function(...) {
   vecs <- list(...)
   size <- lengths(vecs)
