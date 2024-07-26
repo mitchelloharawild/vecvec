@@ -32,7 +32,7 @@ vec_restore.vecvec <- function(x, to, ..., i = NULL) {
   )
 
   # Update index values
-  x$i <- vctrs::vec_group_id(x[[1L]])
+  x$i <- c(vctrs::vec_group_id(x[[1L]]))
   x$x[unlist(g[[2L]])] <- unlist(lapply(g[[2L]], function(i) vctrs::vec_group_id(x[[2L]][i])))
 
   # Restore rcrd type
@@ -54,4 +54,32 @@ vec_cast_to_vecvec <- function(x, to, ...) {
 #' @export
 vec_ptype2.vecvec <- function(x, y, ...) {
   new_vecvec()
+}
+
+#' @importFrom vctrs vec_ptype
+#' @export
+vec_ptype.vecvec <- function(x, ...) {
+  out <- vctrs::new_data_frame(list(i = integer(), x = integer()))
+  attributes(out) <- attributes(x)
+  out
+}
+
+#' @importFrom vctrs vec_ptype2
+#' @export
+vec_ptype2.vecvec.vecvec <- function(x, y, ...) {
+  # Combine attributes
+  attr(x, "v") <- c(attr(x, "v"), attr(y, "v"))
+  x
+}
+
+
+#' @importFrom vctrs vec_cast field field<-
+#' @export
+vec_cast.vecvec.vecvec <- function(x, to, ...) {
+  # Match attributes with combined attributes
+  field(x, "i") <- vctrs::vec_match(attr(x, "v"), attr(to, "v"))[field(x, "i")]
+  # Apply unified attributes
+  attributes(x) <- attributes(to)
+
+  x
 }
