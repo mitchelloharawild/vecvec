@@ -82,6 +82,10 @@ vec_restore.vecvec <- function(x, to, ..., i = NULL) {
   if(vec_is_empty(x)) return(new_vecvec())
   v <- vec_group_loc(x$v)
   x[["i"]][list_unchop(v$loc)] <- rep(vec_seq_along(v), lengths(v$loc))
+  v$key <- .mapply(
+    function(key, loc) vec_slice(key, unique(x$x[loc])),
+    v, NULL
+  )
   return(
     vctrs::new_rcrd(x[c("i", "x")], v = v$key, class = "vecvec")
   )
