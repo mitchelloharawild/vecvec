@@ -2,11 +2,16 @@
 new_vecvec <- function(...) {
   vecs <- list(...)
   size <- lengths(vecs)
-  new_rcrd(
+  out <- if(identical(size, integer(0L))) {
+    list(i = integer(), x = integer())
+  } else {
     list(
       i = rep(seq_along(size), size),
       x = unlist(lapply(size, seq_len))
-    ),
+    )
+  }
+  new_rcrd(
+    out,
     v = vecs,
     class = "vecvec"
   )
