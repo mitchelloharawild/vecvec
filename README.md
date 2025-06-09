@@ -1,5 +1,6 @@
 
-<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+<!-- README.md is generated from README.qmd. Please edit that file -->
 
 # vecvec <img src="man/figures/logo.svg" align="right" height="139" alt="" />
 
@@ -8,14 +9,17 @@
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![CRAN
-status](https://www.r-pkg.org/badges/version/vecvec)](https://CRAN.R-project.org/package=vecvec)
+status](https://www.r-pkg.org/badges/version/vecvec.png)](https://CRAN.R-project.org/package=vecvec)
 <!-- badges: end -->
 
-The vecvec package allows you to create vectors of mixed classes. It
-works similarly to `factor()`, in which the values of a vector (levels
-of a factor) are stored in the attributes. This also allows for
-efficient computation when the values are replicated, since operations
-apply to the unique values of the vector.
+The vecvec package allows you to create vectors of mixed classes. Mixed
+type vectors are useful for data analysis packages as they allow
+semantically similar classes (such as time or distributions) to be
+stored within the same vector and operated upon efficiently with the
+same functions. It works similarly to `factor()`, in which the values of
+a vector (analogous to levels of a factor) are stored in the attributes.
+This also allows for efficient computation when the values are
+replicated, since operations apply to the unique values of the vector.
 
 ## Installation
 
