@@ -16,5 +16,5 @@ computing the common type across all elements of \code{x}. Alternatively, you
 can supply \code{ptype} to give the output a known type.}
 }
 \description{
-Convert a vecvec object into its underlying vector type
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
 }
