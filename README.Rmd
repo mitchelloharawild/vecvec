@@ -38,7 +38,7 @@ Use `new_vecvec()` to create a vecvec. Here we combine three vectors of differen
 ```{r construction}
 library(vecvec)
 
-x <- new_vecvec(Sys.Date(), Sys.time(), rnorm(10))
+x <- new_vecvec(as.Date("2025-03-29"), as.POSIXct("2025-01-03 10:05:00"), rnorm(10))
 x
 ```
 
