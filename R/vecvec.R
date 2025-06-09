@@ -73,7 +73,7 @@ vec_proxy.vecvec <- function(x, ...) {
   # if(is.null(out)) return(list())
   return(out)
   new_data_frame(list(x = out))
-  # structure(new_data_frame(unclass(x)), v = attr(x, "v"))
+  # structure(new_data_frame(x), v = attr(x, "v"))
 }
 
 #' @export
@@ -112,7 +112,7 @@ vec_restore.vecvec <- function(x, to, ..., i = NULL) {
 
 vec_cast_from_vecvec <- function(x, to, ...) {
   out <- lapply(attr(x, "v"), vec_cast, to = to, ...)
-  unlist(.mapply(function(i, x) out[[i]][[x]], vec_proxy(x), NULL))
+  unlist(.mapply(function(i, x) out[[i]][[x]], new_data_frame(x), NULL))
 }
 
 vec_cast_to_vecvec <- function(x, to, ...) {
@@ -188,10 +188,10 @@ vec_arith.vecvec.default <- function(op, x, y, ...) {
 vec_default_arith_vecvec <- function(op, x, y, ..., .xyflip = FALSE) {
   x <- vec_recycle(x, vec_size(y))
 
-  g <- vec_group_id(vec_proxy(y))
+  g <- vec_group_id(new_data_frame(y))
 
   # Alternative implementation of shortcut indexing (seemingly slower)
-  # g <- vec_group_loc(vec_proxy(x))
+  # g <- vec_group_loc(new_data_frame(x))
   # vec_chop(y, indices = g$loc)
   # vapply(g$loc, vec_slice, integer(1L), 1L)
 
@@ -200,7 +200,7 @@ vec_default_arith_vecvec <- function(op, x, y, ..., .xyflip = FALSE) {
   if (all(lengths(y_unique) == 1L)) {
     # Match unique y values to type groups and vector indices
     i <- vec_unique_loc(g)
-    g <- vec_slice(vec_proxy(y), i)
+    g <- vec_slice(new_data_frame(y), i)
 
     # If indices are strictly ordered within groups
     x <- vec_split(vec_slice(x, i), g$i)$val
