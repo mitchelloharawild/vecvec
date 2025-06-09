@@ -81,13 +81,16 @@ vec_restore.vecvec <- function(x, to, ..., i = NULL) {
   # TODO: combine common groups
   if(vec_is_empty(x)) return(new_vecvec())
   v <- vec_group_loc(x$v)
-  x[["i"]][list_unchop(v$loc)] <- rep(vec_seq_along(v), lengths(v$loc))
-  v$key <- .mapply(
+  na_vec <- vapply(v$key, is.null, logical(1L))
+  i_loc <- cumsum(!na_vec)
+  i_loc[na_vec] <- NA_integer_
+  x[["i"]][list_unchop(v$loc)] <- rep(i_loc, lengths(v$loc))
+  v <- .mapply(
     function(key, loc) vec_slice(key, unique(x$x[loc])),
-    v, NULL
+    vec_slice(v, !na_vec), NULL
   )
   return(
-    vctrs::new_rcrd(x[c("i", "x")], v = v$key, class = "vecvec")
+    vctrs::new_rcrd(x[c("i", "x")], v = v, class = "vecvec")
   )
 
   # ptypes <- lapply(x$x, vctrs::vec_ptype)
