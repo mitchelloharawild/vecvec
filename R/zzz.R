@@ -9,10 +9,13 @@
   lapply(sub("^vec_cast", "vecvec", vec_cast_generics), register_s3_method,
          pkg = "vctrs", generic = "vec_cast", fun = vec_cast_to_vecvec)
 
-  # Register vec_ptype2.*.vecvec methods
   vec_ptype2_generics <- vctrs_exports[startsWith(vctrs_exports, "vec_ptype2.")]
+  # Register vec_ptype2.*.vecvec methods
   lapply(vec_ptype2_generics, register_s3_method,
          pkg = "vctrs", class = "vecvec", fun = vec_ptype2.vecvec)
+  # Register vec_ptype2.vecvec.* methods
+  lapply(sub("^vec_ptype2", "vecvec", vec_ptype2_generics), register_s3_method,
+         pkg = "vctrs", generic = "vec_ptype2", fun = vec_cast_to_vecvec)
 
   # Register vec_arith.*.vecvec methods
   vec_arith_generics <- vctrs_exports[startsWith(vctrs_exports, "vec_arith.")]
