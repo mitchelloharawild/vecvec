@@ -30,7 +30,11 @@ unvecvec <- function(x, ..., ptype = NULL) {
 #' @export
 format.vecvec <- function(x, ...) {
   out <- lapply(attr(x, "v"), format, ...)
-  unlist(.mapply(function(i, x) out[[i]][[x]], vec_proxy(x), NULL))
+  unlist(
+    .mapply(function(i, x){
+      if(is.na(i)) NA_character_ else out[[i]][[x]]
+    }, vec_proxy(x), NULL)
+  )
 }
 
 #' @export
