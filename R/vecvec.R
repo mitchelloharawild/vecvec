@@ -40,6 +40,7 @@ format.vecvec <- function(x, ...) {
 #' @export
 vec_restore.vecvec <- function(x, to, ..., i = NULL) {
   g <- vec_group_loc(x[[1L]])
+  g <- vec_slice(g, !is.na(g$key))
 
   # Update value attributes
   attr(to, "v") <- .mapply(
@@ -48,7 +49,8 @@ vec_restore.vecvec <- function(x, to, ..., i = NULL) {
   )
 
   # Update index values
-  x$i <- c(vec_group_id(x[[1L]]))
+  x_avail <- list_unchop(g$loc)
+  x$i[x_avail] <- c(vec_group_id(x[[1L]][x_avail]))
   x$x[unlist(g[[2L]])] <- unlist(lapply(g[[2L]], function(i) vec_group_id(x[[2L]][i])))
 
   # Restore rcrd type
