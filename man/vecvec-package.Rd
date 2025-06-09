@@ -4,12 +4,12 @@
 \name{vecvec-package}
 \alias{vecvec}
 \alias{vecvec-package}
-\title{vecvec: What the Package Does (One Line, Title Case)}
+\title{vecvec: Construct Mixed Type Data Structures with Vectors of Vectors}
 \description{
 What the package does (one paragraph).
 }
 \author{
-\strong{Maintainer}: First Last \email{first.last@example.com} (\href{https://orcid.org/YOUR-ORCID-ID}{ORCID})
+\strong{Maintainer}: Mitchell O'Hara-Wild \email{mail@mitchelloharawild.com} (\href{https://orcid.org/0000-0001-6729-7695}{ORCID})
 
 }
 \keyword{internal}
