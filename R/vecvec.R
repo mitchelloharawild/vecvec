@@ -79,6 +79,7 @@ vec_proxy.vecvec <- function(x, ...) {
 #' @export
 vec_restore.vecvec <- function(x, to, ..., i = NULL) {
   # TODO: combine common groups
+  if(vec_is_empty(x)) return(new_vecvec())
   v <- vec_group_loc(x$v)
   x[["i"]][list_unchop(v$loc)] <- rep(vec_seq_along(v), lengths(v$loc))
   return(
