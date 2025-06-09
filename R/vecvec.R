@@ -1,3 +1,10 @@
+#' Create a new vector of vectors
+#'
+#' @param ... Individual vectors to combine into a vecvec
+#'
+#' @examples
+#' new_vecvec(Sys.Date(), rnorm(3), letters)
+#'
 #' @export
 new_vecvec <- function(...) {
   vecs <- list(...)
@@ -71,8 +78,8 @@ vec_proxy.vecvec <- function(x, ...) {
   #   vec_split(field(x, "x"), field(x, "i")), NULL
   # ))
   # if(is.null(out)) return(list())
-  return(out)
-  new_data_frame(list(x = out))
+  # return(out)
+  # new_data_frame(list(x = out))
   # structure(new_data_frame(x), v = attr(x, "v"))
 }
 
