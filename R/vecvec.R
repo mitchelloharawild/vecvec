@@ -81,6 +81,7 @@ vec_ptype2.vecvec.vecvec <- function(x, y, ...) {
 
 
 #' @export
+#' @method vec_cast.vecvec vecvec
 vec_cast.vecvec.vecvec <- function(x, to, ...) {
   # Match attributes with combined attributes
   field(x, "i") <- vec_match(attr(x, "v"), attr(to, "v"))[field(x, "i")]
@@ -88,6 +89,11 @@ vec_cast.vecvec.vecvec <- function(x, to, ...) {
   attributes(x) <- attributes(to)
 
   x
+}
+
+#' @export
+vec_cast.vecvec <- function(x, to, ...) {
+  UseMethod("vec_cast.vecvec")
 }
 
 #' @export
