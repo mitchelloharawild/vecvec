@@ -38,12 +38,59 @@ format.vecvec <- function(x, ...) {
   unlist(
     .mapply(function(i, x){
       if(is.na(i)) NA_character_ else out[[i]][[x]]
-    }, vec_proxy(x), NULL)
+    }, list(field(x, "i"), field(x, "x")), NULL)
   )
+}
+
+# `[.vecvec` <- function(x, i) {
+#   # TODO: Rework unique and match to be faster
+#   v <- .mapply(
+#     function(key, val) vec_slice(attr(x, "v")[[key]], unique(val)),
+#     vec_split(.x <- field(x, "x")[i], .i <- field(x, "i")[i]),
+#     NULL
+#   )
+#
+#   new_rcrd(
+#     list(i = match(.i, unique(.i)), x = match(.x, unique(.x))),
+#     v = v,
+#     class = "vecvec"
+#   )
+# }
+
+#' @export
+vec_proxy.vecvec <- function(x, ...) {
+  # Somewhat inefficient, copy pointers to vectors by row
+  return(vctrs::data_frame(
+    x = field(x, "x"), v = attr(x, "v")[field(x, "i")]
+  ))
+
+
+  # TODO: Bring attribute into table?
+  # out <- list_unchop(.mapply(
+  #   function(key, val) as.list(attr(x, "v")[[key]][val]),
+  #   vec_split(field(x, "x"), field(x, "i")), NULL
+  # ))
+  # if(is.null(out)) return(list())
+  return(out)
+  new_data_frame(list(x = out))
+  # structure(new_data_frame(unclass(x)), v = attr(x, "v"))
 }
 
 #' @export
 vec_restore.vecvec <- function(x, to, ..., i = NULL) {
+  # TODO: combine common groups
+  v <- vec_group_loc(x$v)
+  x[["i"]][list_unchop(v$loc)] <- rep(vec_seq_along(v), lengths(v$loc))
+  return(
+    vctrs::new_rcrd(x[c("i", "x")], v = v$key, class = "vecvec")
+  )
+
+  # ptypes <- lapply(x$x, vctrs::vec_ptype)
+  # loc <- vctrs::vec_group_loc(ptypes)
+  # loc$key <- vec_seq_along(loc)
+  # rcrd <- list_unchop(.mapply(vec_recycle_common, loc, NULL))
+  # if(is.null(rcrd)) return(new_vecvec())
+
   g <- vec_group_loc(x[[1L]])
   g <- vec_slice(g, !is.na(g$key))
 
@@ -73,11 +120,13 @@ vec_cast_to_vecvec <- function(x, to, ...) {
 
 #' @export
 vec_ptype2.vecvec <- function(x, y, ...) {
-  new_vecvec()
+  return(new_vecvec())
+  vec_ptype2.vecvec.vecvec(vec_cast(x, new_vecvec()), vec_cast(y, new_vecvec()))
 }
 
 #' @export
 vec_ptype.vecvec <- function(x, ...) {
+  return(new_vecvec())
   out <- new_data_frame(list(i = integer(), x = integer()))
   attributes(out) <- attributes(x)
   out
@@ -85,6 +134,7 @@ vec_ptype.vecvec <- function(x, ...) {
 
 #' @export
 vec_ptype2.vecvec.vecvec <- function(x, y, ...) {
+  return(new_vecvec())
   # Combine attributes
   attr(x, "v") <- c(attr(x, "v"), attr(y, "v"))
   x
@@ -93,6 +143,8 @@ vec_ptype2.vecvec.vecvec <- function(x, y, ...) {
 
 #' @export
 vec_cast.vecvec.vecvec <- function(x, to, ...) {
+  return(x)
+
   # Match attributes with combined attributes
   field(x, "i") <- vec_match(attr(x, "v"), attr(to, "v"))[field(x, "i")]
   # Apply unified attributes
