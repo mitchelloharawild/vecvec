@@ -2,7 +2,7 @@
 
 <!-- README.md is generated from README.qmd. Please edit that file -->
 
-# vecvec <img src="man/figures/logo.svg" align="right" height="139" alt="" />
+# vecvec <img src="man/figures/logo.svg" align="right" style="height: 139px;" alt="" />
 
 <!-- badges: start -->
 
