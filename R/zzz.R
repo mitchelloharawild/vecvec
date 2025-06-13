@@ -17,11 +17,6 @@
   lapply(sub("^vec_ptype2", "vecvec", vec_ptype2_generics), register_s3_method,
          pkg = "vctrs", generic = "vec_ptype2", fun = vec_cast_to_vecvec)
 
-  # Register vec_arith.*.vecvec methods
-  vec_arith_generics <- vctrs_exports[startsWith(vctrs_exports, "vec_arith.")]
-  lapply(vec_arith_generics, register_s3_method,
-         pkg = "vctrs", class = "vecvec", fun = vec_default_arith_vecvec)
-
   # Register all methods
   # lapply(attr(methods(class = "default"), "info")$generic, register_s3_method,
   #        pkg = "vecvec", class = "vecvec", fun = dispatch_elements)
