@@ -60,10 +60,9 @@ Ops.vecvec <- function(e1, e2) {
   }
 }
 
-
 #' @export
-vec_math.vecvec <- function(.fn, .x, ...) {
-  attr(.x, "v") <- lapply(attr(.x, "v"), .Generic, .fn = .fn, ...)
+Math.vecvec <- function(x, ...) {
+  attr(x, "v") <- lapply(attr(x, "v"), .Generic, ...)
   # Detect if all listed prototypes are compatible, then collapse if flat
-  collapse_vecvec(.x)
+  collapse_vecvec(x)
 }
