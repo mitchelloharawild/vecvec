@@ -12,3 +12,36 @@ test_that("vec_c", {
     vec_c(letters, new_vecvec(1:10))
   )
 })
+
+
+test_that("vec_arith", {
+  expect_equal(
+    as.numeric(new_vecvec(1:10) + 1:10),
+    seq(2,20, by = 2)
+  )
+  expect_equal(
+    as.numeric(-new_vecvec(1:10)),
+    -1:-10
+  )
+  rand <- rbeta(5, 3, 7)
+  expect_equal(
+    new_vecvec(-5:9, rand) >= 0,
+    c(rep(FALSE, 5), rep(TRUE, 15))
+  )
+  expect_equal(
+    log(new_vecvec(1:10, rand)),
+    log(c(1:10, rand))
+  )
+})
+
+test_that("vec_sort", {
+  rand <- rnorm(5, sd = 5)
+  expect_equal(
+    as.numeric(sort(new_vecvec(1:10, rand))),
+    sort(c(1:10, rand))
+  )
+  expect_equal(
+    as.numeric(sort(sample(new_vecvec(1:10, rand)))),
+    sort(c(1:10, rand))
+  )
+})
