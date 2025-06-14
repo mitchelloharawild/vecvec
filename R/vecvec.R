@@ -7,7 +7,7 @@
 #'
 #' @export
 new_vecvec <- function(...) {
-  vecs <- list(...)
+  vecs <- rlang::list2(...)
   size <- lengths(vecs)
   out <- if(identical(size, integer(0L))) {
     list(i = integer(), x = integer())
