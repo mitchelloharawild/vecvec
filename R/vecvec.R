@@ -32,13 +32,15 @@ new_vecvec <- function(...) {
 #' @inheritParams vctrs::list_unchop
 #' @export
 unvecvec <- function(x, ..., ptype = NULL) {
+  n_vecs <- length(attr(x, "v"))
+
   # Cast mixed vector types to common type
-  if(length(attr(x, "v")) > 1) {
-    if (is.null(ptype)) ptype <- do.call(vec_ptype_common, attr(x, "v"))
-    attr(x, "v") <- lapply(attr(x, "v"), vec_cast, to = ptype)
+  if(n_vecs > 1) {
+    attr(x, "v") <- vec_cast_common(!!!attr(x, "v"), .to = ptype)
   }
 
-  i_offset <- cumsum(c(0, lengths(attr(x, "v")))[-length(attr(x, "v"))])
+  # Apply ordering to attribute vectors
+  i_offset <- cumsum(c(0, lengths(attr(x, "v"))[-n_vecs]))
   list_unchop(attr(x, "v"))[i_offset[field(x, "i")] + field(x, "x")]
 }
 
