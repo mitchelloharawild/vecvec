@@ -24,7 +24,16 @@ set.seed(0)
 
 The vecvec package allows you to create vectors of mixed classes. Mixed type vectors are useful for data analysis packages as they allow semantically similar classes (such as time or distributions) to be stored within the same vector and operated upon efficiently with the same functions. It works similarly to `factor()`, in which the values of a vector (analogous to levels of a factor) are stored in the attributes. This also allows for efficient computation when the values are replicated, since operations apply to the unique values of the vector.
 
+This package is intended for developers creating mixed type vector packages, and is unlikely useful for general data analysis (although I'd be curious if you find direct application of this tool, let me know how you use it).
+
 ## Installation
+
+You can install the **stable** version from 
+[CRAN](https://cran.r-project.org/package=vecvec):
+
+``` r
+install.packages("vecvec")
+```
 
 You can install the development version of vecvec like so:
 
@@ -34,12 +43,12 @@ remotes::install_github("mitchelloharawild/vecvec")
 
 ## Example
 
-Use `new_vecvec()` to create a vecvec. Here we combine three vectors of different types.
+Use `vecvec()` to create a vecvec. Here we combine three vectors of different types.
 
 ```{r construction}
 library(vecvec)
 
-x <- new_vecvec(as.Date("2025-03-29"), as.POSIXct("2025-01-03 10:05:00"), rnorm(10))
+x <- vecvec(as.Date("2025-03-29"), as.POSIXct("2025-01-03 10:05:00"), rnorm(10))
 x
 ```
 

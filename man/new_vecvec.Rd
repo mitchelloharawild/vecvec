@@ -2,17 +2,16 @@
 % Please edit documentation in R/vecvec.R
 \name{new_vecvec}
 \alias{new_vecvec}
-\title{Create a new vector of vectors}
+\title{Construct a vector of vectors}
 \usage{
-new_vecvec(...)
+new_vecvec(x = list())
 }
 \arguments{
-\item{...}{Individual vectors to combine into a vecvec}
+\item{x}{An unnamed list of arbitrary vectors.}
+}
+\value{
+A vector of vectors of class \code{vecvec}.
 }
 \description{
-Create a new vector of vectors
-}
-\examples{
-new_vecvec(Sys.Date(), rnorm(3), letters)
-
+new_vecvec() constructs a new vector of vectors from a list of vectors. It is meant to be performant, and does not check the inputs for correctness in any way. It is only safe to use after a call to df_list(), which collects and validates the columns used to construct the data frame.
 }

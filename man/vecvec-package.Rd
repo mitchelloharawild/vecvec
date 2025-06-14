@@ -2,7 +2,6 @@
 % Please edit documentation in R/vecvec-package.R
 \docType{package}
 \name{vecvec-package}
-\alias{vecvec}
 \alias{vecvec-package}
 \title{vecvec: Construct Mixed Type Data Structures with Vectors of Vectors}
 \description{

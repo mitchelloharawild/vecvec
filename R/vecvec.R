@@ -1,14 +1,14 @@
-#' Create a new vector of vectors
+#' Construct a vector of vectors
 #'
-#' @param ... Individual vectors to combine into a vecvec
+#' new_vecvec() constructs a new vector of vectors from a list of vectors. It is meant to be performant, and does not check the inputs for correctness in any way. It is only safe to use after a call to df_list(), which collects and validates the columns used to construct the data frame.
 #'
-#' @examples
-#' new_vecvec(Sys.Date(), rnorm(3), letters)
+#' @param x An unnamed list of arbitrary vectors.
+#'
+#' @return A vector of vectors of class `vecvec`.
 #'
 #' @export
-new_vecvec <- function(...) {
-  vecs <- rlang::list2(...)
-  size <- lengths(vecs)
+new_vecvec <- function(x = list()) {
+  size <- lengths(x)
   out <- if(identical(size, integer(0L))) {
     list(i = integer(), x = integer())
   } else {
@@ -19,9 +19,27 @@ new_vecvec <- function(...) {
   }
   new_rcrd(
     out,
-    v = vecs,
+    v = x,
     class = "vecvec"
   )
+}
+
+#' Create a new vector of vectors
+#'
+#' @param ... Vectors to combine into a single vector without type coercion.
+#'
+#' @return A vector of vectors of class `vecvec`.
+#'
+#' @seealso [unvecvec()] coerces the mixed-type vector into a single-typed
+#' regular vector. [new_vecvec()] is a performant alternative that accepts a
+#' list of vectors rather than `...` (suitable for R packages).
+#'
+#' @examples
+#' vecvec(Sys.Date(), rnorm(3), letters)
+#'
+#' @export
+vecvec <- function(...) {
+  new_vecvec(rlang::list2(...))
 }
 
 #' Convert a vecvec object into its underlying vector type
