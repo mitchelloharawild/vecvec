@@ -31,12 +31,15 @@ new_vecvec <- function(...) {
 #' @param x A vecvec to unvecvec (convert to its underlying vector type)
 #' @inheritParams vctrs::list_unchop
 #' @export
-unvecvec <- function(x, ..., ptype = NULL) {
-  if (is.null(ptype)) ptype <- do.call(vec_ptype_common, attr(x, "v"))
-  attr(x, "v") <- lapply(attr(x, "v"), vec_cast, to = ptype)
+unvecvec <- function(x, ..., cast_common = TRUE, ptype = NULL) {
+  # Cast mixed vector types to common type
+  if(length(attr(x, "v")) > 1) {
+    if (is.null(ptype)) ptype <- do.call(vec_ptype_common, attr(x, "v"))
+    attr(x, "v") <- lapply(attr(x, "v"), vec_cast, to = ptype)
+  }
 
-  out <- .mapply(function(key, val) attr(x, "v")[[key]][val], vec_split(field(x, "x"), field(x, "i")), NULL)
-  unsplit(out, field(x, "i"))
+  i_offset <- cumsum(c(0, lengths(attr(x, "v")))[-length(attr(x, "v"))])
+  list_unchop(attr(x, "v"))[i_offset[field(x, "i")] + field(x, "x")]
 }
 
 #' @export

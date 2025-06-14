@@ -45,3 +45,16 @@ test_that("vec_sort", {
     sort(c(1:10, rand))
   )
 })
+
+
+test_that("unvecvec", {
+  expect_equal(
+    unvecvec(x <- new_vecvec(1:5, pi, exp(1))),
+    y <- c(1:5, pi, exp(1))
+  )
+
+  expect_equal(
+    unvecvec(x[c(3,7,4,5,6,2,1)]),
+    y[c(3,7,4,5,6,2,1)]
+  )
+})
