@@ -31,7 +31,7 @@ new_vecvec <- function(...) {
 #' @param x A vecvec to unvecvec (convert to its underlying vector type)
 #' @inheritParams vctrs::list_unchop
 #' @export
-unvecvec <- function(x, ..., cast_common = TRUE, ptype = NULL) {
+unvecvec <- function(x, ..., ptype = NULL) {
   # Cast mixed vector types to common type
   if(length(attr(x, "v")) > 1) {
     if (is.null(ptype)) ptype <- do.call(vec_ptype_common, attr(x, "v"))
