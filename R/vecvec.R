@@ -101,6 +101,14 @@ vec_proxy.vecvec <- function(x, ...) {
 }
 
 #' @export
+vec_proxy_equal.vecvec <- function(x, ...) {
+  # Assume duplicated vector values have been combined
+  vctrs::data_frame(
+    x = field(x, "x"), i = field(x, "i")
+  )
+}
+
+#' @export
 vec_restore.vecvec <- function(x, to, ..., i = NULL) {
   # TODO: combine common groups
   if(vec_is_empty(x)) return(new_vecvec())
