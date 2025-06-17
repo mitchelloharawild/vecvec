@@ -73,3 +73,18 @@ test_that("vec_restore with missing", {
     5
   )
 })
+
+test_that("duplicate detection", {
+  x <- vec_c(1L, vecvec(1:10))
+  expect_true(
+    anyDuplicated(x)
+  )
+  expect_identical(
+    duplicated(x),
+    c(FALSE, TRUE, rep(FALSE, 9))
+  )
+  expect_identical(
+    unique(x),
+    vecvec(1:10)
+  )
+})
