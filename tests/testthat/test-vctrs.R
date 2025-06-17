@@ -29,7 +29,7 @@ test_that("vec_arith", {
     c(rep(FALSE, 5), rep(TRUE, 15))
   )
   expect_equal(
-    log(vecvec(1:10, rand)),
+    as.numeric(log(vecvec(1:10, rand))),
     log(c(1:10, rand))
   )
 })

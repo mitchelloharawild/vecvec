@@ -1,7 +1,6 @@
 dispatch_elements <- function(x, ...) {
   attr(x, "v") <- lapply(attr(x, "v"), .Generic, ...)
-  # Detect if all listed prototypes are compatible, then collapse if flat
-  collapse_vecvec(x)
+  x
 }
 
 dispatch_unsuported <- function(x, ...) {

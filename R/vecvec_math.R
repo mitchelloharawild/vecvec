@@ -61,7 +61,10 @@ Ops.vecvec <- function(e1, e2) {
 
 #' @export
 Math.vecvec <- function(x, ...) {
+  if(.Generic %in% c("cumsum, cumprod, cummax, cummin")) {
+    rlang::abort("Culumative operations are not yet supported")
+  }
   attr(x, "v") <- lapply(attr(x, "v"), .Generic, ...)
   # Detect if all listed prototypes are compatible, then collapse if flat
-  collapse_vecvec(x)
+  x
 }
