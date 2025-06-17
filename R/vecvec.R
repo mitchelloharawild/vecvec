@@ -59,7 +59,7 @@ new_vecvec <- function(x = list(), loc = NULL) {
 #'
 #' @export
 vecvec <- function(...) {
-  new_vecvec(rlang::list2(...))
+  vecvec_compress(new_vecvec(rlang::list2(...)))
 }
 
 #' Convert a vecvec object into its underlying vector type
@@ -109,15 +109,14 @@ vec_restore.vecvec <- function(x, to, ..., i = NULL) {
   i_loc <- cumsum(!na_vec)
   i_loc[na_vec] <- NA_integer_
 
-  return(
-    new_vecvec(
-      x = v_grp$key[!na_vec],
-      loc = list(
-        i = rep(i_loc, lengths(v_grp$loc))[order(list_unchop(v_grp$loc))],
-        x = x$x
-      )
+  res <- new_vecvec(
+    x = v_grp$key[!na_vec],
+    loc = list(
+      i = rep(i_loc, lengths(v_grp$loc))[order(list_unchop(v_grp$loc))],
+      x = x$x
     )
   )
+  return(vecvec_compress(res))
 }
 
 vec_cast_from_vecvec <- function(x, to, ...) {
