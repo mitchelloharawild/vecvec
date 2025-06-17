@@ -46,6 +46,14 @@ test_that("vec_sort", {
   )
 })
 
+test_that("vec_rep", {
+  rand <- rnorm(5, sd = 5)
+  expect_equal(
+    as.numeric(rep(vecvec(1:10, rand), 5)),
+    rep(c(1:10, rand), 5)
+  )
+})
+
 
 test_that("unvecvec", {
   expect_equal(
@@ -56,5 +64,12 @@ test_that("unvecvec", {
   expect_equal(
     unvecvec(x[c(3,7,4,5,6,2,1)]),
     y[c(3,7,4,5,6,2,1)]
+  )
+})
+
+test_that("vec_restore with missing", {
+  expect_equal(
+    sum(is.na(sample(c(vec_init(new_vecvec(), 5), rnorm(10))))),
+    5
   )
 })

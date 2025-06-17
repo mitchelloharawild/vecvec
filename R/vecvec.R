@@ -104,18 +104,13 @@ vec_restore.vecvec <- function(x, to, ..., i = NULL) {
   i_loc <- cumsum(!na_vec)
   i_loc[na_vec] <- NA_integer_
 
-  v <- .mapply(
-    function(key, loc) vec_slice(key, unique(x$x[loc])),
-    vec_slice(v_grp, !na_vec), NULL
-  )
-  ix_order <- order(list_unchop(v_grp$loc))
   return(
     vctrs::new_rcrd(
       list(
-        i = rep(i_loc, lengths(v_grp$loc))[ix_order],
-        x = list_unchop(lapply(lengths(v_grp$loc), seq_len))[ix_order]
+        i = rep(i_loc, lengths(v_grp$loc))[order(list_unchop(v_grp$loc))],
+        x = x$x
       ),
-      v = v,
+      v = v_grp$key[!na_vec],
       class = "vecvec"
     )
   )
