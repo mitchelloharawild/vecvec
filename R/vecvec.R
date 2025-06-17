@@ -3,22 +3,42 @@
 #' new_vecvec() constructs a new vector of vectors from a list of vectors. It is meant to be performant, and does not check the inputs for correctness in any way. It is only safe to use after a call to df_list(), which collects and validates the columns used to construct the data frame.
 #'
 #' @param x An unnamed list of arbitrary vectors.
+#' @param loc A named list of value locations, with `i` identifying the vector index and `x` identifying the value index. By default, the order of appearance in `x` will be used.
 #'
 #' @return A vector of vectors of class `vecvec`.
 #'
+#' @examples
+#' # Create a vecvec prototype
+#' new_vecvec()
+#'
+#' # Construct a vecvec from a list of vectors
+#' new_vecvec(list(letters, rnorm(10)))
+#'
+#' # Fully specify a vecvec with locations
+#' new_vecvec(
+#'   x = list(letters, rnorm(10)),
+#'   loc = list(
+#'     i = c(rep(1L, 3), rep(2L, 5), rep(1L, 23), rep(2L, 5)),
+#'     x = c(1:3, 1:5, 26:4, 6:10)
+#'   )
+#' )
+#'
 #' @export
-new_vecvec <- function(x = list()) {
-  size <- lengths(x)
-  out <- if(identical(size, integer(0L))) {
-    list(i = integer(), x = integer())
-  } else {
-    list(
-      i = rep(seq_along(size), size),
-      x = unlist(lapply(size, seq_len))
-    )
+new_vecvec <- function(x = list(), loc = NULL) {
+  if(is.null(loc)) {
+    size <- lengths(x)
+    loc <- if(identical(size, integer(0L))) {
+      list(i = integer(), x = integer())
+    } else {
+      list(
+        i = rep(seq_along(size), size),
+        x = list_unchop(lapply(size, seq_len))
+      )
+    }
   }
+
   new_rcrd(
-    out,
+    loc,
     v = x,
     class = "vecvec"
   )
@@ -72,21 +92,6 @@ format.vecvec <- function(x, ...) {
   )
 }
 
-# `[.vecvec` <- function(x, i) {
-#   # TODO: Rework unique and match to be faster
-#   v <- .mapply(
-#     function(key, val) vec_slice(attr(x, "v")[[key]], unique(val)),
-#     vec_split(.x <- field(x, "x")[i], .i <- field(x, "i")[i]),
-#     NULL
-#   )
-#
-#   new_rcrd(
-#     list(i = match(.i, unique(.i)), x = match(.x, unique(.x))),
-#     v = v,
-#     class = "vecvec"
-#   )
-# }
-
 #' @export
 vec_proxy.vecvec <- function(x, ...) {
   # Somewhat inefficient, copy pointers to vectors by row
@@ -105,13 +110,12 @@ vec_restore.vecvec <- function(x, to, ..., i = NULL) {
   i_loc[na_vec] <- NA_integer_
 
   return(
-    vctrs::new_rcrd(
-      list(
+    new_vecvec(
+      x = v_grp$key[!na_vec],
+      loc = list(
         i = rep(i_loc, lengths(v_grp$loc))[order(list_unchop(v_grp$loc))],
         x = x$x
-      ),
-      v = v_grp$key[!na_vec],
-      class = "vecvec"
+      )
     )
   )
 }

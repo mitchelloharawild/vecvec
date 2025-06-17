@@ -46,16 +46,15 @@ Ops.vecvec <- function(e1, e2) {
     list_unchop(res)[order(list_unchop(loc$loc))]
   } else {
     # Return vecvec type for arith
-    new_rcrd(
-      vec_slice(
+    new_vecvec(
+      x = res,
+      loc = vec_slice(
         data_frame(
           i = rep(seq_along(res), lengths(res)),
           x = list_unchop(lapply(lengths(res), seq_len))
         ),
         order(list_unchop(loc$loc))
-      ),
-      v = res,
-      class = "vecvec"
+      )
     )
   }
 }

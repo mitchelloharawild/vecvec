@@ -4,14 +4,33 @@
 \alias{new_vecvec}
 \title{Construct a vector of vectors}
 \usage{
-new_vecvec(x = list())
+new_vecvec(x = list(), loc = NULL)
 }
 \arguments{
 \item{x}{An unnamed list of arbitrary vectors.}
+
+\item{loc}{A named list of value locations, with \code{i} identifying the vector index and \code{x} identifying the value index. By default, the order of appearance in \code{x} will be used.}
 }
 \value{
 A vector of vectors of class \code{vecvec}.
 }
 \description{
 new_vecvec() constructs a new vector of vectors from a list of vectors. It is meant to be performant, and does not check the inputs for correctness in any way. It is only safe to use after a call to df_list(), which collects and validates the columns used to construct the data frame.
+}
+\examples{
+# Create a vecvec prototype
+new_vecvec()
+
+# Construct a vecvec from a list of vectors
+new_vecvec(list(letters, rnorm(10)))
+
+# Fully specify a vecvec with locations
+new_vecvec(
+  x = list(letters, rnorm(10)),
+  loc = list(
+    i = c(rep(1L, 3), rep(2L, 5), rep(1L, 23), rep(2L, 5)),
+    x = c(1:3, 1:5, 26:4, 6:10)
+  )
+)
+
 }
