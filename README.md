@@ -22,7 +22,19 @@ a vector (analogous to levels of a factor) are stored in the attributes.
 This also allows for efficient computation when the values are
 replicated, since operations apply to the unique values of the vector.
 
+This package is intended for developers creating mixed type vector
+packages, and is unlikely useful for general data analysis (although I’d
+be curious if you find direct application of this tool, let me know how
+you use it).
+
 ## Installation
+
+You can install the **stable** version from
+[CRAN](https://cran.r-project.org/package=vecvec):
+
+``` r
+install.packages("vecvec")
+```
 
 You can install the development version of vecvec like so:
 
@@ -32,13 +44,13 @@ remotes::install_github("mitchelloharawild/vecvec")
 
 ## Example
 
-Use `new_vecvec()` to create a vecvec. Here we combine three vectors of
+Use `vecvec()` to create a vecvec. Here we combine three vectors of
 different types.
 
 ``` r
 library(vecvec)
 
-x <- new_vecvec(as.Date("2025-03-29"), as.POSIXct("2025-01-03 10:05:00"), rnorm(10))
+x <- vecvec(as.Date("2025-03-29"), as.POSIXct("2025-01-03 10:05:00"), rnorm(10))
 x
 #> <vecvec[12]>
 #>  [1] 2025-03-29          2025-01-03 10:05:00  1.262954285       
@@ -91,10 +103,10 @@ str(rep(x, each = 10))
 #>  ..$ : POSIXct[1:1], format: "2025-01-03 10:05:00"
 #>  ..$ : num [1:10] 1.263 -0.326 1.33 1.272 0.415 ...
 str(x[c(1,1,1,3,2,2)])
-#>  vecvec [1:6] 2025-03-29, 2025-03-29, 2025-03-29, 1.262954, 2025-01-03 10:0...
+#>  vecvec [1:6] 2025-03-29, 2025-03-29, 2025-03-29,  1.262954285, 2025-01-03 ...
 #> @ v:List of 3
 #>  ..$ : Date[1:1], format: "2025-03-29"
-#>  ..$ : num 1.26
+#>  ..$ : num [1:10] 1.263 -0.326 1.33 1.272 0.415 ...
 #>  ..$ : POSIXct[1:1], format: "2025-01-03 10:05:00"
 ```
 
