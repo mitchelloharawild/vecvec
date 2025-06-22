@@ -62,21 +62,25 @@
 <!-- badges: start -->
 
 <p>The vecvec package allows you to create vectors of mixed classes. Mixed type vectors are useful for data analysis packages as they allow semantically similar classes (such as time or distributions) to be stored within the same vector and operated upon efficiently with the same functions. It works similarly to <code><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor()</a></code>, in which the values of a vector (analogous to levels of a factor) are stored in the attributes. This also allows for efficient computation when the values are replicated, since operations apply to the unique values of the vector.</p>
+<p>This package is intended for developers creating mixed type vector packages, and is unlikely useful for general data analysis (although I’d be curious if you find direct application of this tool, let me know how you use it).</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>You can install the development version of vecvec like so:</p>
+<p>You can install the <strong>stable</strong> version from <a href="https://cran.r-project.org/package=vecvec" class="external-link">CRAN</a>:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"vecvec"</span><span class="op">)</span></span></code></pre></div>
+<p>You can install the development version of vecvec like so:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"mitchelloharawild/vecvec"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
 </h2>
-<p>Use <code><a href="reference/new_vecvec.html">new_vecvec()</a></code> to create a vecvec. Here we combine three vectors of different types.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<p>Use <code><a href="reference/vecvec.html">vecvec()</a></code> to create a vecvec. Here we combine three vectors of different types.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">vecvec</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/new_vecvec.html">new_vecvec</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2025-03-29"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/as.POSIXlt.html" class="external-link">as.POSIXct</a></span><span class="op">(</span><span class="st">"2025-01-03 10:05:00"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vecvec.html">vecvec</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2025-03-29"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/as.POSIXlt.html" class="external-link">as.POSIXct</a></span><span class="op">(</span><span class="st">"2025-01-03 10:05:00"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">x</span></span>
 <span><span class="co">#&gt; &lt;vecvec[12]&gt;</span></span>
 <span><span class="co">#&gt;  [1] 2025-03-29          2025-01-03 10:05:00  1.262954285       </span></span>
@@ -84,7 +88,7 @@
 <span><span class="co">#&gt;  [7]  0.414641434        -1.539950042        -0.928567035       </span></span>
 <span><span class="co">#&gt; [10] -0.294720447        -0.005767173         2.404653389</span></span></code></pre></div>
 <p>Internally, the vectors are stored separately in the attributes.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  vecvec [1:12] 2025-03-29, 2025-01-03 10:05:00,  1.262954285, -0.326233361,...</span></span>
 <span><span class="co">#&gt; @ v:List of 3</span></span>
@@ -92,7 +96,7 @@
 <span><span class="co">#&gt;  ..$ : POSIXct[1:1], format: "2025-01-03 10:05:00"</span></span>
 <span><span class="co">#&gt;  ..$ : num [1:10] 1.263 -0.326 1.33 1.272 0.415 ...</span></span></code></pre></div>
 <p>Operations apply to all vector types.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x</span> <span class="op">+</span> <span class="fl">1</span></span>
 <span><span class="co">#&gt; &lt;vecvec[12]&gt;</span></span>
 <span><span class="co">#&gt;  [1] 2025-03-30          2025-01-03 10:05:01  2.26295428        </span></span>
@@ -100,7 +104,7 @@
 <span><span class="co">#&gt;  [7]  1.41464143         -0.53995004          0.07143297        </span></span>
 <span><span class="co">#&gt; [10]  0.70527955          0.99423283          3.40465339</span></span></code></pre></div>
 <p>When subsetting, unused values are dropped.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
 <span><span class="co">#&gt; &lt;vecvec[1]&gt;</span></span>
 <span><span class="co">#&gt; [1] 2025-03-29</span></span>
@@ -109,7 +113,7 @@
 <span><span class="co">#&gt; @ v:List of 1</span></span>
 <span><span class="co">#&gt;  ..$ : Date[1:1], format: "2025-03-29"</span></span></code></pre></div>
 <p>When a vecvec is replicated, only the indexing is replicated.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">x</span>, each <span class="op">=</span> <span class="fl">10</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  vecvec [1:120] 2025-03-29, 2025-03-29, 2025-03-29, 2025-03-29, 2025-03-29,...</span></span>
 <span><span class="co">#&gt; @ v:List of 3</span></span>
@@ -117,13 +121,13 @@
 <span><span class="co">#&gt;  ..$ : POSIXct[1:1], format: "2025-01-03 10:05:00"</span></span>
 <span><span class="co">#&gt;  ..$ : num [1:10] 1.263 -0.326 1.33 1.272 0.415 ...</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">3</span>,<span class="fl">2</span>,<span class="fl">2</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt;  vecvec [1:6] 2025-03-29, 2025-03-29, 2025-03-29, 1.262954, 2025-01-03 10:0...</span></span>
+<span><span class="co">#&gt;  vecvec [1:6] 2025-03-29, 2025-03-29, 2025-03-29,  1.262954285, 2025-01-03 ...</span></span>
 <span><span class="co">#&gt; @ v:List of 3</span></span>
 <span><span class="co">#&gt;  ..$ : Date[1:1], format: "2025-03-29"</span></span>
-<span><span class="co">#&gt;  ..$ : num 1.26</span></span>
+<span><span class="co">#&gt;  ..$ : num [1:10] 1.263 -0.326 1.33 1.272 0.415 ...</span></span>
 <span><span class="co">#&gt;  ..$ : POSIXct[1:1], format: "2025-01-03 10:05:00"</span></span></code></pre></div>
 <p>The values in the attribute are unchanged, which allows for efficient computation since operations apply to the attributes (which are not replicated).</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">x</span>, each <span class="op">=</span> <span class="fl">10</span><span class="op">)</span> <span class="op">+</span> <span class="fl">100</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  vecvec [1:120] 2025-07-07, 2025-07-07, 2025-07-07, 2025-07-07, 2025-07-07,...</span></span>
 <span><span class="co">#&gt; @ v:List of 3</span></span>
@@ -131,7 +135,7 @@
 <span><span class="co">#&gt;  ..$ : POSIXct[1:1], format: "2025-01-03 10:06:40"</span></span>
 <span><span class="co">#&gt;  ..$ : num [1:10] 101.3 99.7 101.3 101.3 100.4 ...</span></span></code></pre></div>
 <p>If the arguments is differ across replicated indices, the resulting vecvec is <a href="https://github.com/mitchelloharawild/vecvec/issues/2" class="external-link"><em>expanded</em></a></p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">x</span>, each <span class="op">=</span> <span class="fl">10</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span><span class="op">:</span><span class="fl">120</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  vecvec [1:120] 2025-03-30, 2025-03-31, 2025-04-01, 2025-04-02, 2025-04-03,...</span></span>
 <span><span class="co">#&gt; @ v:List of 3</span></span>
