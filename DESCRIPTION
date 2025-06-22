@@ -1,6 +1,6 @@
 Package: vecvec
 Title: Construct Mixed Type Data Structures with Vectors of Vectors 
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R: c(
       person(
         given = "Mitchell",
@@ -9,7 +9,7 @@ Authors@R: c(
         email = "mail@mitchelloharawild.com",
         comment = c(ORCID = "0000-0001-6729-7695")
       ))
-Description: What the package does (one paragraph).
+Description: Mixed type vectors are useful for combining semantically similar classes. Some examples of semantically related classes include time across different granularities (e.g. daily, monthly, annual) and probability distributions (e.g. Normal, Uniform, Poisson). These groups of vector types typically share common statistical operations which vary in results with the attributes of each vector. The 'vecvec' data structure facilitates efficient storage and computation across multiple vectors within the same object.
 License: MIT + file LICENSE
 Imports: 
     rlang,
