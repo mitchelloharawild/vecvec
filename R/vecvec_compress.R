@@ -8,7 +8,7 @@ vecvec_compress <- function(x) {
   # Already compressed, nothing to do
   if(identical(vec_size(v), vec_size(v_common))) return(x)
 
-  v_compressed <- lapply(v_common$loc, \(i) unique(list_unchop(v[i])))
+  v_compressed <- lapply(v_common$loc, function(i) unique(list_unchop(v[i])))
   i_mapping <- rep(vec_seq_along(v_common), lengths(v_common$loc))
 
   x_mapping <- list_unchop(.mapply(
