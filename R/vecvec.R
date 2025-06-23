@@ -4,6 +4,7 @@
 #'
 #' @param x An unnamed list of arbitrary vectors.
 #' @param loc A named list of value locations, with `i` identifying the vector index and `x` identifying the value index. By default, the order of appearance in `x` will be used.
+#' @param class Name of subclass.
 #'
 #' @return A vector of vectors of class `vecvec`.
 #'
@@ -24,7 +25,7 @@
 #' )
 #'
 #' @export
-new_vecvec <- function(x = list(), loc = NULL) {
+new_vecvec <- function(x = list(), loc = NULL, class = character()) {
   if(is.null(loc)) {
     size <- lengths(x)
     loc <- if(identical(size, integer(0L))) {
@@ -40,7 +41,7 @@ new_vecvec <- function(x = list(), loc = NULL) {
   new_rcrd(
     loc,
     v = x,
-    class = "vecvec"
+    class = c(class, "vecvec")
   )
 }
 

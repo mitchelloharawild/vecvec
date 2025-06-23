@@ -4,12 +4,14 @@
 \alias{new_vecvec}
 \title{Construct a vector of vectors}
 \usage{
-new_vecvec(x = list(), loc = NULL)
+new_vecvec(x = list(), loc = NULL, class = character())
 }
 \arguments{
 \item{x}{An unnamed list of arbitrary vectors.}
 
 \item{loc}{A named list of value locations, with \code{i} identifying the vector index and \code{x} identifying the value index. By default, the order of appearance in \code{x} will be used.}
+
+\item{class}{Name of subclass.}
 }
 \value{
 A vector of vectors of class \code{vecvec}.
