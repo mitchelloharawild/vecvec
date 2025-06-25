@@ -69,6 +69,9 @@ vecvec <- function(...) {
 #'
 #' @param x A vecvec to unvecvec (convert to its underlying vector type)
 #' @inheritParams vctrs::list_unchop
+#'
+#' @return A simple vector, all containing the same type of data.
+#'
 #' @export
 unvecvec <- function(x, ..., ptype = NULL) {
   n_vecs <- length(attr(x, "v"))

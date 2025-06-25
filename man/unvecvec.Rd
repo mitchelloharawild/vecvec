@@ -15,6 +15,9 @@ unvecvec(x, ..., ptype = NULL)
 computing the common type across all elements of \code{x}. Alternatively, you
 can supply \code{ptype} to give the output a known type.}
 }
+\value{
+A simple vector, all containing the same type of data.
+}
 \description{
 \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
 }
