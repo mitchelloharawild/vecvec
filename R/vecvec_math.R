@@ -18,7 +18,9 @@ Ops.vecvec <- function(e1, e2) {
   if (any(arg_len1 <- lengths(args) == 1)) {
     res <- args[[which(!arg_len1)]]
     attr(res, "v") <- .mapply(.Generic, list(attr(res, "v")), attr(args[[which(arg_len1)]], "v"))
-    return(if (bool_op) as.logical(res) else res)
+
+    # Return simple atomic boolean for boolean operations
+    return(if (bool_op) unvecvec(res) else res)
   }
 
   # Binary operation (complete method on values)
@@ -68,3 +70,10 @@ Math.vecvec <- function(x, ...) {
   # Detect if all listed prototypes are compatible, then collapse if flat
   x
 }
+
+#' @export
+vec_math.vecvec <- function(.fn, .x, ...) {
+  attr(.x, "v") <- lapply(attr(.x, "v"), .fn, ...)
+  unvecvec(.x)
+}
+
