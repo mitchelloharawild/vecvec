@@ -27,7 +27,7 @@
 #' @export
 new_vecvec <- function(x = list(), loc = NULL, class = character()) {
   if(is.null(loc)) {
-    size <- lengths(x)
+    size <- vapply(x, vec_size, integer(1L))
     loc <- if(identical(size, integer(0L))) {
       list(i = integer(), x = integer())
     } else {
