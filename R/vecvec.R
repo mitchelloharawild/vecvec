@@ -59,8 +59,8 @@ new_vecvec <- function(x = list(), loc = NULL, class = character()) {
 #' vecvec(Sys.Date(), rnorm(3), letters)
 #'
 #' @export
-vecvec <- function(...) {
-  vecvec_compress(new_vecvec(rlang::list2(...)))
+vecvec <- function(..., class = character()) {
+  vecvec_compress(new_vecvec(rlang::list2(...), class = class))
 }
 
 #' Convert a vecvec object into its underlying vector type
@@ -96,6 +96,10 @@ format.vecvec <- function(x, ...) {
   )
 }
 
+restore_class <- function(x) {
+  setdiff(class(x), c("vecvec", "vctrs_rcrd", "vctrs_vctr"))
+}
+
 #' @export
 vec_proxy.vecvec <- function(x, ...) {
   # Somewhat inefficient, copy pointers to vectors by row
@@ -126,7 +130,8 @@ vec_restore.vecvec <- function(x, to, ..., i = NULL) {
     loc = list(
       i = rep(i_loc, lengths(v_grp$loc))[order(list_unchop(v_grp$loc))],
       x = x$x
-    )
+    ),
+    class = restore_class(to)
   )
   return(vecvec_compress(res))
 }
@@ -137,22 +142,24 @@ vec_cast_from_vecvec <- function(x, to, ...) {
 }
 
 vec_cast_to_vecvec <- function(x, to, ...) {
-  new_vecvec(list(x))
+  new_vecvec(list(x), class = restore_class(to))
 }
 
 #' @export
 vec_ptype2.vecvec <- function(x, y, ...) {
-  new_vecvec()
+  compat_class <- intersect(restore_class(x), restore_class(y))
+  new_vecvec(class = compat_class)
 }
 
 #' @export
 vec_ptype.vecvec <- function(x, ...) {
-  new_vecvec()
+  new_vecvec(class = restore_class(x))
 }
 
 #' @export
 vec_ptype2.vecvec.vecvec <- function(x, y, ...) {
-  new_vecvec()
+  compat_class <- intersect(restore_class(x), restore_class(y))
+  new_vecvec(class = compat_class)
 }
 
 

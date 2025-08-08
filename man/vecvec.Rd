@@ -4,7 +4,7 @@
 \alias{vecvec}
 \title{Create a new vector of vectors}
 \usage{
-vecvec(...)
+vecvec(..., class = character())
 }
 \arguments{
 \item{...}{Vectors to combine into a single vector without type coercion.}

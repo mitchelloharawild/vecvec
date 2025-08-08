@@ -15,7 +15,7 @@
          pkg = "vctrs", class = "vecvec", fun = vec_ptype2.vecvec)
   # Register vec_ptype2.vecvec.* methods
   lapply(sub("^vec_ptype2", "vecvec", vec_ptype2_generics), register_s3_method,
-         pkg = "vctrs", generic = "vec_ptype2", fun = vec_cast_to_vecvec)
+         pkg = "vctrs", generic = "vec_ptype2", fun = vec_ptype2.vecvec)
 
   # Register all methods
   # lapply(attr(methods(class = "default"), "info")$generic, register_s3_method,
