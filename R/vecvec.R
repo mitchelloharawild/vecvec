@@ -48,6 +48,7 @@ new_vecvec <- function(x = list(), loc = NULL, class = character()) {
 #' Create a new vector of vectors
 #'
 #' @param ... Vectors to combine into a single vector without type coercion.
+#' @param class Name of subclass.
 #'
 #' @return A vector of vectors of class `vecvec`.
 #'
