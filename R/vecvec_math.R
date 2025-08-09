@@ -12,19 +12,21 @@ Ops.vecvec <- function(e1, e2) {
     return(e1)
   }
 
-  args <- vec_cast_common(e1 = e1, e2 = e2)
-
   # Binary operation (shortcut method on attributes)
-  if (any(arg_len1 <- lengths(args) == 1)) {
-    res <- args[[which(!arg_len1)]]
-    attr(res, "v") <- .mapply(.Generic, list(attr(res, "v")), attr(args[[which(arg_len1)]], "v"))
-
-    # Return simple atomic boolean for boolean operations
-    return(if (bool_op) unvecvec(res) else res)
-  }
+  # if (any(arg_len1 <- lengths(args) == 1)) {
+  #   res <- args[[which(!arg_len1)]]
+  #   attr(res, "v") <- .mapply(.Generic, list(attr(res, "v")), attr(args[[which(arg_len1)]], "v"))
+  #
+  #   # Return simple atomic boolean for boolean operations
+  #   return(if (bool_op) unvecvec(res) else res)
+  # }
 
   # Binary operation (complete method on values)
-  args <- vec_recycle_common(!!!args)
+  args <- vec_recycle_common(e1 = e1, e2 = e2)
+
+  # Ensure all args are vecvec types
+  which_vecvec <- vapply(args, inherits, logical(1L), what = "vecvec")
+  args[!which_vecvec] <- lapply(args[!which_vecvec], vecvec)
 
   # Compare sets of common vectors
   loc <- vec_group_loc(new_data_frame(lapply(args, field, "i")))
