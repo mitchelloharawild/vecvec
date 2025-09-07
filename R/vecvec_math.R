@@ -50,7 +50,7 @@ Ops.vecvec <- function(e1, e2) {
     list_unchop(res)[order(list_unchop(loc$loc))]
   } else {
     # Return vecvec type for arith
-    new_vecvec(
+    res <- new_vecvec(
       x = res,
       loc = vec_slice(
         data_frame(
@@ -58,8 +58,10 @@ Ops.vecvec <- function(e1, e2) {
           x = list_unchop(lapply(lengths(res), seq_len))
         ),
         order(list_unchop(loc$loc))
-      )
+      ),
+      class = restore_class(vec_ptype_common(!!!args[which_vecvec]))
     )
+    # vec_restore(res, vec_ptype_common(!!!args[which_vecvec]))
   }
 }
 
