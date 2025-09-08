@@ -139,7 +139,7 @@ vec_restore.vecvec <- function(x, to, ..., i = NULL) {
 
 vec_cast_from_vecvec <- function(x, to, ...) {
   out <- lapply(attr(x, "v"), vec_cast, to = to, ...)
-  unlist(.mapply(function(i, x) out[[i]][[x]], new_data_frame(x), NULL))
+  vec_unchop(.mapply(function(i, x) out[[i]][[x]], new_data_frame(x), NULL))
 }
 
 vec_cast_to_vecvec <- function(x, to, ...) {

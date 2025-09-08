@@ -4,6 +4,7 @@
 
 * Fixed error when `Ops` when `vecvec` and second argument are both length 1.
 * Removed unnecessary cast in `Ops` with `vecvec` types.
+* Fix casting from `vecvec` dropping common attributes.
 
 # vecvec 0.1.0
 
