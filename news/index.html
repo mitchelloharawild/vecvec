@@ -44,9 +44,19 @@
     <div class="section level2">
 <h2 class="page-header" data-toc-text="development version" id="vecvec-development-version">vecvec (development version)<a class="anchor" aria-label="anchor" href="#vecvec-development-version"></a></h2>
 <div class="section level3">
+<h3 id="new-features-development-version">New features<a class="anchor" aria-label="anchor" href="#new-features-development-version"></a></h3>
+<ul><li>Added <code>vec_math()</code> for <code>vecvec</code> objects.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="improvements-development-version">Improvements<a class="anchor" aria-label="anchor" href="#improvements-development-version"></a></h3>
+<ul><li>vecvec now works with <code><a href="https://vctrs.r-lib.org/reference/new_rcrd.html" class="external-link">vctrs::new_rcrd</a></code> type vectors.</li>
+<li>Added <code>class</code> argument <code><a href="../reference/vecvec.html">vecvec()</a></code> to specify subclasses.</li>
+<li>Removed unnecessary cast in <code>Ops</code> with <code>vecvec</code> types.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
 <ul><li>Fixed error when <code>Ops</code> when <code>vecvec</code> and second argument are both length 1.</li>
-<li>Removed unnecessary cast in <code>Ops</code> with <code>vecvec</code> types.</li>
+<li>Fix casting from <code>vecvec</code> dropping common attributes.</li>
 </ul></div>
 </div>
     <div class="section level2">
