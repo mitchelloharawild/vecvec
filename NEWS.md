@@ -3,6 +3,7 @@
 ## New features
 
 * Added `vec_math()` for `vecvec` objects.
+* Added `vec_apply()` for applying functions to each vector in a `vecvec`.
 
 ## Improvements
 
