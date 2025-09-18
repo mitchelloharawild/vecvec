@@ -1,6 +1,8 @@
+## Test environments
+* local ubuntu 24.04 install, R 4.5.1
+* ubuntu-latest (on GitHub actions), R 4.5.1
+* win-builder, R-devel
+
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note
-
-* This is a new release.
-* There are no relevant references for this work yet. The description will be updated once the associated research is published.
+0 errors | 0 warnings | 0 notes
