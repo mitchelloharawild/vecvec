@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">vecvec</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.0</span>
       </span>
     </div>
 
@@ -42,22 +42,23 @@
     </div>
 
     <div class="section level2">
-<h2 class="page-header" data-toc-text="development version" id="vecvec-development-version">vecvec (development version)<a class="anchor" aria-label="anchor" href="#vecvec-development-version"></a></h2>
+<h2 class="page-header" data-toc-text="0.2.0" id="vecvec-020">vecvec 0.2.0<a class="anchor" aria-label="anchor" href="#vecvec-020"></a></h2>
 <div class="section level3">
-<h3 id="new-features-development-version">New features<a class="anchor" aria-label="anchor" href="#new-features-development-version"></a></h3>
+<h3 id="new-features-0-2-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-2-0"></a></h3>
 <ul><li>Added <code>vec_math()</code> for <code>vecvec</code> objects.</li>
 <li>Added <code>vec_apply()</code> for applying functions to each vector in a <code>vecvec</code>.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="improvements-development-version">Improvements<a class="anchor" aria-label="anchor" href="#improvements-development-version"></a></h3>
+<h3 id="improvements-0-2-0">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-2-0"></a></h3>
 <ul><li>vecvec now works with <code><a href="https://vctrs.r-lib.org/reference/new_rcrd.html" class="external-link">vctrs::new_rcrd</a></code> type vectors.</li>
 <li>Added <code>class</code> argument <code><a href="../reference/vecvec.html">vecvec()</a></code> to specify subclasses.</li>
 <li>Removed unnecessary cast in <code>Ops</code> with <code>vecvec</code> types.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
+<h3 id="bug-fixes-0-2-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-2-0"></a></h3>
 <ul><li>Fixed error when <code>Ops</code> when <code>vecvec</code> and second argument are both length 1.</li>
 <li>Fix casting from <code>vecvec</code> dropping common attributes.</li>
+<li>Fixed <code>vec_proxy_equal()</code> not comparing values across vectors.</li>
 </ul></div>
 </div>
     <div class="section level2">
