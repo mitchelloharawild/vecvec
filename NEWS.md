@@ -1,4 +1,4 @@
-# vecvec (development version)
+# vecvec 0.2.0
 
 ## New features
 
@@ -15,6 +15,7 @@
 
 * Fixed error when `Ops` when `vecvec` and second argument are both length 1.
 * Fix casting from `vecvec` dropping common attributes.
+* Fixed `vec_proxy_equal()` not comparing values across vectors.
 
 # vecvec 0.1.0
 
