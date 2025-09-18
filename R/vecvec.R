@@ -111,10 +111,10 @@ vec_proxy.vecvec <- function(x, ...) {
 
 #' @export
 vec_proxy_equal.vecvec <- function(x, ...) {
-  # Assume duplicated vector values have been combined
-  vctrs::data_frame(
-    x = field(x, "x"), i = field(x, "i")
-  )
+  # TODO - implement using a faster method (e.g. hashing)
+  n_vecs <- length(attr(x, "v"))
+  i_offset <- cumsum(c(0, lengths(attr(x, "v"))[-n_vecs]))
+  list_unchop(lapply(attr(x, "v"), as.list))[i_offset[field(x, "i")] + field(x, "x")]
 }
 
 #' @export
