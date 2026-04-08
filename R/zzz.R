@@ -1,4 +1,6 @@
 .onLoad <- function(...) {
+  S7::methods_register()
+
   vctrs_exports <- getNamespaceExports(asNamespace("vctrs"))
 
   vec_cast_generics <- vctrs_exports[startsWith(vctrs_exports, "vec_cast.")]
