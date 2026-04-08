@@ -158,8 +158,8 @@ method(as.data.frame, class_vecvec) <- function(x) convert(x, class_data.frame)
 # Combining methods
 method(c, class_vecvec) <- function(..., recursive = FALSE) {
   dots <- rlang::list2(...)
-  is_vecvec <- vapply(dots, is_vecvec, logical(1L))
-  dots[!is_vecvec] <- lapply(dots[!is_vecvec], vecvec)
+  is_vv <- vapply(dots, is_vecvec, logical(1L))
+  dots[!is_vv] <- lapply(dots[!is_vv], vecvec)
 
   # TODO - reduce structure into a common vecvec
   i_offsets <- cumsum(vapply(
