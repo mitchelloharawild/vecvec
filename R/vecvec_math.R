@@ -1,5 +1,8 @@
+# S7-style implementation pending https://github.com/RConsortium/S7/issues/353
+# Indicative release in S7 v0.3.0
+#' @method Ops vecvec::vecvec
 #' @export
-Ops.vecvec <- function(e1, e2) {
+`Ops.vecvec::vecvec` <- function(e1, e2) {
   bool_op <- switch(
     .Generic,
     `<` = , `>` = , `==` = , `!=` = , `<=` = , `>=` = TRUE,
@@ -8,7 +11,7 @@ Ops.vecvec <- function(e1, e2) {
 
   # Unary operation (shortcut method on attributes)
   if (missing(e2)) {
-    attr(e1, "v") <- lapply(attr(e1, "v"), .Generic)
+    e1@x <- lapply(e1@x, .Generic)
     return(e1)
   }
 
@@ -25,59 +28,49 @@ Ops.vecvec <- function(e1, e2) {
   args <- vec_recycle_common(e1 = e1, e2 = e2)
 
   # Ensure all args are vecvec types
-  which_vecvec <- vapply(args, inherits, logical(1L), what = "vecvec")
+  which_vecvec <- vapply(args, is_vecvec, logical(1L))
   args[!which_vecvec] <- lapply(args[!which_vecvec], vecvec)
 
-  # Compare sets of common vectors
-  loc <- vec_group_loc(new_data_frame(lapply(args, field, "i")))
-  loc[names(loc$key)] <- loc$key
-  loc$key <- NULL
+  # Find pairing of underlying vectors
+  x_len <- lapply(args, function(x) lengths(x@x))
+  x_idx <- overlap_indices(x_len[[1L]], x_len[[2L]])
+
+  split_vec <- function(x, len, idx) {
+    vec <- vector("list", length(len))
+    j <- 1L
+    for (i in seq_along(len)) {
+      vec[[i]] <- x@x[[idx[i]]][seq(j, length.out = len[i])]
+      j <- if (identical(idx[i], idx[i+1L])) j + len[i] else 1L
+    }
+    vec
+  }
 
   # Apply operation to pairs of data types
-  res <- .mapply(function(loc, e1, e2) {
-    do.call(
-      .Generic,
-      list(
-        attr(args$e1, "v")[[e1]][field(args$e1, "x")[loc]],
-        attr(args$e2, "v")[[e2]][field(args$e2, "x")[loc]]
-      )
-    )
-  }, loc, NULL)
+  e1@x <- .mapply(
+    .Generic,
+    list(
+      split_vec(args[[1L]], x_idx$len, x_idx$idx[[1L]]),
+      split_vec(args[[2L]], x_idx$len, x_idx$idx[[2L]])
+    ), 
+    NULL
+  )
 
   # Combine results into vector
   if(bool_op) {
     # Return atomic type for logical operations
-    list_unchop(res)[order(list_unchop(loc$loc))]
-  } else {
-    # Return vecvec type for arith
-    res <- new_vecvec(
-      x = res,
-      loc = vec_slice(
-        data_frame(
-          i = rep(seq_along(res), lengths(res)),
-          x = list_unchop(lapply(lengths(res), seq_len))
-        ),
-        order(list_unchop(loc$loc))
-      ),
-      class = restore_class(vec_ptype_common(!!!args[which_vecvec]))
-    )
-    # vec_restore(res, vec_ptype_common(!!!args[which_vecvec]))
+    e1 <- unvecvec(e1)
   }
+  
+  e1
 }
 
+#' @method Math vecvec::vecvec
 #' @export
-Math.vecvec <- function(x, ...) {
+`Math.vecvec::vecvec` <- function(x, ...) {
   if(.Generic %in% c("cumsum, cumprod, cummax, cummin")) {
     rlang::abort("Culumative operations are not yet supported")
   }
-  attr(x, "v") <- lapply(attr(x, "v"), .Generic, ...)
-  # Detect if all listed prototypes are compatible, then collapse if flat
+  x@x <- lapply(x@x, .Generic, ...)
+  # TODO - Detect if all listed prototypes are compatible, then collapse if flat
   x
 }
-
-#' @export
-vec_math.vecvec <- function(.fn, .x, ...) {
-  attr(.x, "v") <- lapply(attr(.x, "v"), .fn, ...)
-  unvecvec(.x)
-}
-
