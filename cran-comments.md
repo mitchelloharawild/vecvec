@@ -1,7 +1,9 @@
 ## Test environments
-* local ubuntu 24.04 install, R 4.5.1
-* ubuntu-latest (on GitHub actions), R 4.5.1
-* win-builder, R-devel
+* local ubuntu 24.04 install, R 4.5.2
+* ubuntu-latest (on GitHub actions), R-devel, R-release, R-oldrel-1, R-oldrel-2, R-oldrel-3, R-oldrel-4
+* macOS-latest (on GitHub actions), R-release
+* windows-latest (on GitHub actions), R-release, R-oldrel-4
+* win-builder, R-devel, R-release, R-oldrelease
 
 ## R CMD check results
 
