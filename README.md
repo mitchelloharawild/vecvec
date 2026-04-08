@@ -1,5 +1,4 @@
 
-
 <!-- README.md is generated from README.qmd. Please edit that file -->
 
 # vecvec <img src="man/figures/logo.svg" align="right" style="height: 139px;" alt="" />
@@ -10,7 +9,7 @@
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![R-CMD-check](https://github.com/mitchelloharawild/vecvec/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/mitchelloharawild/vecvec/actions/workflows/R-CMD-check.yaml)
 [![CRAN
-status](https://www.r-pkg.org/badges/version/vecvec.png)](https://CRAN.R-project.org/package=vecvec)
+status](https://www.r-pkg.org/badges/version/vecvec)](https://CRAN.R-project.org/package=vecvec)
 <!-- badges: end -->
 
 The vecvec package allows you to create vectors of mixed classes. Mixed
@@ -118,9 +117,9 @@ replicated).
 str(rep(x, each = 10) + 100)
 #>  vecvec [1:120] 2025-07-07, 2025-07-07, 2025-07-07, 2025-07-07, 2025-07-07,...
 #> @ v:List of 3
-#>  ..$ : Date[1:1], format: "2025-07-07"
-#>  ..$ : POSIXct[1:1], format: "2025-01-03 10:06:40"
-#>  ..$ : num [1:10] 101.3 99.7 101.3 101.3 100.4 ...
+#>  ..$ : Date[1:10], format: "2025-07-07" "2025-07-07" ...
+#>  ..$ : POSIXct[1:10], format: "2025-01-03 10:06:40" "2025-01-03 10:06:40" ...
+#>  ..$ : num [1:100] 101 101 101 101 101 ...
 ```
 
 If the arguments is differ across replicated indices, the resulting
