@@ -39,6 +39,24 @@ unvecvec <- function(x, ..., ptype = NULL) {
   vec_slice(vec_c(!!!x@x), x@i)
 }
 
+# Class accessors
+
+#' Test if an object is a vecvec
+#'
+#' @param x Object to test.
+#'
+#' @return `TRUE` if `x` inherits from `class_vecvec`, `FALSE` otherwise.
+#'
+#' @seealso [vecvec()] to create a vecvec object.
+#'
+#' @examples
+#' vv <- vecvec(1:3, letters)
+#' is_vecvec(vv)
+#' is_vecvec(1:3)
+#'
+#' @export
+is_vecvec <- function(x) S7_inherits(x, class_vecvec)
+
 # Display methods
 method(print, class_vecvec) <- function(x, ...) {
   vctrs::obj_print(x, ...)
