@@ -1,5 +1,9 @@
 # vecvec (development version)
 
+## Bug fixes
+
+* Fixed missing value handling with `is.na()` for `vecvec` objects (#8).
+
 # vecvec 0.2.0
 
 ## New features
