@@ -7,6 +7,6 @@
 #' @export
 vecvec_apply <- function(x, f, ...) {
   if (vec_is_empty(x)) return(x)
-  attr(x, "v") <- lapply(attr(x, "v"), f, ...)
+  x@x <- lapply(x@x, f, ...)
   x
 }
