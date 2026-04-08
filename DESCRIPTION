@@ -13,6 +13,7 @@ Description: Mixed type vectors are useful for combining semantically similar cl
 License: MIT + file LICENSE
 Imports: 
     rlang,
+    S7,
     vctrs
 Suggests: 
     lifecycle,
