@@ -39,15 +39,14 @@ unvecvec <- function(x, ..., ptype = NULL) {
   vec_slice(vec_c(!!!x@x), x@i)
 }
 
-#' @export
-format.vecvec <- function(x, ...) {
-  out <- lapply(attr(x, "v"), format, ...)
-  unlist(
-    .mapply(function(i, x){
-      if(is.na(i)) NA_character_ else out[[i]][[x]]
-    }, list(field(x, "i"), field(x, "x")), NULL)
-  )
+# Display methods
+method(print, class_vecvec) <- function(x, ...) {
+  vctrs::obj_print(x, ...)
 }
+method(format, class_vecvec) <- function(x, ...) {
+  vec_c(!!!lapply(x@x, format, ...), .ptype = character())[x@i]
+}
+
 
 restore_class <- function(x) {
   setdiff(class(x), c("vecvec", "vctrs_rcrd", "vctrs_vctr"))
