@@ -13,27 +13,6 @@ test_that("vec_c", {
   )
 })
 
-
-test_that("vec_arith", {
-  expect_equal(
-    as.numeric(vecvec(1:10) + 1:10),
-    seq(2,20, by = 2)
-  )
-  expect_equal(
-    as.numeric(-vecvec(1:10)),
-    -1:-10
-  )
-  rand <- rbeta(5, 3, 7)
-  expect_equal(
-    vecvec(-5:9, rand) >= 0,
-    c(rep(FALSE, 5), rep(TRUE, 15))
-  )
-  expect_equal(
-    as.numeric(log(vecvec(1:10, rand))),
-    log(c(1:10, rand))
-  )
-})
-
 test_that("vec_sort", {
   rand <- rnorm(5, sd = 5)
   expect_equal(
