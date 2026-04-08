@@ -146,3 +146,28 @@ method(as.Date, class_vecvec) <- function(x) convert(x, class_Date)
 method(as.POSIXct, class_vecvec) <- function(x) convert(x, class_POSIXct)
 method(as.POSIXlt, class_vecvec) <- function(x) convert(x, class_POSIXlt)
 method(as.data.frame, class_vecvec) <- function(x) convert(x, class_data.frame)
+
+# Combining methods
+method(c, class_vecvec) <- function(..., recursive = FALSE) {
+  dots <- rlang::list2(...)
+  is_vecvec <- vapply(dots, is_vecvec, logical(1L))
+  dots[!is_vecvec] <- lapply(dots[!is_vecvec], vecvec)
+
+  # TODO - reduce structure into a common vecvec
+  i_offsets <- cumsum(vapply(
+    dots[-length(dots)],
+    function(x) sum(lengths(x@x)),
+    integer(1L)
+  ))
+
+  x <- lapply(dots, function(x) x@x)
+  i <- c(dots[[1L]]@i, .mapply(
+    function(x, j) x@i + j,
+    list(x = dots[-1L], j = i_offsets), NULL
+  ))
+
+  class_vecvec(
+    x = unlist(x, recursive = FALSE),
+    i = unlist(i, recursive = FALSE)
+  )
+}
