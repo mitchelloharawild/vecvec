@@ -112,6 +112,32 @@ vec_ptype.vecvec <- function(x, ...) {
 vec_ptype2.vecvec.vecvec <- function(x, y, ...) {
   compat_class <- intersect(restore_class(x), restore_class(y))
   new_vecvec(class = compat_class)
+# Indexing methods
+method(`[`, class_vecvec) <- function(x, i, ...) {
+  idx <- x@i[i]
+  len <- c(0L, cumsum(lengths(x@x[-length(x@x)])))
+  pos <- findInterval(idx[!is.na(idx)], len, left.open = TRUE)
+  grp <- vec_group_loc(pos)
+  
+  # TODO - if grp has only one group we can return a simpler vecvec type
+
+  # Prune unused vectors
+  x@x <- .mapply(
+    function(key, loc) x@x[[key]][idx[loc] - len[key], drop = FALSE],
+    grp, NULL
+  )
+
+  # Update indices
+  idx[!is.na(pos)] <- unlist(grp$loc)
+  x@i <- idx
+
+  x
+}
+method(`[[`, class_vecvec) <- function(x, i, ...) {
+  idx <- x@i[i]
+  len <- c(0L, cumsum(lengths(x@x[-length(x@x)])))
+  pos <- findInterval(idx, len)
+  x@x[[pos]][[idx - len[pos]]]
 }
 
 # Casting methods
