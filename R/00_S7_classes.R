@@ -44,7 +44,6 @@ class_vecvec <- new_class(
     }
   }
 )
-S7::S4_register(class_vecvec)
 
 # Alternative candidate implementation - indices in base object.
 # class_vecvec <- S7::new_class(
