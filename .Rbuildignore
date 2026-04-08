@@ -1,7 +1,8 @@
 ^vecvec\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
-^README\.qmd$
+^README\.Rmd$
 ^cran-comments\.md$
 ^hex$
 ^.github$
+^CRAN-SUBMISSION$
