@@ -1,50 +1,3 @@
-#' Construct a vector of vectors
-#'
-#' new_vecvec() constructs a new vector of vectors from a list of vectors. It is meant to be performant, and does not check the inputs for correctness in any way. It is only safe to use after a call to df_list(), which collects and validates the columns used to construct the data frame.
-#'
-#' @param x An unnamed list of arbitrary vectors.
-#' @param loc A named list of value locations, with `i` identifying the vector index and `x` identifying the value index. By default, the order of appearance in `x` will be used.
-#' @param class Name of subclass.
-#'
-#' @return A vector of vectors of class `vecvec`.
-#'
-#' @examples
-#' # Create a vecvec prototype
-#' new_vecvec()
-#'
-#' # Construct a vecvec from a list of vectors
-#' new_vecvec(list(letters, rnorm(10)))
-#'
-#' # Fully specify a vecvec with locations
-#' new_vecvec(
-#'   x = list(letters, rnorm(10)),
-#'   loc = list(
-#'     i = c(rep(1L, 3), rep(2L, 5), rep(1L, 23), rep(2L, 5)),
-#'     x = c(1:3, 1:5, 26:4, 6:10)
-#'   )
-#' )
-#'
-#' @export
-new_vecvec <- function(x = list(), loc = NULL, class = character()) {
-  if(is.null(loc)) {
-    size <- vapply(x, vec_size, integer(1L))
-    loc <- if(identical(size, integer(0L))) {
-      list(i = integer(), x = integer())
-    } else {
-      list(
-        i = rep(seq_along(size), size),
-        x = list_unchop(lapply(size, seq_len))
-      )
-    }
-  }
-
-  new_rcrd(
-    loc,
-    v = x,
-    class = c(class, "vecvec")
-  )
-}
-
 #' Create a new vector of vectors
 #'
 #' @param ... Vectors to combine into a single vector without type coercion.
@@ -53,38 +6,37 @@ new_vecvec <- function(x = list(), loc = NULL, class = character()) {
 #' @return A vector of vectors of class `vecvec`.
 #'
 #' @seealso [unvecvec()] coerces the mixed-type vector into a single-typed
-#' regular vector. [new_vecvec()] is a performant alternative that accepts a
-#' list of vectors rather than `...` (suitable for R packages).
+#' regular vector.
 #'
 #' @examples
 #' vecvec(Sys.Date(), rnorm(3), letters)
 #'
 #' @export
-vecvec <- function(..., class = character()) {
-  vecvec_compress(new_vecvec(rlang::list2(...), class = class))
+vecvec <- function(...) {
+  class_vecvec(x = rlang::list2(...))
 }
 
-#' Convert a vecvec object into its underlying vector type
+#' Obtain a singular common vector type from a vector of vectors
 #'
 #' `r lifecycle::badge('experimental')`
 #'
 #' @param x A vecvec to unvecvec (convert to its underlying vector type)
-#' @inheritParams vctrs::list_unchop
 #'
 #' @return A simple vector, all containing the same type of data.
 #'
 #' @export
 unvecvec <- function(x, ..., ptype = NULL) {
-  n_vecs <- length(attr(x, "v"))
+  n_vecs <- length(x@x)
 
   # Cast mixed vector types to common type
-  if(n_vecs > 1) {
-    attr(x, "v") <- vec_cast_common(!!!attr(x, "v"), .to = ptype)
+  if (!is.null(ptype)) {
+    x@x <- lapply(x@x, vec_cast, to = ptype)
+  } else if (n_vecs > 1L) {
+    ptype <- vec_cast_common(!!!x@x)
   }
 
   # Apply ordering to attribute vectors
-  i_offset <- cumsum(c(0, lengths(attr(x, "v"))[-n_vecs]))
-  list_unchop(attr(x, "v"))[i_offset[field(x, "i")] + field(x, "x")]
+  vec_slice(vec_c(!!!x@x), x@i)
 }
 
 #' @export

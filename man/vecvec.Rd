@@ -4,7 +4,7 @@
 \alias{vecvec}
 \title{Create a new vector of vectors}
 \usage{
-vecvec(..., class = character())
+vecvec(...)
 }
 \arguments{
 \item{...}{Vectors to combine into a single vector without type coercion.}
@@ -23,6 +23,5 @@ vecvec(Sys.Date(), rnorm(3), letters)
 }
 \seealso{
 \code{\link[=unvecvec]{unvecvec()}} coerces the mixed-type vector into a single-typed
-regular vector. \code{\link[=new_vecvec]{new_vecvec()}} is a performant alternative that accepts a
-list of vectors rather than \code{...} (suitable for R packages).
+regular vector.
 }
