@@ -47,71 +47,35 @@ method(format, class_vecvec) <- function(x, ...) {
   vec_c(!!!lapply(x@x, format, ...), .ptype = character())[x@i]
 }
 
-
-restore_class <- function(x) {
-  setdiff(class(x), c("vecvec", "vctrs_rcrd", "vctrs_vctr"))
+# vctrs compatibility methods
+method(vec_proxy, class_vecvec) <- function(x, ...) x@i
+method(vec_restore, class_vecvec) <- function(x, to, ...) {
+  to[x]
 }
-
 #' @export
-vec_proxy.vecvec <- function(x, ...) {
-  # Somewhat inefficient, copy pointers to vectors by row
-  vctrs::data_frame(
-    x = field(x, "x"), v = attr(x, "v")[field(x, "i")]
-  )
+vec_ptype2_vecvec <- function(x, y, ...) {
+  if (!is_vecvec(x)) x <- vecvec(x)
+  if (!is_vecvec(y)) y <- vecvec(y)
+
+  x <- c(x, y)
+  x@i <- integer()
+  x
 }
-
-#' @export
-vec_proxy_equal.vecvec <- function(x, ...) {
-  # TODO - implement using a faster method (e.g. hashing)
-  n_vecs <- length(attr(x, "v"))
-  i_offset <- cumsum(c(0, lengths(attr(x, "v"))[-n_vecs]))
-  list_unchop(lapply(attr(x, "v"), as.list))[i_offset[field(x, "i")] + field(x, "x")]
+method(vec_ptype_full, class_vecvec) <- function(x, ...) {
+  if (length(x@x) != 1L) "vecvec" else paste0(vec_ptype_full(x@x[[1L]]), "*")
 }
-
-#' @export
-vec_restore.vecvec <- function(x, to, ..., i = NULL) {
-  # TODO: combine common groups
-  if(vec_is_empty(x)) return(new_vecvec())
-  v_grp <- vec_group_loc(x$v)
-  na_vec <- vapply(v_grp$key, is.null, logical(1L))
-  i_loc <- cumsum(!na_vec)
-  i_loc[na_vec] <- NA_integer_
-
-  res <- new_vecvec(
-    x = v_grp$key[!na_vec],
-    loc = list(
-      i = rep(i_loc, lengths(v_grp$loc))[order(list_unchop(v_grp$loc))],
-      x = x$x
-    ),
-    class = restore_class(to)
-  )
-  return(vecvec_compress(res))
+method(vec_ptype_abbr, class_vecvec) <- function(x, ...) {
+  if (length(x@x) != 1L) "vecvec" else paste0(vec_ptype_abbr(x@x[[1L]]), "*")
 }
-
-vec_cast_from_vecvec <- function(x, to, ...) {
-  out <- lapply(attr(x, "v"), vec_cast, to = to, ...)
-  list_unchop(.mapply(function(i, x) out[[i]][[x]], new_data_frame(x), NULL))
-}
-
 vec_cast_to_vecvec <- function(x, to, ...) {
-  new_vecvec(list(x), class = restore_class(to))
+  vecvec(x)
 }
-
-#' @export
-vec_ptype2.vecvec <- function(x, y, ...) {
-  compat_class <- intersect(restore_class(x), restore_class(y))
-  new_vecvec(class = compat_class)
+vec_cast_from_vecvec <- function(x, to, ...) {
+  unvecvec(x, ptype = to)
 }
+# Attribute methods
+method(length, class_vecvec) <- function(x) length(x@i)
 
-#' @export
-vec_ptype.vecvec <- function(x, ...) {
-  new_vecvec(class = restore_class(x))
-}
-
-#' @export
-vec_ptype2.vecvec.vecvec <- function(x, y, ...) {
-  compat_class <- intersect(restore_class(x), restore_class(y))
-  new_vecvec(class = compat_class)
 # Indexing methods
 method(`[`, class_vecvec) <- function(x, i, ...) {
   idx <- x@i[i]
