@@ -37,7 +37,7 @@ class_vecvec <- new_class(
     new_object(S7_object(), x = x, i = i)
   },
   validator = function(self) {
-    vec <- vapply(self@x, is.vector, logical(1L))
+    vec <- vapply(self@x, vec_is, logical(1L))
     if (!all(vec)) {
       "@x must be a list of primitive vectors"
     }
