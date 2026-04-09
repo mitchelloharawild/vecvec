@@ -12,11 +12,11 @@ test_that("Unary Ops", {
 test_that("Binary Ops with single segments", {
   expect_equal(
     as.numeric(vecvec(1:10) + 1:10),
-    seq(2, 20, by = 2)
+    seq(2,20, by = 2)
   )
   expect_equal(
     as.numeric(vecvec(1:10) + vecvec(1:10)),
-    seq(2, 20, by = 2)
+    seq(2,20, by = 2)
   )
 })
 
@@ -48,5 +48,34 @@ test_that("Binary Ops with non-overlapping segments", {
   expect_equal(
     as.numeric(vecvec1 + vecvec2),
     1:20 + 21:40
+  )
+})
+
+test_that("Binary Ops don't expand when arguments are invariable over replicates", {
+  x <- vecvec(1:10, as.double(11:20), 21:30)
+
+  result <- rep(x, each = 10) + 100L
+  result_vals <- as.numeric(result)
+
+  expected <- rep(c(1:10, 11:20, 21:30), each = 10) + 100
+  expect_equal(result_vals, expected)
+
+  expect_equal(
+    lengths(result@x),
+    c(10L, 10L, 10L)
+  )
+})
+
+test_that("Binary Ops expand when arguments differ across replicated indices", {
+  x <- vecvec(1:10, as.double(11:20), 21:30)
+
+  result <- rep(x, each = 10) + 1:300
+  result_vals <- as.numeric(result)
+
+  expected <- rep(c(1:10, 11:20, 21:30), each = 10) + 1:300
+  expect_equal(result_vals, expected)
+  expect_equal(
+    lengths(result@x),
+    c(100L, 100L, 100)
   )
 })
