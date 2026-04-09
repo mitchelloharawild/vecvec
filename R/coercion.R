@@ -1,3 +1,5 @@
+globalVariables("properties")
+
 # Casting methods
 method(convert, list(class_any, class_vecvec)) <- function(from, to, ...) {
   vecvec(from)
