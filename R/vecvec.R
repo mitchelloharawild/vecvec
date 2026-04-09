@@ -126,11 +126,14 @@ method(as.integer, class_vecvec) <- function(x) convert(x, class_integer)
 `as.double.vecvec::vecvec` <- function(x) convert(x, class_double)
 method(as.complex, class_vecvec) <- function(x) convert(x, class_complex)
 method(as.character, class_vecvec) <- function(x) convert(x, class_character)
-method(as.list, class_vecvec) <- function(x) convert(x, class_list)
 method(as.Date, class_vecvec) <- function(x) convert(x, class_Date)
 method(as.POSIXct, class_vecvec) <- function(x) convert(x, class_POSIXct)
 method(as.POSIXlt, class_vecvec) <- function(x) convert(x, class_POSIXlt)
 method(as.data.frame, class_vecvec) <- function(x) convert(x, class_data.frame)
+method(as.list, class_vecvec) <- function(x) {
+  x@x <- lapply(x@x, as.list)
+  unvecvec(x, ptype = list())
+}
 
 # Combining methods
 method(c, class_vecvec) <- function(..., recursive = FALSE) {
