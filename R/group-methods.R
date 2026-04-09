@@ -94,3 +94,25 @@
   # TODO - Detect if all listed prototypes are compatible, then collapse if flat
   x
 }
+
+#' @method Summary vecvec::vecvec
+#' @export
+`Summary.vecvec::vecvec` <- function(..., na.rm = FALSE) {
+  do.call(
+    .Generic,
+    c(
+      lapply(
+        rlang::list2(...),
+        function(x) {if (is_vecvec(x)) unvecvec(x) else x}
+      ),
+      list(na.rm = na.rm)
+    )
+  )
+}
+
+#' @method Complex vecvec::vecvec
+#' @export
+`Complex.vecvec::vecvec` <- function(z) {
+  z@x <- lapply(z@x, .Generic)
+  unvecvec(z)
+}
