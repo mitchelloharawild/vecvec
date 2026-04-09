@@ -25,6 +25,14 @@ method(vec_restore, class_vecvec) <- function(x, to, ...) {
     i = unlist(idx, recursive = FALSE)
   )
 }
+
+# Comparison proxies
+#' @export
+`vec_proxy_equal.vecvec::vecvec` <- function(x, ...) {
+  # This is inefficient, but seems necessary for vctrs machinery.
+  # Directly using `==` is faster as it applies on overlapping vctrs directly.
+  data_frame(x = as.list(x), na = ifelse(is.na(x), NA, FALSE))
+}
 # prototypes
 vec_ptype2_vecvec <- function(x, y, ...) {
   # return(class_vecvec())
