@@ -35,7 +35,7 @@ method(vec_restore, class_vecvec) <- function(x, to, ...) {
 }
 
 #' @export
-`vec_proxy_order.vecvec::vecvec` <- function(x, ...) {
+`vec_proxy_compare.vecvec::vecvec` <- function(x, ...) {
   xtfrm(x, ...)
 }
 
