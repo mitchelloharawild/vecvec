@@ -73,6 +73,7 @@ method(length, class_vecvec) <- function(x) length(x@i)
 
 # Indexing methods
 method(`[`, class_vecvec) <- function(x, i, ...) {
+  # TODO - try to make this faster by reducing loops
   idx <- x@i[i]
   len <- c(0L, cumsum(lengths(x@x[-length(x@x)])))
   pos <- findInterval(idx[!is.na(idx)], len, left.open = TRUE)
@@ -82,13 +83,12 @@ method(`[`, class_vecvec) <- function(x, i, ...) {
 
   # Prune unused vectors
   x@x[grp$key] <- .mapply(
-    # TODO - remove the sort()
     function(key, loc) x@x[[key]][sort(idx[loc]) - len[key], drop = FALSE],
     grp, NULL
   )
 
   # Update indices
-  x@i <- idx
+  x@i <- match(idx, sort(unique(idx)))
 
   x
 }
