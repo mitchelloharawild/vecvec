@@ -80,13 +80,13 @@ method(`[`, class_vecvec) <- function(x, i, ...) {
   # TODO - if grp has only one group we can return a simpler vecvec type
 
   # Prune unused vectors
-  x@x <- .mapply(
-    function(key, loc) x@x[[key]][idx[loc] - len[key], drop = FALSE],
+  x@x[grp$key] <- .mapply(
+    # TODO - remove the sort()
+    function(key, loc) x@x[[key]][sort(idx[loc]) - len[key], drop = FALSE],
     grp, NULL
   )
 
   # Update indices
-  idx[!is.na(pos)] <- unlist(grp$loc)
   x@i <- idx
 
   x
