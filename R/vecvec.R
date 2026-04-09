@@ -27,6 +27,7 @@ vecvec <- function(...) {
 #' @export
 unvecvec <- function(x, ..., ptype = NULL) {
   n_vecs <- length(x@x)
+  if ((len <- length(x)) == 0L) return(unlist(x@x))
 
   # Cast mixed vector types to common type
   if (!is.null(ptype)) {
