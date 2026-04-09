@@ -23,8 +23,8 @@
   # Binary operation (complete method on values)
   # Convert to vecvec before recycling so vctrs repeats @i rather than
   # expanding the underlying vector (which would defeat compression).
-  if (!is_vecvec(e1)) e1 <- vecvec(e1)
-  if (!is_vecvec(e2)) e2 <- vecvec(e2)
+  if (!is_vecvec(e1)) e1 <- vecvec(e1) else class_vv <- S7_class(e1)
+  if (!is_vecvec(e2)) e2 <- vecvec(e2) else class_vv <- S7_class(e2)
   args <- vec_recycle_common(e1 = e1, e2 = e2)
   n <- vec_size(args[[1L]])
 
@@ -76,7 +76,8 @@
     result_i[groups[[s]]] <- offsets[[s]] + computed[[s]]$val_idx
   }
 
-  res <- class_vecvec(result_x, result_i)
+  # TODO - use a method to identify if a better class can be returned.
+  res <- class_vv(result_x, result_i)
 
   if (bool_op) {
     res <- unvecvec(res)
