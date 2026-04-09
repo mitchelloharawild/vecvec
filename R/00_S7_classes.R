@@ -32,8 +32,7 @@ class_vecvec <- new_class(
     i = class_integer
   ),
   constructor = function(x = list(), i = seq_len(sum(lengths(x)))) {
-    # TODO - adjacent common vectors can be merged for efficiency
-    x
+    x <- vecvec_flatten_adj(x)
     i
     new_object(S7_object(), x = x, i = i)
   },
