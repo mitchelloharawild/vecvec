@@ -12,11 +12,11 @@ test_that("Unary Ops", {
 test_that("Binary Ops with single segments", {
   expect_equal(
     as.numeric(vecvec(1:10) + 1:10),
-    seq(2,20, by = 2)
+    seq(2, 20, by = 2)
   )
   expect_equal(
     as.numeric(vecvec(1:10) + vecvec(1:10)),
-    seq(2,20, by = 2)
+    seq(2, 20, by = 2)
   )
 })
 

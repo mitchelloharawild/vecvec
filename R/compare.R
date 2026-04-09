@@ -5,11 +5,13 @@ method(unique, class_vecvec) <- function(x, incomparables = FALSE, ...) {
 
 method(duplicated, class_vecvec) <- function(x, incomparables = FALSE, ...) {
   # Special case for empty vecvec vectors
-  if (length(x@x) == 0L) return(duplicated(x@i, incomparables, ...))
+  if (length(x@x) == 0L) {
+    return(duplicated(x@i, incomparables, ...))
+  }
 
   # Find common vector types
   ptypes <- lapply(x@x, `[`, 0L)
-  loc  <- lapply(
+  loc <- lapply(
     unique(ptypes),
     function(k) which(vapply(ptypes, identical, logical(1), k))
   )
@@ -34,10 +36,10 @@ method(duplicated, class_vecvec) <- function(x, incomparables = FALSE, ...) {
   unvecvec(x, ptype = logical())
 }
 
-method(anyDuplicated, class_vecvec)<- function(x, incomparables = FALSE, ...) {
+method(anyDuplicated, class_vecvec) <- function(x, incomparables = FALSE, ...) {
   # Find common vector types
   ptypes <- lapply(x@x, `[`, 0L)
-  loc  <- lapply(
+  loc <- lapply(
     unique(ptypes),
     function(k) which(vapply(ptypes, identical, logical(1), k))
   )
@@ -48,7 +50,7 @@ method(anyDuplicated, class_vecvec)<- function(x, incomparables = FALSE, ...) {
     idx <- loc[[i]]
     vec <- unlist(x@x[idx], recursive = FALSE)
     dup <- anyDuplicated(vec, incomparables = incomparables, ...)
-    if(dup > 0L)  {
+    if (dup > 0L) {
       # Find the actual index of the duplicated value
       len <- c(0L, cumsum(lengths(x@x[idx[-length(idx)]])))
       pos <- findInterval(dup, len, left.open = TRUE)

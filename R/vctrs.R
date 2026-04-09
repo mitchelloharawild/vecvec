@@ -6,7 +6,9 @@ method(vec_proxy, class_vecvec) <- function(x, ...) {
   data_frame(x = list(x@x), i = x@i)
 }
 method(vec_restore, class_vecvec) <- function(x, to, ...) {
-  if (vec_size(x) == 0L) return(class_vecvec())
+  if (vec_size(x) == 0L) {
+    return(class_vecvec())
+  }
 
   # Identify groups of vectors
   grp <- vec_group_loc(x$x)
@@ -16,7 +18,10 @@ method(vec_restore, class_vecvec) <- function(x, to, ...) {
   val <- lapply(grp$key, function(x) if (is.null(x)) list() else x)
 
   # Index offsets for each grp
-  len <- c(0L, cumsum(vapply(val[-length(val)], function(x) sum(lengths(x)), integer(1))))
+  len <- c(
+    0L,
+    cumsum(vapply(val[-length(val)], function(x) sum(lengths(x)), integer(1)))
+  )
   idx <- lapply(vec_seq_along(grp), function(i) x$i[grp$loc[[i]]] + len[i])
 
   # Restore the vecvec S7 object
@@ -39,8 +44,12 @@ method(vec_proxy_compare, class_vecvec) <- function(x, ...) {
 # prototypes
 vec_ptype2_vecvec <- function(x, y, ...) {
   # return(class_vecvec())
-  if (!is_vecvec(x)) x <- vecvec(x)
-  if (!is_vecvec(y)) y <- vecvec(y)
+  if (!is_vecvec(x)) {
+    x <- vecvec(x)
+  }
+  if (!is_vecvec(y)) {
+    y <- vecvec(y)
+  }
 
   x <- c(x, y)
   x@i <- integer()
@@ -66,4 +75,3 @@ method(vec_ptype_full, class_vecvec) <- function(x, ...) {
 method(vec_ptype_abbr, class_vecvec) <- function(x, ...) {
   if (length(x@x) != 1L) "vecvec" else paste0(vec_ptype_abbr(x@x[[1L]]), "*")
 }
-

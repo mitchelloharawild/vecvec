@@ -5,8 +5,8 @@ test_that("unvecvec", {
   )
 
   expect_equal(
-    unvecvec(x[c(3,7,4,5,6,2,1)]),
-    y[c(3,7,4,5,6,2,1)]
+    unvecvec(x[c(3, 7, 4, 5, 6, 2, 1)]),
+    y[c(3, 7, 4, 5, 6, 2, 1)]
   )
 })
 

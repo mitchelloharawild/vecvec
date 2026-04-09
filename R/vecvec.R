@@ -26,7 +26,9 @@ vecvec <- function(...) {
 #'
 #' @export
 unvecvec <- function(x, ..., ptype = NULL) {
-  if ((len <- length(x)) == 0L) return(unlist(x@x))
+  if ((len <- length(x)) == 0L) {
+    return(unlist(x@x))
+  }
 
   # Cast mixed vector types to common type
   if (is.null(ptype)) {
@@ -76,7 +78,9 @@ method(`[`, class_vecvec) <- function(x, i, ...) {
   idx <- x@i[i]
   not_na <- !is.na(idx)
 
-  if (!any(not_na)) return(class_vecvec(x = list(), i = idx))
+  if (!any(not_na)) {
+    return(class_vecvec(x = list(), i = idx))
+  }
 
   idx_nn <- idx[not_na]
 
@@ -90,11 +94,11 @@ method(`[`, class_vecvec) <- function(x, i, ...) {
   keep <- sort(unique(pos))
   all_kept <- length(keep) == length(x@x)
 
-  x@x        <- x@x[keep]
+  x@x <- x@x[keep]
   orig_starts <- orig_starts[keep]
 
-  new_slot  <- match(pos, keep)
-  local_idx <- idx_nn - orig_starts[new_slot]  # 1-based within slot
+  new_slot <- match(pos, keep)
+  local_idx <- idx_nn - orig_starts[new_slot] # 1-based within slot
 
   # Only deduplicate if `i` may contain repeats
   has_repeats <- anyDuplicated(idx_nn) > 0L
@@ -104,9 +108,9 @@ method(`[`, class_vecvec) <- function(x, i, ...) {
     groups <- split(seq_along(new_slot), new_slot)
 
     for (k in seq_along(x@x)) {
-      el  <- groups[[k]]
+      el <- groups[[k]]
       sel <- local_idx[el]
-      u   <- unique(sel)
+      u <- unique(sel)
       if (length(u) < slot_lengths[k]) {
         local_idx[el] <- match(sel, u)
         x@x[[k]] <- x@x[[k]][u]
@@ -114,8 +118,8 @@ method(`[`, class_vecvec) <- function(x, i, ...) {
     }
   }
 
-  new_starts    <- c(0L, cumsum(lengths(x@x[-length(x@x)])))
-  idx[not_na]   <- new_starts[new_slot] + local_idx
+  new_starts <- c(0L, cumsum(lengths(x@x[-length(x@x)])))
+  idx[not_na] <- new_starts[new_slot] + local_idx
   x@i <- idx
   x
 }
@@ -131,7 +135,8 @@ method(`[[`, class_vecvec) <- function(x, i, ...) {
 method(convert, list(class_any, class_vecvec)) <- function(from, to, ...) {
   vecvec(from)
 }
-method(convert, 
+method(
+  convert,
   list(
     class_vecvec,
     new_union(
@@ -177,10 +182,14 @@ method(c, class_vecvec) <- function(..., recursive = FALSE) {
   ))
 
   x <- lapply(dots, function(x) x@x)
-  i <- c(dots[[1L]]@i, .mapply(
-    function(x, j) x@i + j,
-    list(x = dots[-1L], j = i_offsets), NULL
-  ))
+  i <- c(
+    dots[[1L]]@i,
+    .mapply(
+      function(x, j) x@i + j,
+      list(x = dots[-1L], j = i_offsets),
+      NULL
+    )
+  )
 
   class_vecvec(
     x = unlist(x, recursive = FALSE),
