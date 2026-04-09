@@ -36,7 +36,8 @@ unvecvec <- function(x, ..., ptype = NULL) {
 
   # Construct output single-typed vector
   res <- vec_init(ptype, n = len)
-  res[x@i[!is.na(x@i)]] <- vec_c(!!!x@x)
+  pos <- !is.na(x@i)
+  res[pos] <- vec_c(!!!x@x)[x@i[pos]]
   res
 }
 
