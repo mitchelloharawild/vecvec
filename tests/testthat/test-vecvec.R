@@ -28,3 +28,11 @@ test_that("unvecvec missing values", {
   )
 })
 
+
+test_that("Replicating vectors", {
+  rand <- rnorm(5, sd = 5)
+  expect_equal(
+    as.numeric(rep(vecvec(1:10, rand), 5)),
+    rep(c(1:10, rand), 5)
+  )
+})
