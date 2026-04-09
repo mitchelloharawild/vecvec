@@ -7,7 +7,7 @@ method(vec_proxy, class_vecvec) <- function(x, ...) {
 }
 method(vec_restore, class_vecvec) <- function(x, to, ...) {
   if (vec_size(x) == 0L) {
-    return(S7_class(x)())
+    return(S7_class(to)())
   }
 
   # Identify groups of vectors
