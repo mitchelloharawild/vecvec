@@ -26,18 +26,18 @@ vecvec <- function(...) {
 #'
 #' @export
 unvecvec <- function(x, ..., ptype = NULL) {
-  n_vecs <- length(x@x)
   if ((len <- length(x)) == 0L) return(unlist(x@x))
 
   # Cast mixed vector types to common type
-  if (!is.null(ptype)) {
-    x@x <- lapply(x@x, vec_cast, to = ptype)
-  } else if (n_vecs > 1L) {
-    ptype <- vec_cast_common(!!!x@x)
+  if (is.null(ptype)) {
+    ptype <- vec_ptype_common(!!!x@x) %||% logical()
   }
+  x@x <- lapply(x@x, vec_cast, to = ptype)
 
-  # Apply ordering to attribute vectors
-  vec_slice(vec_c(!!!x@x), x@i)
+  # Construct output single-typed vector
+  res <- vec_init(ptype, n = len)
+  res[x@i[!is.na(x@i)]] <- vec_c(!!!x@x)
+  res
 }
 
 # Class accessors
