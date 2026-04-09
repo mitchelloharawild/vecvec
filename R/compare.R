@@ -1,3 +1,8 @@
+method(unique, class_vecvec) <- function(x, incomparables = FALSE, ...) {
+  # x@i <- unique(x@i)
+  x[!duplicated(x)]
+}
+
 method(duplicated, class_vecvec) <- function(x, incomparables = FALSE, ...) {
   # Special case for empty vecvec vectors
   if (length(x@x) == 0L) return(duplicated(x@i, incomparables, ...))
