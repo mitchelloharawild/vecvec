@@ -4,10 +4,10 @@ method(duplicated, class_vecvec) <- function(x, incomparables = FALSE, ...) {
 
   # Find common vector types
   ptypes <- lapply(x@x, `[`, 0L)
-
-  # Analagous to vctrs::vec_group_loc
-  key <- unique(ptypes)
-  loc  <- lapply(key, function(k) which(vapply(ptypes, identical, logical(1), k)))
+  loc  <- lapply(
+    unique(ptypes),
+    function(k) which(vapply(ptypes, identical, logical(1), k))
+  )
 
   # Identify duplicated values within common vector types
   dup <- lapply(loc, function(i) {
