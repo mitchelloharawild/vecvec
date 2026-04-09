@@ -3,6 +3,7 @@
 S3method(Math,"vecvec::vecvec")
 S3method(Ops,"vecvec::vecvec")
 S3method(as.double,"vecvec::vecvec")
+S3method(rep,"vecvec::vecvec")
 S3method(vec_cast,"vecvec::vecvec.vecvec::vecvec")
 S3method(vec_proxy_compare,"vecvec::vecvec")
 S3method(vec_proxy_equal,"vecvec::vecvec")
