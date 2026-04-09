@@ -95,7 +95,7 @@ method(`[`, class_vecvec) <- function(x, i, ...) {
 method(`[[`, class_vecvec) <- function(x, i, ...) {
   idx <- x@i[i]
   len <- c(0L, cumsum(lengths(x@x[-length(x@x)])))
-  pos <- findInterval(idx, len)
+  pos <- findInterval(idx, len, left.open = TRUE)
   x@x[[pos]][[idx - len[pos]]]
 }
 
