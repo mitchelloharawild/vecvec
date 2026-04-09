@@ -27,15 +27,12 @@ method(vec_restore, class_vecvec) <- function(x, to, ...) {
 }
 
 # Comparison proxies
-#' @export
-`vec_proxy_equal.vecvec::vecvec` <- function(x, ...) {
+method(vec_proxy_equal, class_vecvec) <- function(x, ...) {
   # This is inefficient, but seems necessary for vctrs machinery.
   # Directly using `==` is faster as it applies on overlapping vctrs directly.
   data_frame(x = as.list(x), na = ifelse(is.na(x), NA, FALSE))
 }
-
-#' @export
-`vec_proxy_compare.vecvec::vecvec` <- function(x, ...) {
+method(vec_proxy_compare, class_vecvec) <- function(x, ...) {
   xtfrm(x, ...)
 }
 
