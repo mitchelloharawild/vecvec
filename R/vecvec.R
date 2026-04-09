@@ -73,25 +73,53 @@ method(length, class_vecvec) <- function(x) length(x@i)
 
 # Indexing methods
 method(`[`, class_vecvec) <- function(x, i, ...) {
-  # TODO - try to make this faster by reducing loops
   idx <- x@i[i]
-  len <- c(0L, cumsum(lengths(x@x[-length(x@x)])))
-  pos <- findInterval(idx[!is.na(idx)], len, left.open = TRUE)
-  grp <- vec_group_loc(pos)
-  
-  # TODO - if grp has only one group we can return a simpler vecvec type
+  not_na <- !is.na(idx)
 
-  # Prune unused vectors
-  x@x[grp$key] <- .mapply(
-    function(key, loc) x@x[[key]][sort(idx[loc]) - len[key], drop = FALSE],
-    grp, NULL
-  )
+  if (!any(not_na)) return(class_vecvec(x = list(), i = idx))
 
-  # Update indices
-  x@i <- match(idx, sort(unique(idx)))
+  idx_nn <- idx[not_na]
 
+  # Slot start positions in original x@x
+  orig_starts <- c(0L, cumsum(lengths(x@x[-length(x@x)])))
+
+  # Which original slot each selected element belongs to
+  pos <- findInterval(idx_nn, orig_starts, left.open = TRUE)
+
+  # Drop entirely unreferenced slots
+  keep <- sort(unique(pos))
+  all_kept <- length(keep) == length(x@x)
+
+  x@x        <- x@x[keep]
+  orig_starts <- orig_starts[keep]
+
+  new_slot  <- match(pos, keep)
+  local_idx <- idx_nn - orig_starts[new_slot]  # 1-based within slot
+
+  # Only deduplicate if `i` may contain repeats
+  has_repeats <- anyDuplicated(idx_nn) > 0L
+
+  if (has_repeats) {
+    slot_lengths <- lengths(x@x)
+    groups <- split(seq_along(new_slot), new_slot)
+
+    for (k in seq_along(x@x)) {
+      el  <- groups[[k]]
+      sel <- local_idx[el]
+      u   <- unique(sel)
+      if (length(u) < slot_lengths[k]) {
+        local_idx[el] <- match(sel, u)
+        x@x[[k]] <- x@x[[k]][u]
+      }
+    }
+  }
+
+  new_starts    <- c(0L, cumsum(lengths(x@x[-length(x@x)])))
+  idx[not_na]   <- new_starts[new_slot] + local_idx
+  x@i <- idx
   x
 }
+
 method(`[[`, class_vecvec) <- function(x, i, ...) {
   idx <- x@i[i]
   len <- c(0L, cumsum(lengths(x@x[-length(x@x)])))
