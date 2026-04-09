@@ -66,32 +66,7 @@ method(format, class_vecvec) <- function(x, ...) {
   vec_c(!!!lapply(x@x, format, ...), .ptype = character())[x@i]
 }
 
-# vctrs compatibility methods
-method(vec_proxy, class_vecvec) <- function(x, ...) x@i
-method(vec_restore, class_vecvec) <- function(x, to, ...) {
-  to[x]
-}
-#' @export
-vec_ptype2_vecvec <- function(x, y, ...) {
-  if (!is_vecvec(x)) x <- vecvec(x)
-  if (!is_vecvec(y)) y <- vecvec(y)
 
-  x <- c(x, y)
-  x@i <- integer()
-  x
-}
-method(vec_ptype_full, class_vecvec) <- function(x, ...) {
-  if (length(x@x) != 1L) "vecvec" else paste0(vec_ptype_full(x@x[[1L]]), "*")
-}
-method(vec_ptype_abbr, class_vecvec) <- function(x, ...) {
-  if (length(x@x) != 1L) "vecvec" else paste0(vec_ptype_abbr(x@x[[1L]]), "*")
-}
-vec_cast_to_vecvec <- function(x, to, ...) {
-  vecvec(x)
-}
-vec_cast_from_vecvec <- function(x, to, ...) {
-  unvecvec(x, ptype = to)
-}
 # Attribute methods
 method(length, class_vecvec) <- function(x) length(x@i)
 
