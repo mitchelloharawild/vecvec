@@ -2,26 +2,52 @@
 % Please edit documentation in R/vecvec.R
 \name{vecvec}
 \alias{vecvec}
-\title{Create a new vector of vectors}
+\title{Create a vector of vectors}
 \usage{
 vecvec(...)
 }
 \arguments{
-\item{...}{Vectors to combine into a single vector without type coercion.}
-
-\item{class}{Name of subclass.}
+\item{...}{Vectors to combine. Each vector is stored as a separate typed
+slot; no type coercion is performed.}
 }
 \value{
-A vector of vectors of class \code{vecvec}.
+A \code{vecvec} object whose length equals the total number of elements
+across all input vectors.
 }
 \description{
-Create a new vector of vectors
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
+
+A \code{vecvec} is a vector that holds elements of different types without
+coercing them to a common type. Unlike a list of vectors, a \code{vecvec} behaves
+as a flat vector (hence vector of vectors). This means that you can
+operations (such as indexing, arithmetic, and statistics) apply across all
+elements of a \code{vecvec} as if they were combined into a single vector.
+
+Mixed-type vectors can be useful if you need to store heterogeneous data in a
+vector-like structure. In most cases, I believe this is bad practice for data
+analytics, but this could be useful for tidying up messy data. The most
+valuable use case for vecvec is as a data structure for mixed-type semantic
+vectors. This package is used by \href{https://pkg.mitchelloharawild.com/mixtime/}{mixtime}
+and \href{https://pkg.mitchelloharawild.com/distributional/}{distributional} to
+create vectors of time with different chronons and distributions with
+different shapes.
+
+To convert a \code{vecvec} back to a plain typed vector, use \code{\link[=unvecvec]{unvecvec()}}, which
+casts all elements to a common type via \code{\link[vctrs:vec_cast]{vctrs::vec_cast()}}.
 }
 \examples{
-vecvec(Sys.Date(), rnorm(3), letters)
+# Mixed types are preserved without coercion
+vv <- vecvec(Sys.Date(), rnorm(3), letters)
+vv
+
+# .[i] Indexing works like a flat vector
+vv[c(1L, 3L, 7L)]
+
+# .[[i]] drops to the original vector type
+vv[[2L]]
 
 }
 \seealso{
-\code{\link[=unvecvec]{unvecvec()}} coerces the mixed-type vector into a single-typed
-regular vector.
+\code{\link[=unvecvec]{unvecvec()}} to coerce a \code{vecvec} to a single-typed vector;
+\code{\link[=is_vecvec]{is_vecvec()}} to test whether an object is a \code{vecvec}.
 }

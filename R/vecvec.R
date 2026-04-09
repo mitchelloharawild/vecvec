@@ -1,15 +1,46 @@
-#' Create a new vector of vectors
+#' Create a vector of vectors
 #'
-#' @param ... Vectors to combine into a single vector without type coercion.
-#' @param class Name of subclass.
+#' @description
+#' 
+#' `r lifecycle::badge('stable')`
 #'
-#' @return A vector of vectors of class `vecvec`.
+#' A `vecvec` is a vector that holds elements of different types without
+#' coercing them to a common type. Unlike a list of vectors, a `vecvec` behaves 
+#' as a flat vector (hence vector of vectors). This means that you can 
+#' operations (such as indexing, arithmetic, and statistics) apply across all
+#' elements of a `vecvec` as if they were combined into a single vector.
 #'
-#' @seealso [unvecvec()] coerces the mixed-type vector into a single-typed
-#' regular vector.
+#' Mixed-type vectors can be useful if you need to store heterogeneous data in a
+#' vector-like structure. In most cases, I believe this is bad practice for data
+#' analytics, but this could be useful for tidying up messy data. The most
+#' valuable use case for vecvec is as a data structure for mixed-type semantic
+#' vectors. This package is used by [mixtime](https://pkg.mitchelloharawild.com/mixtime/)
+#' and [distributional](https://pkg.mitchelloharawild.com/distributional/) to 
+#' create vectors of time with different chronons and distributions with 
+#' different shapes.
+#'
+#' To convert a `vecvec` back to a plain typed vector, use [unvecvec()], which
+#' casts all elements to a common type via [vctrs::vec_cast()].
+#'
+#' @param ... Vectors to combine. Each vector is stored as a separate typed
+#'   slot; no type coercion is performed.
+#'
+#' @return A `vecvec` object whose length equals the total number of elements
+#'   across all input vectors.
+#'
+#' @seealso [unvecvec()] to coerce a `vecvec` to a single-typed vector;
+#'   [is_vecvec()] to test whether an object is a `vecvec`.
 #'
 #' @examples
-#' vecvec(Sys.Date(), rnorm(3), letters)
+#' # Mixed types are preserved without coercion
+#' vv <- vecvec(Sys.Date(), rnorm(3), letters)
+#' vv
+#'
+#' # .[i] Indexing works like a flat vector
+#' vv[c(1L, 3L, 7L)]
+#' 
+#' # .[[i]] drops to the original vector type
+#' vv[[2L]]
 #'
 #' @export
 vecvec <- function(...) {
@@ -19,21 +50,41 @@ vecvec <- function(...) {
 #' Coerce a vector of vectors to a single typed vector
 #'
 #' @description
+#' 
 #' `r lifecycle::badge('stable')`
 #'
-#' Extracts the elements of a `vecvec` and casts them to a common type,
-#' returning a plain vector of that type.
+#' Flattens a `vecvec` into a plain R vector by casting all elements to a
+#' common type. This is the inverse of [vecvec()].
+#'
+#' Type resolution follows vctrs coercion rules: when `ptype` is `NULL` the
+#' common type is determined automatically from the slots of `x` via
+#' [vctrs::vec_ptype_common()]. If no common type can be found (e.g. all slots
+#' are empty), the result falls back to `logical()`.
 #'
 #' @param x A `vecvec` object.
-#' @param ptype A prototype specifying the desired output type. If `NULL`
-#'   (the default), the common type is inferred from the elements of `x`
-#'   using [vctrs::vec_ptype_common()], falling back to `logical()` when
-#'   no common type can be determined.
+#' @param ptype A prototype specifying the desired output type, e.g.
+#'   `character()` or `numeric()`. If `NULL` (the default), the common type is
+#'   inferred from the elements of `x` using [vctrs::vec_ptype_common()],
+#'   falling back to `logical()` when no common type can be determined. Passing
+#'   an explicit `ptype` is useful when you need a guaranteed output type
+#'   regardless of what `x` contains, or when automatic inference would pick an
+#'   undesirable type.
 #'
-#' @return A vector of the same length as `x`, with all elements cast to
-#'   a common type.
+#' @return A vector of length `length(x)` and type `ptype` (or the inferred
+#'   common type when `ptype = NULL`). Positions corresponding to `NA` indices
+#'   in the underlying `vecvec` structure are filled with `NA`.
 #'
-#' @seealso [vecvec()] to create a `vecvec` object.
+#' @seealso [vecvec()] to create a `vecvec`; [vctrs::vec_ptype_common()] for
+#'   the type inference rules; [vctrs::vec_cast()] for the casting rules.
+#'
+#' @examples
+#' vv <- vecvec(1:3, c(4.5, 5.5))
+#'
+#' # Automatic type inference: integer + double -> double
+#' unvecvec(vv)
+#'
+#' # Force a specific output type
+#' unvecvec(vv, ptype = character())
 #'
 #' @export
 unvecvec <- function(x, ptype = NULL) {
