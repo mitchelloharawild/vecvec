@@ -33,6 +33,12 @@ method(vec_restore, class_vecvec) <- function(x, to, ...) {
   # Directly using `==` is faster as it applies on overlapping vctrs directly.
   data_frame(x = as.list(x), na = ifelse(is.na(x), NA, FALSE))
 }
+
+#' @export
+`vec_proxy_order.vecvec::vecvec` <- function(x, ...) {
+  xtfrm(x, ...)
+}
+
 # prototypes
 vec_ptype2_vecvec <- function(x, y, ...) {
   # return(class_vecvec())
