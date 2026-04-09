@@ -29,12 +29,10 @@ method(as.character, class_vecvec) <- function(x) convert(x, class_character)
 method(as.Date, class_vecvec) <- function(x) convert(x, class_Date)
 method(as.data.frame, class_vecvec) <- function(x) convert(x, class_data.frame)
 method(as.POSIXct, class_vecvec) <- function(x, tz = "", ...) {
-  x@x <- lapply(x@x, as.POSIXct, tz = tz, ...)
-  unvecvec(x, ptype = class_POSIXct)
+  unvecvec(x, ptype = class_POSIXct$constructor(tz = tz))
 }
 method(as.POSIXlt, class_vecvec) <- function(x, tz = "", ...) {
-  x@x <- lapply(x@x, as.POSIXlt, tz = tz, ...)
-  unvecvec(x, ptype = class_POSIXlt)
+  unvecvec(x, ptype = class_POSIXlt$constructor(tz = tz))
 }
 method(as.list, class_vecvec) <- function(x) {
   x@x <- lapply(x@x, as.list)
