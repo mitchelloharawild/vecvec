@@ -12,11 +12,11 @@ method(is.na, class_vecvec) <- function(x) {
   # Missing values in vecvec indices or values are both considered NA.
   is.na(x@i) | unvecvec(vecvec_apply(x, is.na), ptype = logical(1L))
 }
-method(anyNA, class_vecvec) <- function(x) {
+method(anyNA, class_vecvec) <- function(x, recursive = FALSE) {
   if (anyNA(x@i)) return(TRUE)
   
   for (v in x@x) {
-    if (anyNA(v)) return(TRUE)
+    if (anyNA(v, recursive = recursive)) return(TRUE)
   }
 
   FALSE
