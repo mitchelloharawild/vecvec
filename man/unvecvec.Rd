@@ -2,16 +2,48 @@
 % Please edit documentation in R/vecvec.R
 \name{unvecvec}
 \alias{unvecvec}
-\title{Obtain a singular common vector type from a vector of vectors}
+\title{Coerce a vector of vectors to a single typed vector}
 \usage{
-unvecvec(x, ..., ptype = NULL)
+unvecvec(x, ptype = NULL)
 }
 \arguments{
-\item{x}{A vecvec to unvecvec (convert to its underlying vector type)}
+\item{x}{A \code{vecvec} object.}
+
+\item{ptype}{A prototype specifying the desired output type, e.g.
+\code{character()} or \code{numeric()}. If \code{NULL} (the default), the common type is
+inferred from the elements of \code{x} using \code{\link[vctrs:vec_ptype]{vctrs::vec_ptype_common()}},
+falling back to \code{logical()} when no common type can be determined. Passing
+an explicit \code{ptype} is useful when you need a guaranteed output type
+regardless of what \code{x} contains, or when automatic inference would pick an
+undesirable type.}
 }
 \value{
-A simple vector, all containing the same type of data.
+A vector of length \code{length(x)} and type \code{ptype} (or the inferred
+common type when \code{ptype = NULL}). Positions corresponding to \code{NA} indices
+in the underlying \code{vecvec} structure are filled with \code{NA}.
 }
 \description{
-\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
+
+Flattens a \code{vecvec} into a plain R vector by casting all elements to a
+common type. This is the inverse of \code{\link[=vecvec]{vecvec()}}.
+
+Type resolution follows vctrs coercion rules: when \code{ptype} is \code{NULL} the
+common type is determined automatically from the slots of \code{x} via
+\code{\link[vctrs:vec_ptype]{vctrs::vec_ptype_common()}}. If no common type can be found (e.g. all slots
+are empty), the result falls back to \code{logical()}.
+}
+\examples{
+vv <- vecvec(1:3, c(4.5, 5.5))
+
+# Automatic type inference: integer + double -> double
+unvecvec(vv)
+
+# Force a specific output type
+unvecvec(vv, ptype = character())
+
+}
+\seealso{
+\code{\link[=vecvec]{vecvec()}} to create a \code{vecvec}; \code{\link[vctrs:vec_ptype]{vctrs::vec_ptype_common()}} for
+the type inference rules; \code{\link[vctrs:vec_cast]{vctrs::vec_cast()}} for the casting rules.
 }

@@ -16,16 +16,27 @@ vecvec <- function(...) {
   class_vecvec(x = rlang::list2(...))
 }
 
-#' Obtain a singular common vector type from a vector of vectors
+#' Coerce a vector of vectors to a single typed vector
 #'
-#' `r lifecycle::badge('experimental')`
+#' @description
+#' `r lifecycle::badge('stable')`
 #'
-#' @param x A vecvec to unvecvec (convert to its underlying vector type)
+#' Extracts the elements of a `vecvec` and casts them to a common type,
+#' returning a plain vector of that type.
 #'
-#' @return A simple vector, all containing the same type of data.
+#' @param x A `vecvec` object.
+#' @param ptype A prototype specifying the desired output type. If `NULL`
+#'   (the default), the common type is inferred from the elements of `x`
+#'   using [vctrs::vec_ptype_common()], falling back to `logical()` when
+#'   no common type can be determined.
+#'
+#' @return A vector of the same length as `x`, with all elements cast to
+#'   a common type.
+#'
+#' @seealso [vecvec()] to create a `vecvec` object.
 #'
 #' @export
-unvecvec <- function(x, ..., ptype = NULL) {
+unvecvec <- function(x, ptype = NULL) {
   if ((len <- length(x)) == 0L) {
     return(unlist(x@x))
   }
