@@ -1,12 +1,21 @@
-#' Construct a vector of vectors
+#' S7 class for vecvec
 #'
-#' new_vecvec() constructs a new vector of vectors from a list of vectors. It is meant to be performant, and does not check the inputs for correctness in any way. It is only safe to use after a call to df_list(), which collects and validates the columns used to construct the data frame.
-#'
-#' @param x An unnamed list of arbitrary vectors.
-#' @param loc A named list of value locations, with `i` identifying the vector index and `x` identifying the value index. By default, the order of appearance in `x` will be used.
-#' @param class Name of subclass.
-#'
-#' @return A vector of vectors of class `vecvec`.
+#' `class_vecvec()` constructs a new vecvec object from a list of vectors. It is
+#' designed to be performant with minimal checks on the inputs. Direct use of
+#' `class_vecvec()` is useful for developers, but for users it is recommended to
+#' use [vecvec()] to create vecvec objects.
+#' 
+#' @param x An unnamed list of arbitrary vectors. The vectors can be of 
+#'   different types and lengths, but they must all be vectors (according to
+#'   [vctrs::vec_is]). Adjacent vectors of the same type will be combined 
+#'   together into a single vector.
+#' @param i A vector of integers specifying the location of each element in `x` 
+#'   as if they were combined in order. The values in `i` must be between 1 and
+#'   the total number of elements across all vectors in `x`, and can contain 
+#'   duplicates. If not provided, it defaults to a sequence from 1 to the total 
+#'   number of elements across all vectors in `x`.
+#' 
+#' @return A vector of vectors of S7 object of class `class_vecvec`.
 #'
 #' @examples
 #' # Create a vecvec prototype

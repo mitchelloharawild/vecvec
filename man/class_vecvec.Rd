@@ -2,22 +2,30 @@
 % Please edit documentation in R/00_S7_classes.R
 \name{class_vecvec}
 \alias{class_vecvec}
-\title{Construct a vector of vectors}
+\title{S7 class for vecvec}
 \usage{
 class_vecvec(x = list(), i = seq_len(sum(lengths(x))))
 }
 \arguments{
-\item{x}{An unnamed list of arbitrary vectors.}
+\item{x}{An unnamed list of arbitrary vectors. The vectors can be of
+different types and lengths, but they must all be vectors (according to
+\link[vctrs:vec_assert]{vctrs::vec_is}). Adjacent vectors of the same type will be combined
+together into a single vector.}
 
-\item{loc}{A named list of value locations, with \code{i} identifying the vector index and \code{x} identifying the value index. By default, the order of appearance in \code{x} will be used.}
-
-\item{class}{Name of subclass.}
+\item{i}{A vector of integers specifying the location of each element in \code{x}
+as if they were combined in order. The values in \code{i} must be between 1 and
+the total number of elements across all vectors in \code{x}, and can contain
+duplicates. If not provided, it defaults to a sequence from 1 to the total
+number of elements across all vectors in \code{x}.}
 }
 \value{
-A vector of vectors of class \code{vecvec}.
+A vector of vectors of S7 object of class \code{class_vecvec}.
 }
 \description{
-new_vecvec() constructs a new vector of vectors from a list of vectors. It is meant to be performant, and does not check the inputs for correctness in any way. It is only safe to use after a call to df_list(), which collects and validates the columns used to construct the data frame.
+\code{class_vecvec()} constructs a new vecvec object from a list of vectors. It is
+designed to be performant with minimal checks on the inputs. Direct use of
+\code{class_vecvec()} is useful for developers, but for users it is recommended to
+use \code{\link[=vecvec]{vecvec()}} to create vecvec objects.
 }
 \examples{
 # Create a vecvec prototype
