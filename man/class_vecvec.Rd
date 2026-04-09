@@ -21,18 +21,15 @@ new_vecvec() constructs a new vector of vectors from a list of vectors. It is me
 }
 \examples{
 # Create a vecvec prototype
-new_vecvec()
+class_vecvec()
 
 # Construct a vecvec from a list of vectors
-new_vecvec(list(letters, rnorm(10)))
+class_vecvec(list(letters, rnorm(10)))
 
 # Fully specify a vecvec with locations
-new_vecvec(
+class_vecvec(
   x = list(letters, rnorm(10)),
-  loc = list(
-    i = c(rep(1L, 3), rep(2L, 5), rep(1L, 23), rep(2L, 5)),
-    x = c(1:3, 1:5, 26:4, 6:10)
-  )
+  i = c(1:3, 27:31, 26:4, 32:36)
 )
 
 }
