@@ -7,7 +7,7 @@ method(vec_proxy, class_vecvec) <- function(x, ...) {
 }
 method(vec_restore, class_vecvec) <- function(x, to, ...) {
   if (vec_size(x) == 0L) {
-    return(class_vecvec())
+    return(S7_class(x)())
   }
 
   # Identify groups of vectors
@@ -25,7 +25,7 @@ method(vec_restore, class_vecvec) <- function(x, to, ...) {
   idx <- lapply(vec_seq_along(grp), function(i) x$i[grp$loc[[i]]] + len[i])
 
   # Restore the vecvec S7 object
-  class_vecvec(
+  S7_class(to)(
     x = unlist(val, recursive = FALSE),
     i = unlist(idx, recursive = FALSE)
   )
@@ -43,7 +43,6 @@ method(vec_proxy_compare, class_vecvec) <- function(x, ...) {
 
 # prototypes
 vec_ptype2_vecvec <- function(x, y, ...) {
-  # return(class_vecvec())
   if (!is_vecvec(x)) {
     x <- vecvec(x)
   }

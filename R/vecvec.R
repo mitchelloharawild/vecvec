@@ -79,7 +79,7 @@ method(`[`, class_vecvec) <- function(x, i, ...) {
   not_na <- !is.na(idx)
 
   if (!any(not_na)) {
-    return(class_vecvec(x = list(), i = idx))
+    return(S7_class(x)(x = list(), i = idx))
   }
 
   idx_nn <- idx[not_na]
@@ -154,7 +154,7 @@ method(c, class_vecvec) <- function(..., recursive = FALSE) {
     )
   )
 
-  class_vecvec(
+  S7_class(..1)(
     x = unlist(x, recursive = FALSE),
     i = unlist(i, recursive = FALSE)
   )
