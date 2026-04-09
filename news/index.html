@@ -49,6 +49,26 @@
 
     <div class="section level2">
 <h2 class="page-header" data-toc-text="development version" id="vecvec-development-version">vecvec (development version)<a class="anchor" aria-label="anchor" href="#vecvec-development-version"></a></h2>
+<p>The <code>vecvec</code> class has been reimplemented using S7, replacing the previous vctrs implementation. Existing code using <code>vecvec</code> objects should continue to work.</p>
+<div class="section level3">
+<h3 id="breaking-changes-development-version">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-development-version"></a></h3>
+<ul><li>Removed <code>new_vecvec()</code>, which is replaced by <code>class_vecvec</code> for S7 consistency.</li>
+<li>Extension packages building new vecvec data types will need to use S7 classes that have the parent class <code>class_vecvec</code>.</li>
+<li>The internal data structure for <code>vecvec</code> objects has been overhauled. In practice these internal indices should not be used by users or developers, as the structure can change in the future to accommodate faster variants for special cases (<a href="https://github.com/mitchelloharawild/vecvec/issues/7" class="external-link">#7</a>).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="new-features-development-version">New features<a class="anchor" aria-label="anchor" href="#new-features-development-version"></a></h3>
+<ul><li>
+<code><a href="../reference/is_vecvec.html">is_vecvec()</a></code> tests whether an object is a <code>vecvec</code>.</li>
+<li>
+<code>class_vecvec</code> S7 class and constructor for vecvec objects.</li>
+<li>Added <code>vctrs</code> methods for backwards compatibility and vctrs interoperability.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="improvements-development-version">Improvements<a class="anchor" aria-label="anchor" href="#improvements-development-version"></a></h3>
+<ul><li>Substantially faster performance and reduced object size</li>
+<li>Adjacent compatible vectors are now automatically flattened when constructing or modifying a <code>vecvec</code>, reducing fragmentation.</li>
+</ul></div>
 </div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="0.2.1" id="vecvec-021">vecvec 0.2.1<small>2026-04-08</small><a class="anchor" aria-label="anchor" href="#vecvec-021"></a></h2>
@@ -82,7 +102,7 @@
 <div class="section level3">
 <h3 id="new-features-0-1-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-1-0"></a></h3>
 <ul><li>
-<code><a href="../reference/new_vecvec.html">new_vecvec()</a></code> and <code><a href="../reference/vecvec.html">vecvec()</a></code> class constructors.</li>
+<code>new_vecvec()</code> and <code><a href="../reference/vecvec.html">vecvec()</a></code> class constructors.</li>
 <li>
 <code><a href="../reference/unvecvec.html">unvecvec()</a></code> class deconstructor to reduce back to atomic vectors.</li>
 <li>

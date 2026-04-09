@@ -53,7 +53,7 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">vecvec</span><span class="op">(</span><span class="va">...</span>, class <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">vecvec</span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -75,15 +75,14 @@
     <div id="see-also">
     <h2>See also</h2>
     <div class="dont-index"><p><code><a href="unvecvec.html">unvecvec()</a></code> coerces the mixed-type vector into a single-typed
-regular vector. <code><a href="new_vecvec.html">new_vecvec()</a></code> is a performant alternative that accepts a
-list of vectors rather than <code>...</code> (suitable for R packages).</p></div>
+regular vector.</p></div>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">vecvec</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.Date</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span>, <span class="va">letters</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;vecvec[30]&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 2026-04-09  0.4681544  0.3629513 -1.3045435 a          b         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 2026-04-09 -1.4000435  0.2553171 -2.4372636 a          b         </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  [7] c          d          e          f          g          h         </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [13] i          j          k          l          m          n         </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [19] o          p          q          r          s          t         </span>
