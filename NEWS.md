@@ -1,3 +1,30 @@
+# vecvec (development version)
+
+The `vecvec` class has been reimplemented using S7, replacing the previous vctrs
+implementation. Existing code using `vecvec` objects should continue to work.
+
+## Breaking changes
+
+* Removed `new_vecvec()`, which is replaced by `class_vecvec` for S7 consistency.
+* Extension packages building new vecvec data types will need to use S7 classes
+  that have the parent class `class_vecvec`.
+* The internal data structure for `vecvec` objects has been overhauled. In
+  practice these internal indices should not be used by users or developers,
+  as the structure can change in the future to accommodate faster variants for
+  special cases (#7).
+
+## New features
+
+* `is_vecvec()` tests whether an object is a `vecvec`.
+* `class_vecvec` S7 class and constructor for vecvec objects.
+* Added `vctrs` methods for backwards compatibility and vctrs interoperability.
+
+## Improvements
+
+* Substantially faster performance and reduced object size
+* Adjacent compatible vectors are now automatically flattened when constructing
+  or modifying a `vecvec`, reducing fragmentation.
+
 # vecvec 0.2.1
 
 ## Bug fixes
