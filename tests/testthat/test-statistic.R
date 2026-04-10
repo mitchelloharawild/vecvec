@@ -1,5 +1,5 @@
 
-# Statistics: mean(), weighted.mean(), median(), var(), quantile()
+# Statistics: mean(), weighted.mean(), median(), var(), quantile(), cov(), cor()
 
 # --- mean() -----------------------------------------------------------------
 
@@ -89,6 +89,37 @@ test_that("median() respects na.rm = TRUE", {
   expect_equal(median(vecvec(x), na.rm = TRUE), median(x, na.rm = TRUE))
 })
 
+# --- var() ------------------------------------------------------------------
+
+test_that("var() of a single-segment double vecvec matches base var()", {
+  x <- c(2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0)
+  expect_equal(var(vecvec(x)), var(x))
+})
+
+test_that("var() of an integer vecvec matches base var()", {
+  x <- 1:10
+  expect_equal(var(vecvec(x)), var(x))
+})
+
+test_that("var() of a multi-segment vecvec matches base var()", {
+  x <- c(1.0, 2.0, 3.0)
+  y <- c(4.0, 5.0, 6.0)
+  expect_equal(var(vecvec(x, y)), var(c(x, y)))
+})
+
+test_that("var() of a length-1 vecvec returns NA", {
+  expect_identical(var(vecvec(42)), NA_real_)
+})
+
+test_that("var() with NA returns NA by default", {
+  x <- c(1, NA, 3)
+  expect_identical(var(vecvec(x)), NA_real_)
+})
+
+test_that("var() respects na.rm = TRUE", {
+  x <- c(1, NA, 3, 4)
+  expect_equal(var(vecvec(x), na.rm = TRUE), var(x, na.rm = TRUE))
+})
 
 # --- quantile() -------------------------------------------------------------
 
@@ -129,4 +160,83 @@ test_that("quantile() with a single prob returns a named scalar", {
   x <- 1:10
   result <- quantile(vecvec(x), probs = 0.5)
   expect_equal(result, quantile(x, probs = 0.5))
+})
+
+# --- cov() ------------------------------------------------------------------
+
+test_that("cov() with vecvec x and plain vector y matches base cov()", {
+  x <- c(1.0, 2.0, 3.0, 4.0, 5.0)
+  y <- c(2.0, 4.0, 5.0, 4.0, 5.0)
+  expect_equal(cov(vecvec(x), y = y), cov(x, y = y))
+})
+
+test_that("cov() with both x and y as vecvec matches base cov()", {
+  x <- c(1.0, 2.0, 3.0, 4.0, 5.0)
+  y <- c(5.0, 4.0, 3.0, 2.0, 1.0)
+  expect_equal(cov(vecvec(x), y = vecvec(y)), cov(x, y = y))
+})
+
+test_that("cov() of a multi-segment vecvec x matches base cov()", {
+  x <- c(1.0, 2.0, 3.0)
+  y_seg <- c(4.0, 5.0, 6.0)
+  y <- c(2.0, 4.0, 6.0, 5.0, 3.0, 1.0)
+  expect_equal(cov(vecvec(x, y_seg), y = y), cov(c(x, y_seg), y = y))
+})
+
+test_that("cov() respects use = 'complete.obs' with NAs", {
+  x <- c(1, NA, 3, 4, 5)
+  y <- c(2, 4,  5, 4, 5)
+  expect_equal(
+    cov(vecvec(x), y = y, use = "complete.obs"),
+    cov(x, y = y, use = "complete.obs")
+  )
+})
+
+# --- cor() ------------------------------------------------------------------
+test_that("cor() with vecvec x and plain vector y matches base cor()", {
+  x <- c(1.0, 2.0, 3.0, 4.0, 5.0)
+  y <- c(2.0, 4.0, 5.0, 4.0, 5.0)
+  expect_equal(cor(vecvec(x), y = y), cor(x, y = y))
+})
+
+test_that("cor() with both x and y as vecvec matches base cor()", {
+  x <- c(1.0, 2.0, 3.0, 4.0, 5.0)
+  y <- c(5.0, 4.0, 3.0, 2.0, 1.0)
+  expect_equal(cor(vecvec(x), y = vecvec(y)), cor(x, y = y))
+})
+
+test_that("cor() of perfectly correlated vectors returns 1", {
+  x <- c(1.0, 2.0, 3.0, 4.0, 5.0)
+  expect_equal(cor(vecvec(x), y = x), 1)
+})
+
+test_that("cor() of perfectly anti-correlated vectors returns -1", {
+  x <- c(1.0, 2.0, 3.0, 4.0, 5.0)
+  y <- rev(x)
+  expect_equal(cor(vecvec(x), y = y), -1)
+})
+
+test_that("cor() of a multi-segment vecvec x matches base cor()", {
+  x <- c(1.0, 2.0, 3.0)
+  y_seg <- c(4.0, 5.0, 6.0)
+  y <- c(2.0, 4.0, 6.0, 5.0, 3.0, 1.0)
+  expect_equal(cor(vecvec(x, y_seg), y = y), cor(c(x, y_seg), y = y))
+})
+
+test_that("cor() respects use = 'complete.obs' with NAs", {
+  x <- c(1, NA, 3, 4, 5)
+  y <- c(2,  4, 5, 4, 5)
+  expect_equal(
+    cor(vecvec(x), y = y, use = "complete.obs"),
+    cor(x, y = y, use = "complete.obs")
+  )
+})
+
+test_that("cor() respects method = 'spearman'", {
+  x <- c(1.0, 2.0, 3.0, 4.0, 5.0)
+  y <- c(5.0, 6.0, 7.0, 8.0, 7.0)
+  expect_equal(
+    cor(vecvec(x), y = y, method = "spearman"),
+    cor(x, y = y, method = "spearman")
+  )
 })
