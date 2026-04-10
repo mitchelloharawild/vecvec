@@ -225,6 +225,7 @@ method(c, class_vecvec) <- function(..., recursive = FALSE) {
 }
 
 # Array methods
+method(as.vector, class_vecvec) <- function(x, mode = "any") x
 method(`dim<-`, class_vecvec) <- function(x, value) {
   attr(x, "dim") <- value
   x
