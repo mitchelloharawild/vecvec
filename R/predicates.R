@@ -21,6 +21,12 @@ method(anyNA, class_vecvec) <- function(x, recursive = FALSE) {
 
   FALSE
 }
+method(na.fail, class_vecvec) <- function(x, ...) {
+  if (anyNA(x)) {
+    stop("missing values in object of class 'vecvec'", call. = FALSE)
+  }
+  x
+}
 
 method(duplicated, class_vecvec) <- function(x, incomparables = FALSE, ...) {
   # Special case for empty vecvec vectors
