@@ -9,6 +9,7 @@ method(
   weighted.mean(unvecvec(x), w = w, ...)
 }
 
+#' @importFrom stats median
 method(
   median,
   class_vecvec
