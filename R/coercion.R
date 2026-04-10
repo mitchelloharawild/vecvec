@@ -36,18 +36,18 @@ globalVariables("properties")
 #   )
 # ) <- function(from, to, ...) unvecvec(from, ptype = to$constructor())
 
-method(as.logical, class_vecvec) <- function(x, ...) convert(x, class_logical)
-method(as.raw, class_vecvec) <- function(x, ...) convert(x, class_raw)
-method(as.integer, class_vecvec) <- function(x, ...) convert(x, class_integer)
+method(as.logical, class_vecvec) <- function(x, ...) unvecvec(x, ptype = class_logical$constructor())
+method(as.raw, class_vecvec) <- function(x, ...) unvecvec(x, ptype = class_raw$constructor())
+method(as.integer, class_vecvec) <- function(x, ...) unvecvec(x, ptype = class_integer$constructor())
 # For some reason this method isn't being registered properly with S7::method<-
-# method(as.double, class_vecvec) <- function(x) convert(x, class_double)
+# method(as.double, class_vecvec) <- function(x) unvecvec(x, ptype = class_double$constructor())
 #' @export
 #' @method as.double vecvec::vecvec
-`as.double.vecvec::vecvec` <- function(x, ...) convert(x, class_double)
-method(as.complex, class_vecvec) <- function(x, ...) convert(x, class_complex)
-method(as.character, class_vecvec) <- function(x, ...) convert(x, class_character)
-method(as.Date, class_vecvec) <- function(x, ...) convert(x, class_Date)
-method(as.data.frame, class_vecvec) <- function(x, ...) convert(x, class_data.frame)
+`as.double.vecvec::vecvec` <- function(x, ...) unvecvec(x, ptype = class_double$constructor())
+method(as.complex, class_vecvec) <- function(x, ...) unvecvec(x, ptype = class_complex$constructor())
+method(as.character, class_vecvec) <- function(x, ...) unvecvec(x, ptype = class_character$constructor())
+method(as.Date, class_vecvec) <- function(x, ...) unvecvec(x, ptype = class_Date$constructor())
+method(as.data.frame, class_vecvec) <- function(x, ...) unvecvec(x, ptype = class_data.frame$constructor())
 method(as.POSIXct, class_vecvec) <- function(x, tz = "", ...) {
   unvecvec(x, ptype = class_POSIXct$constructor(tz = tz))
 }
@@ -58,3 +58,4 @@ method(as.list, class_vecvec) <- function(x, ...) {
   x@x <- lapply(x@x, as.list)
   unvecvec(x, ptype = list())
 }
+

@@ -95,8 +95,10 @@ unvecvec <- function(x, ptype = NULL) {
   # Cast mixed vector types to common type
   if (is.null(ptype)) {
     ptype <- vec_ptype_common(!!!x@x) %||% logical()
+    # Use safe casting from vctrs
+    vec_cast_unsafe <- vec_cast
   }
-  x@x <- lapply(x@x, vec_cast, to = ptype)
+  x@x <- lapply(x@x, vec_cast_unsafe, to = ptype)
 
   # Construct output single-typed vector
   res <- vec_init(ptype, n = len)
