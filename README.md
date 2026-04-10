@@ -6,7 +6,7 @@
 <!-- badges: start -->
 
 [![Lifecycle:
-experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 [![R-CMD-check](https://github.com/mitchelloharawild/vecvec/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/mitchelloharawild/vecvec/actions/workflows/R-CMD-check.yaml)
 [![CRAN
 status](https://www.r-pkg.org/badges/version/vecvec)](https://CRAN.R-project.org/package=vecvec)
@@ -62,11 +62,12 @@ Internally, the vectors are stored separately in the attributes.
 
 ``` r
 str(x)
-#>  vecvec [1:12] 2025-03-29, 2025-01-03 10:05:00,  1.262954285, -0.326233361,...
-#> @ v:List of 3
-#>  ..$ : Date[1:1], format: "2025-03-29"
-#>  ..$ : POSIXct[1:1], format: "2025-01-03 10:05:00"
-#>  ..$ : num [1:10] 1.263 -0.326 1.33 1.272 0.415 ...
+#> <vecvec::vecvec>
+#>  @ x:List of 3
+#>  .. $ : Date[1:1], format: "2025-03-29"
+#>  .. $ : POSIXct[1:1], format: "2025-01-03 10:05:00"
+#>  .. $ : num [1:10] 1.263 -0.326 1.33 1.272 0.415 ...
+#>  @ i: int [1:12] 1 2 3 4 5 6 7 8 9 10 ...
 ```
 
 Operations apply to all vector types.
@@ -84,29 +85,32 @@ When subsetting, unused values are dropped.
 
 ``` r
 x[1]
-#> <vecvec[1]>
+#> <date*[1]>
 #> [1] 2025-03-29
 str(x[1])
-#>  vecvec [1:1] 2025-03-29
-#> @ v:List of 1
-#>  ..$ : Date[1:1], format: "2025-03-29"
+#> <vecvec::vecvec>
+#>  @ x:List of 1
+#>  .. $ : Date[1:1], format: "2025-03-29"
+#>  @ i: int 1
 ```
 
 When a vecvec is replicated, only the indexing is replicated.
 
 ``` r
 str(rep(x, each = 10))
-#>  vecvec [1:120] 2025-03-29, 2025-03-29, 2025-03-29, 2025-03-29, 2025-03-29,...
-#> @ v:List of 3
-#>  ..$ : Date[1:1], format: "2025-03-29"
-#>  ..$ : POSIXct[1:1], format: "2025-01-03 10:05:00"
-#>  ..$ : num [1:10] 1.263 -0.326 1.33 1.272 0.415 ...
+#> <vecvec::vecvec>
+#>  @ x:List of 3
+#>  .. $ : Date[1:1], format: "2025-03-29"
+#>  .. $ : POSIXct[1:1], format: "2025-01-03 10:05:00"
+#>  .. $ : num [1:10] 1.263 -0.326 1.33 1.272 0.415 ...
+#>  @ i: int [1:120] 1 1 1 1 1 1 1 1 1 1 ...
 str(x[c(1,1,1,3,2,2)])
-#>  vecvec [1:6] 2025-03-29, 2025-03-29, 2025-03-29,  1.262954285, 2025-01-03 ...
-#> @ v:List of 3
-#>  ..$ : Date[1:1], format: "2025-03-29"
-#>  ..$ : num [1:10] 1.263 -0.326 1.33 1.272 0.415 ...
-#>  ..$ : POSIXct[1:1], format: "2025-01-03 10:05:00"
+#> <vecvec::vecvec>
+#>  @ x:List of 3
+#>  .. $ : Date[1:1], format: "2025-03-29"
+#>  .. $ : POSIXct[1:1], format: "2025-01-03 10:05:00"
+#>  .. $ : num 1.26
+#>  @ i: int [1:6] 1 1 1 3 2 2
 ```
 
 The values in the attribute are unchanged, which allows for efficient
@@ -115,11 +119,12 @@ replicated).
 
 ``` r
 str(rep(x, each = 10) + 100)
-#>  vecvec [1:120] 2025-07-07, 2025-07-07, 2025-07-07, 2025-07-07, 2025-07-07,...
-#> @ v:List of 3
-#>  ..$ : Date[1:10], format: "2025-07-07" "2025-07-07" ...
-#>  ..$ : POSIXct[1:10], format: "2025-01-03 10:06:40" "2025-01-03 10:06:40" ...
-#>  ..$ : num [1:100] 101 101 101 101 101 ...
+#> <vecvec::vecvec>
+#>  @ x:List of 3
+#>  .. $ : Date[1:1], format: "2025-07-07"
+#>  .. $ : POSIXct[1:1], format: "2025-01-03 10:06:40"
+#>  .. $ : num [1:10] 101.3 99.7 101.3 101.3 100.4 ...
+#>  @ i: int [1:120] 1 1 1 1 1 1 1 1 1 1 ...
 ```
 
 If the arguments is differ across replicated indices, the resulting
@@ -128,9 +133,10 @@ vecvec is
 
 ``` r
 str(rep(x, each = 10) + 1:120)
-#>  vecvec [1:120] 2025-03-30, 2025-03-31, 2025-04-01, 2025-04-02, 2025-04-03,...
-#> @ v:List of 3
-#>  ..$ : Date[1:10], format: "2025-03-30" "2025-03-31" ...
-#>  ..$ : POSIXct[1:10], format: "2025-01-03 10:05:11" "2025-01-03 10:05:12" ...
-#>  ..$ : num [1:100] 22.3 23.3 24.3 25.3 26.3 ...
+#> <vecvec::vecvec>
+#>  @ x:List of 3
+#>  .. $ : Date[1:10], format: "2025-03-30" "2025-03-31" ...
+#>  .. $ : POSIXct[1:10], format: "2025-01-03 10:05:11" "2025-01-03 10:05:12" ...
+#>  .. $ : num [1:100] 22.3 23.3 24.3 25.3 26.3 ...
+#>  @ i: int [1:120] 1 2 3 4 5 6 7 8 9 10 ...
 ```
