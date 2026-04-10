@@ -120,6 +120,7 @@ method(print, class_vecvec) <- function(x, ...) {
 method(format, class_vecvec) <- function(x, ...) {
   fmt <- vec_c(!!!lapply(x@x, format, ...), .ptype = character())[S7_data(x)]
   dim(fmt) <- dim(x)
+  dimnames(fmt) <- dimnames(x)
   fmt
 }
 
