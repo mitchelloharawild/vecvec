@@ -21,21 +21,21 @@
   }
 
   # Binary operation (complete method on values)
-  # Convert to vecvec before recycling so vctrs repeats @i rather than
+  # Convert to vecvec before recycling so vctrs repeats indices rather than
   # expanding the underlying vector (which would defeat compression).
   if (!is_vecvec(e1)) e1 <- vecvec(e1) else class_vv <- S7_class(e1)
   if (!is_vecvec(e2)) e2 <- vecvec(e2) else class_vv <- S7_class(e2)
   args <- vec_recycle_common(e1 = e1, e2 = e2)
   n <- vec_size(args[[1L]])
 
-  # Cumulative slot boundaries: map @i -> (slot index, within-slot position).
+  # Cumulative slot boundaries: map indices -> (slot index, within-slot position).
   b <- lapply(args, function(a) c(0L, cumsum(lengths(a@x))))
   slot <- lapply(
     seq_along(args),
-    function(i) findInterval(args[[i]]@i, b[[i]], left.open = TRUE)
+    function(i) findInterval(S7_data(args[[i]]), b[[i]], left.open = TRUE)
   )
   within <- .mapply(
-    function(arg, b, slot) arg@i - b[slot],
+    function(arg, b, slot) S7_data(arg) - b[slot],
     list(args, b, slot), NULL
   )
 

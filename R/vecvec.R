@@ -102,8 +102,8 @@ unvecvec <- function(x, ptype = NULL) {
 
   # Construct output single-typed vector
   res <- vec_init(ptype, n = len)
-  pos <- !is.na(x@i)
-  res[pos] <- vec_c(!!!x@x)[x@i[pos]]
+  pos <- !is.na(S7_data(x))
+  res[pos] <- vec_c(!!!x@x)[S7_data(x)[pos]]
   res
 }
 
@@ -130,17 +130,16 @@ method(print, class_vecvec) <- function(x, ...) {
   vctrs::obj_print(x, ...)
 }
 method(format, class_vecvec) <- function(x, ...) {
-  vec_c(!!!lapply(x@x, format, ...), .ptype = character())[x@i]
+  vec_c(!!!lapply(x@x, format, ...), .ptype = character())[S7_data(x)]
 }
 
-
 # Attribute methods
-method(length, class_vecvec) <- function(x) length(x@i)
+# method(length, class_vecvec) <- function(x) length(S7_data(x))
 method(`length<-`, class_vecvec) <- function(x, value) x[seq_len(value)]
 
 # Indexing methods
 method(`[`, class_vecvec) <- function(x, i, ...) {
-  idx <- x@i[i]
+  idx <- S7_data(x)[i]
   not_na <- !is.na(idx)
 
   if (!any(not_na)) {
@@ -185,12 +184,12 @@ method(`[`, class_vecvec) <- function(x, i, ...) {
 
   new_starts <- c(0L, cumsum(lengths(x@x[-length(x@x)])))
   idx[not_na] <- new_starts[new_slot] + local_idx
-  x@i <- idx
+  S7_data(x) <- idx
   x
 }
 
 method(`[[`, class_vecvec) <- function(x, i, ...) {
-  idx <- x@i[i]
+  idx <- S7_data(x)[i]
   len <- c(0L, cumsum(lengths(x@x[-length(x@x)])))
   pos <- findInterval(idx, len, left.open = TRUE)
   x@x[[pos]][[idx - len[pos]]]
@@ -211,9 +210,9 @@ method(c, class_vecvec) <- function(..., recursive = FALSE) {
 
   x <- lapply(dots, function(x) x@x)
   i <- c(
-    dots[[1L]]@i,
+    S7_data(dots[[1L]]),
     .mapply(
-      function(x, j) x@i + j,
+      function(x, j) S7_data(x) + j,
       list(x = dots[-1L], j = i_offsets),
       NULL
     )
@@ -223,4 +222,14 @@ method(c, class_vecvec) <- function(..., recursive = FALSE) {
     x = unlist(x, recursive = FALSE),
     i = unlist(i, recursive = FALSE)
   )
+}
+
+# Array methods
+method(`dim<-`, class_vecvec) <- function(x, value) {
+  attr(x, "dim") <- value
+  x
+}
+method(`dimnames<-`, class_vecvec) <- function(x, value) {
+  attr(x, "dimnames") <- value
+  x
 }

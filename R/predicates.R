@@ -10,10 +10,10 @@ method(is.nan, class_vecvec) <- function(x) {
 
 method(is.na, class_vecvec) <- function(x) {
   # Missing values in vecvec indices or values are both considered NA.
-  is.na(x@i) | unvecvec(vecvec_apply(x, is.na), ptype = logical(1L))
+  is.na(S7_data(x)) | unvecvec(vecvec_apply(x, is.na), ptype = logical(1L))
 }
 method(anyNA, class_vecvec) <- function(x, recursive = FALSE) {
-  if (anyNA(x@i)) return(TRUE)
+  if (anyNA(S7_data(x))) return(TRUE)
   
   for (v in x@x) {
     if (anyNA(v, recursive = recursive)) return(TRUE)
@@ -42,7 +42,7 @@ method(na.exclude, class_vecvec) <- function(object, ...) na.drop(object, class 
 method(duplicated, class_vecvec) <- function(x, incomparables = FALSE, ...) {
   # Special case for empty vecvec vectors
   if (length(x@x) == 0L) {
-    return(duplicated(x@i, incomparables, ...))
+    return(duplicated(S7_data(x), incomparables, ...))
   }
 
   # Find common vector types

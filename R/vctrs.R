@@ -3,7 +3,7 @@
 # proxy/restore
 # This is inefficient but seemingly required for vctrs machinery
 method(vec_proxy, class_vecvec) <- function(x, ...) {
-  data_frame(x = list(x@x), i = x@i)
+  data_frame(x = list(x@x), i = S7_data(x))
 }
 method(vec_restore, class_vecvec) <- function(x, to, ...) {
   if (vec_size(x) == 0L) {
@@ -11,6 +11,7 @@ method(vec_restore, class_vecvec) <- function(x, to, ...) {
   }
 
   # Identify groups of vectors
+  # TODO - this destroys altrep
   grp <- vec_group_loc(x$x)
 
   # val <- x$x[vapply(grp$loc, `[[`, integer(1), 1L)]
@@ -51,7 +52,7 @@ vec_ptype2_vecvec <- function(x, y, ...) {
   }
 
   x <- c(x, y)
-  x@i <- integer()
+  S7_data(x) <- integer()
   x
 }
 #' @export
