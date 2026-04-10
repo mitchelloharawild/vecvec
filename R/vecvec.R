@@ -130,7 +130,9 @@ method(print, class_vecvec) <- function(x, ...) {
   vctrs::obj_print(x, ...)
 }
 method(format, class_vecvec) <- function(x, ...) {
-  vec_c(!!!lapply(x@x, format, ...), .ptype = character())[S7_data(x)]
+  fmt <- vec_c(!!!lapply(x@x, format, ...), .ptype = character())[S7_data(x)]
+  dim(fmt) <- dim(x)
+  fmt
 }
 
 # Attribute methods
