@@ -21,11 +21,11 @@ method(anyNA, class_vecvec) <- function(x, recursive = FALSE) {
 
   FALSE
 }
-method(na.fail, class_vecvec) <- function(x, ...) {
-  if (anyNA(x)) {
+method(na.fail, class_vecvec) <- function(object, ...) {
+  if (anyNA(object)) {
     stop("missing values in object of class 'vecvec'", call. = FALSE)
   }
-  x
+  object
 }
 na.drop <- function(object, class = NULL,...) {
   pos <- which(is.na(object))
