@@ -88,6 +88,10 @@ vecvec <- function(...) {
 #'
 #' @export
 unvecvec <- function(x, ptype = NULL) {
+  if (!is_vecvec(x)) {
+    stop("`x` must be a vecvec object", call. = FALSE)
+  }
+
   if ((len <- length(x)) == 0L) {
     return(unlist(x@x))
   }
