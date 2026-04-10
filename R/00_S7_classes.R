@@ -33,6 +33,7 @@
 #' @export
 class_vecvec <- new_class(
   "vecvec",
+  parent = class_integer,
   properties = list(
     x = class_list,
     i = class_integer
@@ -40,7 +41,7 @@ class_vecvec <- new_class(
   constructor = function(x = list(), i = seq_len(sum(lengths(x)))) {
     x <- vecvec_flatten_adj(x)
     i
-    new_object(S7_object(), x = x, i = i)
+    new_object(integer(), x = x, i = i)
   },
   validator = function(self) {
     vec <- vapply(self@x, vec_is, logical(1L))
