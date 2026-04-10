@@ -1,6 +1,6 @@
 # This causes fragmentation as new values are appended to vector list
 # A defragmentation function would be useful (#18)
-method(`[<-`, class_vecvec) <- function(x, i, value) {
+method(`[<-`, class_vecvec) <- function(x, value, i) {
   # Recycle `value` to the length of `i`
   value <- vec_recycle(value, size = length(i))
 
@@ -30,7 +30,7 @@ method(`[<-`, class_vecvec) <- function(x, i, value) {
   vecvec_flatten_adj(x)
 }
 
-method(`[[<-`, class_vecvec) <- function(x, i, value) {
+method(`[[<-`, class_vecvec) <- function(x, value, i) {
   if (length(i) != 1L) {
     stop("attempt to replace multiple elements in a vecvec", call. = FALSE)
   }
