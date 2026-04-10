@@ -1,22 +1,22 @@
 globalVariables("properties")
 
 # Casting methods
-method(convert, list(class_any, class_vecvec)) <- function(from, to, ...) {
-  vecvec(from)
-}
-method(
-  convert,
-  list(
-    class_vecvec,
-    new_union(
-      class_vector,
-      class_Date,
-      class_POSIXct,
-      class_POSIXlt,
-      class_data.frame
-    )
-  )
-) <- function(from, to, ...) unvecvec(from, ptype = to$constructor())
+# method(convert, list(class_any, class_vecvec)) <- function(from, to, ...) {
+#   vecvec(from)
+# }
+# method(
+#   convert,
+#   list(
+#     class_vecvec,
+#     new_union(
+#       class_vector,
+#       class_Date,
+#       class_POSIXct,
+#       class_POSIXlt,
+#       class_data.frame
+#     )
+#   )
+# ) <- function(from, to, ...) unvecvec(from, ptype = to$constructor())
 
 method(as.logical, class_vecvec) <- function(x, ...) convert(x, class_logical)
 method(as.raw, class_vecvec) <- function(x, ...) convert(x, class_raw)
