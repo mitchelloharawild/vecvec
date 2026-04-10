@@ -136,6 +136,7 @@ method(format, class_vecvec) <- function(x, ...) {
 
 # Attribute methods
 method(length, class_vecvec) <- function(x) length(x@i)
+method(`length<-`, class_vecvec) <- function(x, value) x[seq_len(value)]
 
 # Indexing methods
 method(`[`, class_vecvec) <- function(x, i, ...) {
