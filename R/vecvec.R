@@ -126,7 +126,9 @@ method(format, class_vecvec) <- function(x, ...) {
 # ------------------------------------------------------------------------------
 # Attribute methods
 # ------------------------------------------------------------------------------
-method(`length<-`, class_vecvec) <- function(x, value) x[seq_len(value)]
+# @method length<- vecvec::vecvec
+#' @rawNamespace S3method(`length<-`,"vecvec::vecvec")
+`length<-.vecvec::vecvec` <- function(x, value) x[seq_len(value)]
 
 #' Test if an object is a vecvec
 #'
@@ -243,11 +245,15 @@ method(c, class_vecvec) <- function(..., recursive = FALSE) {
 #' @rawNamespace S3method(as.vector,"vecvec::vecvec")
 `as.vector.vecvec::vecvec` <- function(x, mode = "any") x
 
-method(`dim<-`, class_vecvec) <- function(x, value) {
+# @method dim<- vecvec::vecvec
+#' @rawNamespace S3method(`dim<-`,"vecvec::vecvec")
+`dim<-.vecvec::vecvec` <- function(x, value) {
   attr(x, "dim") <- value
   x
 }
-method(`dimnames<-`, class_vecvec) <- function(x, value) {
+# @method dimnames<- vecvec::vecvec
+#' @rawNamespace S3method(`dimnames<-`,"vecvec::vecvec")
+`dimnames<-.vecvec::vecvec` <- function(x, value) {
   attr(x, "dimnames") <- value
   x
 }

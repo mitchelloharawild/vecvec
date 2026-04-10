@@ -1,6 +1,8 @@
 # This causes fragmentation as new values are appended to vector list
 # A defragmentation function would be useful (#18)
-method(`[<-`, class_vecvec) <- function(x, value, i) {
+# @method [<- vecvec::vecvec
+#' @rawNamespace S3method(`[<-`,"vecvec::vecvec")
+`[<-.vecvec::vecvec` <- function(x, i, value) {
   # Recycle `value` to the length of `i`
   value <- vec_recycle(value, size = length(i))
 
@@ -30,7 +32,9 @@ method(`[<-`, class_vecvec) <- function(x, value, i) {
   vecvec_flatten_adj(x)
 }
 
-method(`[[<-`, class_vecvec) <- function(x, value, i) {
+#' @method [[<- vecvec::vecvec
+#' @rawNamespace S3method(`[[<-`,"vecvec::vecvec")
+`[[<-.vecvec::vecvec` <- function(x, i, value) {
   if (length(i) != 1L) {
     stop("attempt to replace multiple elements in a vecvec", call. = FALSE)
   }
@@ -40,7 +44,10 @@ method(`[[<-`, class_vecvec) <- function(x, value, i) {
 }
 
 # The vector values are set to NA rather than the vecvec index being set to NA.
-method(`is.na<-`, class_vecvec) <- function(x, value) {
+
+# @method is.na<- vecvec::vecvec
+#' @rawNamespace S3method(`is.na<-`,"vecvec::vecvec")
+`is.na<-.vecvec::vecvec` <- function(x, value) {
   if (is.logical(value)) {
     if (length(value) != length(x)) {
       stop("logical subscript has wrong length", call. = FALSE)
