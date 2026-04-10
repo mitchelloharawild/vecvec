@@ -176,10 +176,8 @@ method(`[`, class_vecvec) <- function(x, i, ...) {
   new_slot <- match(pos, keep)
   local_idx <- idx_nn - orig_starts[new_slot] # 1-based within slot
 
-  # Only deduplicate if `i` may contain repeats
-  has_repeats <- anyDuplicated(idx_nn) > 0L
-
-  if (has_repeats) {
+  # TODO - remove unreferenced values from x@x if *all* references are dropped
+  if (!anyDuplicated(idx_nn)) {
     slot_lengths <- lengths(x@x)
     groups <- split(seq_along(new_slot), new_slot)
 
