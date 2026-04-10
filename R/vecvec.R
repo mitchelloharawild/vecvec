@@ -151,7 +151,7 @@ is_vecvec <- function(x) S7_inherits(x, class_vecvec)
 # Indexing methods
 # ------------------------------------------------------------------------------
 method(`[`, class_vecvec) <- function(x, i, ...) {
-  idx <- S7_data(x)[i]
+  idx <- S7_data(x)[i, ...]
   not_na <- !is.na(idx)
 
   if (!any(not_na)) {
@@ -192,9 +192,13 @@ method(`[`, class_vecvec) <- function(x, i, ...) {
     }
   }
 
+  # Assign new vecvec indices
   new_starts <- c(0L, cumsum(lengths(x@x[-length(x@x)])))
   idx[not_na] <- new_starts[new_slot] + local_idx
+  dim(x) <- NULL
   S7_data(x) <- idx
+  dim(x) <- dim(idx)
+
   x
 }
 
