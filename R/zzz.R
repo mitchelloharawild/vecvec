@@ -40,7 +40,13 @@
   )
 
   # Register all methods
-  # lapply(attr(methods(class = "default"), "info")$generic, register_s3_method,
-  #        pkg = "vecvec", class = "vecvec", fun = dispatch_elements)
+  # lapply(
+  #   setdiff(
+  #     attr(methods(class = "default"), "info")$generic,
+  #     attr(methods(class = "vecvec::vecvec"), "info")$generic
+  #   ),
+  #   register_s3_method,
+  #   pkg = "vecvec", class = "vecvec::vecvec", 
+  #   fun = vecvec_dispatch)
   invisible()
 }

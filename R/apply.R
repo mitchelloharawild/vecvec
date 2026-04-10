@@ -12,3 +12,8 @@ vecvec_apply <- function(x, f, ...) {
   x@x <- lapply(x@x, f, ...)
   x
 }
+
+vecvec_dispatch <- function(x, ...) {
+  x@x <- lapply(x@x, .Generic, ...)
+  x
+}
