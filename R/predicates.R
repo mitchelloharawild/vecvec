@@ -27,6 +27,17 @@ method(na.fail, class_vecvec) <- function(x, ...) {
   }
   x
 }
+na.drop <- function(object, class = NULL,...) {
+  pos <- which(is.na(object))
+  object <- object[-pos]
+  
+  # Add na.action attributes
+  class(object) <- c(class, class(object))
+  attr(object, "na.action") <- pos
+  object
+}
+method(na.omit, class_vecvec) <- function(object, ...) na.drop(object, class = "omit", ...)
+method(na.exclude, class_vecvec) <- function(object, ...) na.drop(object, class = "exclude", ...)
 
 method(duplicated, class_vecvec) <- function(x, incomparables = FALSE, ...) {
   # Special case for empty vecvec vectors
