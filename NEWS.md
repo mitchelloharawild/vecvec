@@ -15,6 +15,7 @@ implementation. Existing code using `vecvec` objects should continue to work.
 
 ## New features
 
+* `vecvec` classed objects now work as matrices and arrays (#15).
 * `is_vecvec()` tests whether an object is a `vecvec`.
 * `class_vecvec` S7 class and constructor for vecvec objects.
 * Added `vctrs` methods for backwards compatibility and vctrs interoperability.
