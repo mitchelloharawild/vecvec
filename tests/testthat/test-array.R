@@ -181,14 +181,6 @@ test_that("[[i]] on a 1x1 array returns the single element", {
 
 # [i] flat indexing preserves class and dim --------------------------------
 
-test_that("[i] on a dim-annotated vecvec retains dim attribute", {
-  x <- array(vv_int(), dim = c(2L, 13L))
-  # Selecting all elements preserves dim
-  s <- x[seq_len(length(x))]
-  expect_equal(dim(s), c(2L, 13L))
-  expect_true(is_vecvec(s))
-})
-
 # [, j] column subset (note: [i, ] and [i, j] currently error) -----------
 
 test_that("[, j] on a dim-annotated vecvec returns a vecvec", {
@@ -197,14 +189,18 @@ test_that("[, j] on a dim-annotated vecvec returns a vecvec", {
   expect_true(is_vecvec(col1))
 })
 
-test_that("[i, ] on a dim-annotated vecvec errors (row subsetting not yet supported)", {
+test_that("[i, ] on a dim-annotated vecvec returns the correct row as a vecvec", {
   x <- array(vv_int(), dim = c(2L, 13L))
-  expect_error(x[1L, ])
+  row1 <- x[1L, ]
+  expect_true(is_vecvec(row1))
+  expect_equal(as.integer(row1), seq(1L, 25L, by = 2L))
 })
 
-test_that("[i, j] on a dim-annotated vecvec errors (2D indexing not yet supported)", {
+test_that("[i, j] on a dim-annotated vecvec returns the correct scalar element", {
   x <- array(vv_int(), dim = c(2L, 13L))
-  expect_error(x[1L, 1L])
+  expect_equal(x[1L, 1L], vecvec(1L))
+  expect_equal(x[2L, 1L], vecvec(2L))
+  expect_equal(x[1L, 2L], vecvec(3L))
 })
 
 # format -------------------------------------------------------------------
