@@ -107,7 +107,22 @@ unvecvec <- function(x, ptype = NULL) {
   res
 }
 
-# Class accessors
+# ------------------------------------------------------------------------------
+# Display methods
+# ------------------------------------------------------------------------------
+method(print, class_vecvec) <- function(x, ...) {
+  vctrs::obj_print(x, ...)
+}
+method(format, class_vecvec) <- function(x, ...) {
+  fmt <- vec_c(!!!lapply(x@x, format, ...), .ptype = character())[S7_data(x)]
+  dim(fmt) <- dim(x)
+  fmt
+}
+
+# ------------------------------------------------------------------------------
+# Attribute methods
+# ------------------------------------------------------------------------------
+method(`length<-`, class_vecvec) <- function(x, value) x[seq_len(value)]
 
 #' Test if an object is a vecvec
 #'
@@ -125,21 +140,9 @@ unvecvec <- function(x, ptype = NULL) {
 #' @export
 is_vecvec <- function(x) S7_inherits(x, class_vecvec)
 
-# Display methods
-method(print, class_vecvec) <- function(x, ...) {
-  vctrs::obj_print(x, ...)
-}
-method(format, class_vecvec) <- function(x, ...) {
-  fmt <- vec_c(!!!lapply(x@x, format, ...), .ptype = character())[S7_data(x)]
-  dim(fmt) <- dim(x)
-  fmt
-}
-
-# Attribute methods
-# method(length, class_vecvec) <- function(x) length(S7_data(x))
-method(`length<-`, class_vecvec) <- function(x, value) x[seq_len(value)]
-
+# ------------------------------------------------------------------------------
 # Indexing methods
+# ------------------------------------------------------------------------------
 method(`[`, class_vecvec) <- function(x, i, ...) {
   idx <- S7_data(x)[i]
   not_na <- !is.na(idx)
@@ -197,7 +200,9 @@ method(`[[`, class_vecvec) <- function(x, i, ...) {
   x@x[[pos]][[idx - len[pos]]]
 }
 
+# ------------------------------------------------------------------------------
 # Combining methods
+# ------------------------------------------------------------------------------
 method(c, class_vecvec) <- function(..., recursive = FALSE) {
   dots <- rlang::list2(...)
   is_vv <- vapply(dots, is_vecvec, logical(1L))
@@ -226,7 +231,9 @@ method(c, class_vecvec) <- function(..., recursive = FALSE) {
   )
 }
 
+# ------------------------------------------------------------------------------
 # Array methods
+# ------------------------------------------------------------------------------
 method(as.vector, class_vecvec) <- function(x, mode = "any") x
 method(`dim<-`, class_vecvec) <- function(x, value) {
   attr(x, "dim") <- value
