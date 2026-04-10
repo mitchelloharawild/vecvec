@@ -1,3 +1,21 @@
+# Internal helper for casting which is less strict than `vec_cast()` for 
+# user specified casts. This is used in `as.*` methods and `unvecvec()` when a
+# `ptype` is supplied.
+vec_cast_unsafe <- S7::new_generic("vec_cast_unsafe", c("x", "to"))
+method(vec_cast_unsafe, list(class_any, class_vecvec)) <- function(x, to) {
+  vecvec(x)
+}
+method(vec_cast_unsafe, list(class_any, class_logical)) <- function(x, to) as.logical(x)
+method(vec_cast_unsafe, list(class_any, class_integer)) <- function(x, to) as.integer(x)
+method(vec_cast_unsafe, list(class_any, class_double)) <- function(x, to) as.double(x)
+method(vec_cast_unsafe, list(class_any, class_complex)) <- function(x, to) as.complex(x)
+method(vec_cast_unsafe, list(class_any, class_character)) <- function(x, to) as.character(x)
+method(vec_cast_unsafe, list(class_any, class_raw)) <- function(x, to) as.raw(x)
+method(vec_cast_unsafe, list(class_any, class_Date)) <- function(x, to) as.Date(x)
+method(vec_cast_unsafe, list(class_any, class_POSIXct)) <- function(x, to) as.POSIXct(x, tz = attr(to, "tzone", exact = TRUE))
+method(vec_cast_unsafe, list(class_any, class_POSIXlt)) <- function(x, to) as.POSIXlt(x, tz = attr(to, "tzone", exact = TRUE))
+method(vec_cast_unsafe, list(class_any, class_any)) <- function(x, to) vec_cast(x, to)
+
 globalVariables("properties")
 
 # Casting methods
