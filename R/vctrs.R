@@ -60,7 +60,25 @@ vec_ptype2_vecvec <- function(x, y, ...) {
 
 # casting
 vec_cast_to_vecvec <- function(x, to, ...) {
-  vecvec(x)
+  # If the input or ptype is empty, produce flat vecvec type
+  if (length(x) == 0L || length(to) == 0L) return(S7_class(to)(x))
+  
+  # TODO - handle replicated indices
+  if (anyDuplicated(S7_data(to))) {
+    stop("Casting to vecvec with duplicated indices is not supported.", call. = FALSE)
+  }
+
+  # Match index positions and vec_cast the individual vectors
+  idx <- S7_data(to)
+  len <- c(0L, cumsum(lengths(to@x[-length(to@x)])))
+  pos <- findInterval(idx, len, left.open = TRUE)
+  loc <- vec_split(x, pos)
+  to@x <- .mapply(
+    function(i, val) vec_cast(val, to@x[[i]], ...),
+    list(loc$key, loc$val), NULL
+  )
+
+  to
 }
 vec_cast_from_vecvec <- function(x, to, ...) {
   unvecvec(x, ptype = to)
