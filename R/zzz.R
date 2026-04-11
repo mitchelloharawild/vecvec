@@ -1,26 +1,11 @@
 .onLoad <- function(...) {
   S7::methods_register()
 
+  # Register vecvec methods
+  vecvec_register(class_vecvec)
+  
   vctrs_exports <- getNamespaceExports(asNamespace("vctrs"))
-
   vec_cast_generics <- vctrs_exports[startsWith(vctrs_exports, "vec_cast.")]
-  # Register vec_cast.*.vecvec methods
-  lapply(
-    vec_cast_generics,
-    register_s3_method,
-    pkg = "vctrs",
-    class = "vecvec::vecvec",
-    fun = vec_cast_from_vecvec
-  )
-  # Register vec_cast.vecvec.* methods
-  lapply(
-    sub("^vec_cast", "vecvec::vecvec", vec_cast_generics),
-    register_s3_method,
-    pkg = "vctrs",
-    generic = "vec_cast",
-    fun = vec_cast_to_vecvec
-  )
-
   vec_ptype2_generics <- vctrs_exports[startsWith(vctrs_exports, "vec_ptype2.")]
   # Register vec_ptype2.*.vecvec methods
   lapply(

@@ -21,3 +21,70 @@ register_s3_method <- function(pkg, generic, class, fun = NULL) {
     }
   )
 }
+
+
+#' Register methods for a vecvec subclass
+#'
+#' Call `vecvec_register()` inside your package's `.onLoad()` function to
+#' register the S3 methods that allow a custom
+#' [vecvec][vecvec::class_vecvec] subclass to participate in the
+#' [vctrs](https://vctrs.r-lib.org/) vector system.
+#'
+#' Specifically, `vecvec_register()` registers:
+#' - `vec_cast.<class>.*` methods, so that other types can be cast *to* your
+#'   vecvec subclass.
+#' - `vec_cast.*.<class>` methods, so that your vecvec subclass can be cast
+#'   *from* other types.
+#'
+#' @param x An S7 class object that extends [class_vecvec]. Typically the
+#'   class object created by [S7::new_class()] in your package, e.g.
+#'   `class_myvec`.
+#'
+#' @return `NULL`, invisibly. Called for its side effects.
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # In your package, define a vecvec subclass:
+#' class_myvec <- S7::new_class(
+#'   "myvec",
+#'   parent = vecvec::class_vecvec
+#' )
+#'
+#' # Then register it in .onLoad():
+#' .onLoad <- function(libname, pkgname) {
+#'   S7::methods_register()
+#'   vecvec::vecvec_register(class_myvec)
+#' }
+#' }
+vecvec_register <- function(x) {
+  vctrs_exports <- getNamespaceExports(asNamespace("vctrs"))
+  vec_cast_generics <- vctrs_exports[startsWith(vctrs_exports, "vec_cast.")]
+
+  if (!S7_inherits(x(), class_vecvec)) {
+    stop("`x` must be an S7 object extending `vecvec`", call. = FALSE)
+  }
+
+  pkg <- attr(x, "package", exact = TRUE)
+  nm <- attr(x, "name", exact = TRUE)
+  cls <- paste0(pkg, "::", nm)
+
+  # Register vec_cast.*.<class> methods
+  lapply(
+    vec_cast_generics,
+    register_s3_method,
+    pkg = "vctrs",
+    class = cls,
+    fun = vec_cast_from_vecvec
+  )
+  # Register vec_cast.<class>.* methods
+  lapply(
+    sub("^vec_cast.", "", vec_cast_generics),
+    register_s3_method,
+    pkg = pkg,
+    generic = paste0("vec_cast.", cls),
+    fun = vec_cast_to_vecvec
+  )
+  invisible(NULL)
+}

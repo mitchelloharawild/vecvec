@@ -83,9 +83,11 @@ vec_cast_to_vecvec <- function(x, to, ...) {
 vec_cast_from_vecvec <- function(x, to, ...) {
   unvecvec(x, ptype = to)
 }
+#' @method vec_cast vecvec::vecvec
 #' @export
-`vec_cast.vecvec::vecvec.vecvec::vecvec` <- function(x, to, ...) x
-
+`vec_cast.vecvec::vecvec` <- function(x, to, ...) {
+  UseMethod("vec_cast.vecvec::vecvec", to)
+}
 # labels
 method(vec_ptype_full, class_vecvec) <- function(x, ...) {
   if (length(x@x) != 1L) "vecvec" else paste0(vec_ptype_full(x@x[[1L]]), "*")
