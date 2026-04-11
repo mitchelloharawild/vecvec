@@ -255,6 +255,135 @@ test_that("as.double on a dim-annotated double vecvec returns correct values", {
   expect_equal(as.double(x), as.double(1:26))
 })
 
+# [i, j, ...] replacement -------------------------------------------------
+
+test_that("[i, j]<- replaces a single element in a 2D integer vecvec", {
+  x <- array(vv_int(), dim = c(2L, 13L))
+  x[1L, 1L] <- 99L
+  expect_equal(x[[1L]], 99L)
+})
+
+test_that("[i, j]<- replaces an element that is not the first, in a 2D integer vecvec", {
+  x <- array(vv_int(), dim = c(2L, 13L))
+  x[2L, 1L] <- 99L
+  expect_equal(x[[2L]], 99L)
+})
+
+test_that("[i, j]<- preserves surrounding elements in a 2D array", {
+  x <- array(vv_int(), dim = c(2L, 13L))
+  x[1L, 1L] <- 99L
+  expect_equal(x[[2L]], 2L)
+  expect_equal(x[[3L]], 3L)
+})
+
+test_that("[i, j]<- preserves dim after replacement", {
+  x <- array(vv_int(), dim = c(2L, 13L))
+  x[1L, 2L] <- 99L
+  expect_equal(dim(x), c(2L, 13L))
+})
+
+test_that("[i, j]<- preserves vecvec class after replacement", {
+  x <- array(vv_int(), dim = c(2L, 13L))
+  x[2L, 3L] <- 99L
+  expect_true(is_vecvec(x))
+})
+
+test_that("[i, j]<- preserves length after replacement", {
+  x <- array(vv_int(), dim = c(2L, 13L))
+  x[1L, 1L] <- 99L
+  expect_equal(length(x), 26L)
+})
+
+test_that("[, j]<- replaces an entire column in a 2D array", {
+  x <- array(vv_int(), dim = c(2L, 13L))
+  x[, 1L] <- c(91L, 92L)
+  expect_equal(x[[1L]], 91L)
+  expect_equal(x[[2L]], 92L)
+  expect_equal(x[[3L]], 3L)  # column 2, row 1 unchanged
+})
+
+test_that("[i, ]<- replaces an entire row in a 2D array", {
+  x <- array(vv_int(), dim = c(2L, 13L))
+  x[1L, ] <- 0L
+  # row 1: positions 1, 3, 5, ... (odd flat indices)
+  expect_equal(x[[1L]], 0L)
+  expect_equal(x[[3L]], 0L)
+  expect_equal(x[[2L]], 2L)  # row 2, col 1 unchanged
+})
+
+test_that("[i, j]<- can replace with a different type (character into integer vecvec)", {
+  x <- array(vv_int(), dim = c(2L, 13L))
+  x[1L, 1L] <- "hello"
+  expect_equal(x[[1L]], "hello")
+  expect_equal(x[[2L]], 2L)
+})
+
+test_that("[i, j]<- can replace with a Date value", {
+  x <- array(vv_int(), dim = c(2L, 13L))
+  d <- Sys.Date()
+  x[1L, 1L] <- d
+  expect_s3_class(x[[1L]], "Date")
+  expect_equal(x[[1L]], d)
+})
+
+test_that("[i, j]<- works on a 2D mixed vecvec", {
+  x <- array(vv_mix(), dim = c(8L, 13L))
+  x[1L, 1L] <- 999L
+  expect_equal(x[[1L]], 999L)
+  expect_equal(dim(x), c(8L, 13L))
+  expect_true(is_vecvec(x))
+})
+
+test_that("[i, j, k]<- replaces a single element in a 3D integer vecvec", {
+  x <- array(vv_int(), dim = c(2L, 3L, 4L))
+  x[1L, 1L, 1L] <- 99L
+  expect_equal(x[[1L]], 99L)
+})
+
+test_that("[i, j, k]<- replaces an element not at position 1 in a 3D array", {
+  x <- array(vv_int(), dim = c(2L, 3L, 4L))
+  # flat index for [2,3,4] in column-major: 2 + (3-1)*2 + (4-1)*6 = 2+4+18 = 24
+  x[2L, 3L, 4L] <- 99L
+  expect_equal(x[[24L]], 99L)
+})
+
+test_that("[i, j, k]<- preserves dim after replacement in a 3D array", {
+  x <- array(vv_int(), dim = c(2L, 3L, 4L))
+  x[1L, 2L, 3L] <- 99L
+  expect_equal(dim(x), c(2L, 3L, 4L))
+})
+
+test_that("[i, j, k]<- preserves vecvec class and length in a 3D array", {
+  x <- array(vv_int(), dim = c(2L, 3L, 4L))
+  x[2L, 2L, 2L] <- 0L
+  expect_true(is_vecvec(x))
+  expect_equal(length(x), 24L)
+})
+
+test_that("[i, j, k]<- preserves surrounding elements in a 3D array", {
+  x <- array(vv_int(), dim = c(2L, 3L, 4L))
+  x[1L, 1L, 1L] <- 99L
+  expect_equal(x[[2L]], 2L)
+  expect_equal(x[[3L]], 3L)
+})
+
+test_that("[i, j, k]<- works on a 3D mixed vecvec", {
+  x <- array(vv_mix(), dim = c(8L, 3L, 4L))
+  x[1L, 1L, 1L] <- "replaced"
+  expect_equal(x[[1L]], "replaced")
+  expect_equal(dim(x), c(8L, 3L, 4L))
+  expect_true(is_vecvec(x))
+})
+
+test_that("[i]<- on a 1D dim-annotated vecvec replaces the element and preserves dim", {
+  x <- vv_int()
+  dim(x) <- 26L
+  x[3L] <- 99L
+  expect_equal(x[[3L]], 99L)
+  expect_equal(dim(x), 26L)
+  expect_true(is_vecvec(x))
+})
+
 # Edge cases ---------------------------------------------------------------
 
 test_that("zero-length vecvec with dim c(0, 0) is valid", {

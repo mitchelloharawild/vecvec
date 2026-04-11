@@ -2,12 +2,21 @@
 # A defragmentation function would be useful (#18)
 # @method [<- vecvec::vecvec
 #' @rawNamespace S3method(`[<-`,"vecvec::vecvec")
-`[<-.vecvec::vecvec` <- function(x, i, value) {
+`[<-.vecvec::vecvec` <- function(x, i, ..., value) {
   # Recycle `value` to the length of `i`
-  value <- vec_recycle(value, size = length(i))
+  replacements <- S7_data(x)[i, ...]
+  value <- vec_recycle(value, size = length(replacements))
 
   # Remove unreferenced values from `x@x`
-  vec_rm <- unique(S7_data(x)[i])
+  vec_rm <- unique(replacements)
+  if (is.array(x)) {
+    # Also remove out-of-bounds indices produced
+    # by array() when length(x) != prod(dim(x))
+    nx <- sum(lengths(x@x))
+    if (length(x) < nx) {
+      vec_rm <- c(vec_rm, seq(from = length(x) + 1L, to = nx))
+    }
+  }
   vec_starts <- c(0L, cumsum(lengths(x@x)[-length(x@x)]))
   vec_idx <- findInterval(vec_rm, vec_starts, left.open = TRUE)
   vec_pos <- vec_split(vec_rm - vec_starts[vec_idx], vec_idx)
@@ -23,10 +32,10 @@
     x@x <- c(x@x, list(value))
     idx <- seq_along(value) + length(x)
   }
-  S7_data(x)[i] <- idx
+  S7_data(x)[i, ...] <- idx
   
   # Rank local indices
-  S7_data(x) <- vec_rank(S7_data(x))
+  S7_data(x) <- vec_rank(as.integer(S7_data(x)))
 
   # Crude but fast defragmentation of adjacent same-type vectors
   vecvec_flatten_adj(x)
