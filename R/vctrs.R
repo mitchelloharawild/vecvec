@@ -59,6 +59,26 @@ vec_ptype2_vecvec <- function(x, y, ...) {
 `vec_ptype2.vecvec::vecvec.vecvec::vecvec` <- vec_ptype2_vecvec
 
 # casting
+
+#' Cast methods for vecvec types
+#'
+#' These functions are the underlying handlers for [vctrs::vec_cast()] when
+#' casting to or from a `vecvec` type. They are not called directly; instead,
+#' they are registered dynamically in [.onLoad()] as S3 methods covering every
+#' `vec_cast.*` generic exported by **vctrs**.
+#'
+#' @param x The object to cast.
+#' @param to The target ptype.
+#' @param ... Passed on to inner [vctrs::vec_cast()] calls.
+#'
+#' @return
+#' * `vec_cast_to_vecvec()` returns a `vecvec` object. Each element of `x` is
+#'   cast to the ptype of the corresponding group in `to@x`.
+#' * `vec_cast_from_vecvec()` returns an object of the type described by `to`,
+#'   produced by [unvecvec()].
+#'
+#' @seealso [unvecvec()], [vctrs::vec_cast()]
+#' @noRd
 vec_cast_to_vecvec <- function(x, to, ...) {
   # If the input or ptype is empty, produce flat vecvec type
   if (length(x) == 0L || length(to) == 0L) return(S7_class(to)(x))

@@ -22,7 +22,6 @@ register_s3_method <- function(pkg, generic, class, fun = NULL) {
   )
 }
 
-
 #' Register methods for a vecvec subclass
 #'
 #' Call `vecvec_register()` inside your package's `.onLoad()` function to
@@ -80,10 +79,10 @@ vecvec_register <- function(x) {
   )
   # Register vec_cast.<class>.* methods
   lapply(
-    sub("^vec_cast.", "", vec_cast_generics),
+    sub("^vec_cast", cls, vec_cast_generics),
     register_s3_method,
-    pkg = pkg,
-    generic = paste0("vec_cast.", cls),
+    pkg = "vctrs",
+    generic = "vec_cast",
     fun = vec_cast_to_vecvec
   )
   invisible(NULL)

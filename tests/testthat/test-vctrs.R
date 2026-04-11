@@ -105,15 +105,93 @@ test_that("vctrs::vec_ptype2 is commutative", {
 
 # vec_cast ----------------------------------------------------------------
 
+# vecvec -> vecvec
 test_that("vctrs::vec_cast vecvec to vecvec is identity", {
   vv <- vecvec(1:5, letters)
   expect_equal(vec_cast(vv, class_vecvec()), vv)
 })
 
+test_that("vctrs::vec_cast vecvec<integer> to vecvec<integer>", {
+  vv <- vecvec(1L, 5L, 10L)
+  result <- vec_cast(vv, vecvec(0L))
+  expect_true(is_vecvec(result))
+  expect_equal(as.integer(result), c(1L, 5L, 10L))
+})
+
+test_that("vctrs::vec_cast vecvec<character> to vecvec<character>", {
+  vv <- vecvec(letters[1:3])
+  result <- vec_cast(vv, vecvec(""))
+  expect_true(is_vecvec(result))
+  expect_equal(as.character(result), letters[1:3])
+})
+
+# plain type -> vecvec
 test_that("vctrs::vec_cast plain vector to vecvec", {
   result <- vec_cast(1:5, class_vecvec())
   expect_true(is_vecvec(result))
   expect_equal(as.integer(result), 1:5)
+})
+
+test_that("vctrs::vec_cast integer to vecvec<integer>", {
+  result <- vec_cast(10L, vecvec(1L))
+  expect_true(is_vecvec(result))
+  expect_equal(as.integer(result), 10L)
+})
+
+test_that("vctrs::vec_cast double to vecvec<double>", {
+  result <- vec_cast(3.14, vecvec(1.0))
+  expect_true(is_vecvec(result))
+  expect_equal(as.double(result), 3.14)
+})
+
+test_that("vctrs::vec_cast character to vecvec<character>", {
+  result <- vec_cast("hello", vecvec("world"))
+  expect_true(is_vecvec(result))
+  expect_equal(as.character(result), "hello")
+})
+
+test_that("vctrs::vec_cast logical to vecvec<logical>", {
+  result <- vec_cast(c(TRUE, FALSE, NA), vecvec(TRUE))
+  expect_true(is_vecvec(result))
+  expect_equal(as.logical(result), c(TRUE, FALSE, NA))
+})
+
+# vecvec -> plain type
+test_that("vctrs::vec_cast vecvec to integer", {
+  vv <- vecvec(1L, 2L, 3L)
+  result <- vec_cast(vv, integer())
+  expect_equal(result, 1:3)
+})
+
+test_that("vctrs::vec_cast vecvec to double", {
+  vv <- vecvec(c(1.5, 2.5, 3.5))
+  result <- vec_cast(vv, double())
+  expect_equal(result, c(1.5, 2.5, 3.5))
+})
+
+test_that("vctrs::vec_cast vecvec to character", {
+  vv <- vecvec(c("a", "b", "c"))
+  result <- vec_cast(vv, character())
+  expect_equal(result, c("a", "b", "c"))
+})
+
+test_that("vctrs::vec_cast vecvec to logical", {
+  vv <- vecvec(c(TRUE, FALSE))
+  result <- vec_cast(vv, logical())
+  expect_equal(result, c(TRUE, FALSE))
+})
+
+# zero-length edge cases
+test_that("vctrs::vec_cast empty vecvec to vecvec is zero-length", {
+  result <- vec_cast(class_vecvec(), class_vecvec())
+  expect_true(is_vecvec(result))
+  expect_equal(vec_size(result), 0L)
+})
+
+test_that("vctrs::vec_cast empty vector to vecvec is zero-length", {
+  result <- vec_cast(integer(0), class_vecvec())
+  expect_true(is_vecvec(result))
+  expect_equal(vec_size(result), 0L)
 })
 
 # ptype labels ------------------------------------------------------------
