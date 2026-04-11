@@ -80,8 +80,8 @@ vec_ptype2_vecvec <- function(x, y, ...) {
 #' @seealso [unvecvec()], [vctrs::vec_cast()]
 #' @noRd
 vec_cast_to_vecvec <- function(x, to, ...) {
-  # If the input or ptype is empty, produce flat vecvec type
-  if (length(x) == 0L || length(to) == 0L) return(S7_class(to)(x))
+  # If input and ptype have incompatible structure, produce flat vecvec type
+  if (length(x) != length(to)) return(S7_class(to)(list(x)))
   
   # TODO - handle replicated indices
   if (anyDuplicated(S7_data(to))) {
