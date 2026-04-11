@@ -3,13 +3,23 @@
 # proxy/restore
 # This is inefficient but seemingly required for vctrs machinery
 method(vec_proxy, class_vecvec) <- function(x, ...) {
-  data_frame(x = list(x@x), i = S7_data(x))
+  data_frame(x = list(x@x), l = sum(lengths(x@x)), i = S7_data(x))
 }
 method(vec_restore, class_vecvec) <- function(x, to, ...) {
+  if (is_vecvec(x)) return(x)
   if (vec_size(x) == 0L) {
     return(S7_class(to)())
   }
 
+  # Fast path for vecvec without merging - just update the indices
+  if(identical(sum(slot_len <- lengths(to@x)), slot_grp <- unique(x$l))) {
+    S7_data(to) <- x$i
+    # Invoke pruning of slots
+    out <- to[seq_along(to)]
+    attributes(out) <- attributes(to)
+    return(out)
+  }
+  
   # Identify groups of vectors
   # TODO - this destroys altrep
   grp <- vec_group_loc(x$x)
