@@ -54,6 +54,12 @@ test_that("vctrs::vec_slice basic", {
   expect_equal(as.integer(vec_slice(vv, c(1L, 10L))), c(1L, 10L))
 })
 
+test_that("vctrs::vec_slice with mixed types", {
+  vv <- vecvec(1:5, letters)
+  expect_equal(as.integer(vec_slice(vv, 1:5)), 1:5)
+  expect_equal(as.character(vec_slice(vv, 6:10)), letters[1:5])
+})
+
 test_that("vctrs::vec_slice out-of-order indices", {
   vv <- vecvec(1:5, 6:10)
   idx <- c(10L, 3L, 7L, 1L)

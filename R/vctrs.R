@@ -16,7 +16,6 @@ method(vec_restore, class_vecvec) <- function(x, to, ...) {
     S7_data(to) <- x$i
     # Invoke pruning of slots
     out <- to[seq_along(to)]
-    attributes(out) <- attributes(to)
     return(out)
   }
   
