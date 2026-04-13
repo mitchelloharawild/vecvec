@@ -1,16 +1,10 @@
-method(is.finite, class_vecvec) <- function(x) {
-  unvecvec(vecvec_apply(x, is.finite), ptype = logical(1L))
-}
-method(is.infinite, class_vecvec) <- function(x) {
-  unvecvec(vecvec_apply(x, is.infinite), ptype = logical(1L))
-}
-method(is.nan, class_vecvec) <- function(x) {
-  unvecvec(vecvec_apply(x, is.nan), ptype = logical(1L))
-}
+method(is.finite, class_vecvec) <- vecvec_apply_fn(is.finite, ptype = logical())
+method(is.infinite, class_vecvec) <- vecvec_apply_fn(is.infinite, ptype = logical())
+method(is.nan, class_vecvec) <- vecvec_apply_fn(is.nan, ptype = logical())
 
 method(is.na, class_vecvec) <- function(x) {
   # Missing values in vecvec indices or values are both considered NA.
-  is.na(S7_data(x)) | unvecvec(vecvec_apply(x, is.na), ptype = logical(1L))
+  is.na(S7_data(x)) | unvecvec(vecvec_apply(x, is.na), ptype = logical())
 }
 method(anyNA, class_vecvec) <- function(x, recursive = FALSE) {
   if (anyNA(S7_data(x))) return(TRUE)
