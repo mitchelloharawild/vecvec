@@ -13,6 +13,11 @@ vecvec_apply(x, f, ...)
 
 \item{...}{Additional arguments passed to \code{f}}
 }
+\value{
+A vecvec data type with the same structure as \code{x} but with each
+vector transformed by \code{f}.
+}
 \description{
-Apply a function to each vector of the vecvec
+The \code{vecvec_apply()} function applies a function \code{f} to each vector in the
+\code{vecvec} vectors.
 }
