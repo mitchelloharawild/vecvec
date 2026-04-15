@@ -4,10 +4,10 @@
 \alias{vecvec_apply_fn}
 \title{Function factory for vecvec_apply}
 \usage{
-vecvec_apply_fn(f, ptype = NULL, SIMPLIFY = !is.null(ptype))
+vecvec_apply_fn(.f, ptype = NULL, SIMPLIFY = !is.null(ptype))
 }
 \arguments{
-\item{f}{A function to apply to each vector}
+\item{.f}{A function to apply to each vector}
 
 \item{ptype}{A prototype to simplify to. If \code{NULL}, the result will be a
 \code{vecvec} object. If not \code{NULL}, the result will be simplified to the type
@@ -18,14 +18,14 @@ of \code{vecvec_apply()}, using \code{ptype} as the target type. If \code{FALSE}
 result will always be a \code{vecvec} object.}
 }
 \value{
-A function that applies \code{f} to each vector of a \code{vecvec} object and
+A function that applies \code{.f} to each vector of a \code{vecvec} object and
 optionally simplifies the result.
 }
 \description{
 The \code{vecvec_apply_fn()} function is a function factory that creates applies
-the function \code{f} to each vector and optionally simplifies the result with
+the function \code{.f} to each vector and optionally simplifies the result with
 \verb{[unvecvec()]}. The function matches the forms of the original function
-\code{f} and can be used to define methods for generic functions that apply to
-\code{vecvec} objects. If \code{f} is a primitive function, the resulting function will
+\code{.f} and can be used to define methods for generic functions that apply to
+\code{vecvec} objects. If \code{.f} is a primitive function, the resulting function will
 have a apply over an argument \code{x} and pass through \code{...}.
 }
