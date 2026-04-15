@@ -21,7 +21,8 @@ method(vec_restore, class_vecvec) <- function(x, to, ...) {
   
   # Identify groups of vectors
   # TODO - this destroys altrep
-  grp <- vec_group_loc(x$x)
+  grp <- data_frame(loc = match(unique(x$x), x$x))
+  grp$key <- x$x[grp$loc]
 
   # val <- x$x[vapply(grp$loc, `[[`, integer(1), 1L)]
   # vctrs seems to drop list() to NULL internally somewhere? - fix it
