@@ -213,7 +213,7 @@ method(`[[`, class_vecvec) <- function(x, i, ...) {
 # Combining methods
 # ------------------------------------------------------------------------------
 method(c, class_vecvec) <- function(..., recursive = FALSE) {
-  dots <- rlang::list2(...)
+  dots <- unname(rlang::list2(...))
   is_vv <- vapply(dots, is_vecvec, logical(1L))
   dots[!is_vv] <- lapply(dots[!is_vv], vecvec)
 
