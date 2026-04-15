@@ -38,9 +38,11 @@ method(
 #' [`stats::cor`] functions to add support for `vecvec` objects. More details
 #' can be found in the documentation for those functions.
 #' 
-#' @inherit stats::cor
+#' @inheritParams stats::cor
 #' @param ... Additional arguments passed to [`stats::var`], [`stats::cov`], and 
 #' [`stats::cor`].
+#' 
+#' @seealso [stats::var()], [stats::cov()], [stats::cor()]
 #' 
 #' @name masked-cor
 #' @export
