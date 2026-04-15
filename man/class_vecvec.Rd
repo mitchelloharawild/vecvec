@@ -9,7 +9,7 @@ class_vecvec(x = list(), i = seq_len(sum(lengths(x))))
 \arguments{
 \item{x}{An unnamed list of arbitrary vectors. The vectors can be of
 different types and lengths, but they must all be vectors (according to
-\link[vctrs:vec_assert]{vctrs::vec_is}). Adjacent vectors of the same type will be combined
+\link[vctrs:vec_is]{vctrs::vec_is}). Adjacent vectors of the same type will be combined
 together into a single vector.}
 
 \item{i}{A vector of integers specifying the location of each element in \code{x}

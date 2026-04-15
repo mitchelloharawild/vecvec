@@ -16,7 +16,7 @@ cor(x, ...)
 \arguments{
 \item{x}{a numeric vector, matrix or data frame.}
 
-\item{...}{Additional arguments passed to \code{\link[stats:cor]{stats::var}}, \code{\link[stats:cor]{stats::cov}}, and
+\item{...}{Additional arguments passed to \code{\link[stats:var]{stats::var}}, \code{\link[stats:cov]{stats::cov}}, and
 \code{\link[stats:cor]{stats::cor}}.}
 }
 \value{
@@ -29,7 +29,7 @@ correlation of x and y if these are vectors. If x and y are matrices then
 the covariances (or correlations) between the columns of x and the columns
 of y are computed.
 
-These functions mask and wrap the \code{\link[stats:cor]{stats::var}}, \code{\link[stats:cor]{stats::cov}}, and
+These functions mask and wrap the \code{\link[stats:var]{stats::var}}, \code{\link[stats:cov]{stats::cov}}, and
 \code{\link[stats:cor]{stats::cor}} functions to add support for \code{vecvec} objects. More details
 can be found in the documentation for those functions.
 }

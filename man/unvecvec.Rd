@@ -11,7 +11,7 @@ unvecvec(x, ptype = NULL)
 
 \item{ptype}{A prototype specifying the desired output type, e.g.
 \code{character()} or \code{numeric()}. If \code{NULL} (the default), the common type is
-inferred from the elements of \code{x} using \code{\link[vctrs:vec_ptype]{vctrs::vec_ptype_common()}},
+inferred from the elements of \code{x} using \code{\link[vctrs:vec_ptype_common]{vctrs::vec_ptype_common()}},
 falling back to \code{logical()} when no common type can be determined. Passing
 an explicit \code{ptype} is useful when you need a guaranteed output type
 regardless of what \code{x} contains, or when automatic inference would pick an
@@ -30,7 +30,7 @@ common type. This is the inverse of \code{\link[=vecvec]{vecvec()}}.
 
 Type resolution follows vctrs coercion rules: when \code{ptype} is \code{NULL} the
 common type is determined automatically from the slots of \code{x} via
-\code{\link[vctrs:vec_ptype]{vctrs::vec_ptype_common()}}. If no common type can be found (e.g. all slots
+\code{\link[vctrs:vec_ptype_common]{vctrs::vec_ptype_common()}}. If no common type can be found (e.g. all slots
 are empty), the result falls back to \code{logical()}.
 }
 \examples{
@@ -44,6 +44,6 @@ unvecvec(vv, ptype = character())
 
 }
 \seealso{
-\code{\link[=vecvec]{vecvec()}} to create a \code{vecvec}; \code{\link[vctrs:vec_ptype]{vctrs::vec_ptype_common()}} for
+\code{\link[=vecvec]{vecvec()}} to create a \code{vecvec}; \code{\link[vctrs:vec_ptype_common]{vctrs::vec_ptype_common()}} for
 the type inference rules; \code{\link[vctrs:vec_cast]{vctrs::vec_cast()}} for the casting rules.
 }
