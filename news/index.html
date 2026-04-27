@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">vecvec</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.1.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
       </span>
     </div>
 
@@ -48,16 +48,16 @@
     </div>
 
     <div class="section level2">
-<h2 class="page-header" data-toc-text="development version" id="vecvec-development-version">vecvec (development version)<a class="anchor" aria-label="anchor" href="#vecvec-development-version"></a></h2>
+<h2 class="page-header" data-toc-text="1.0.0" id="vecvec-100">vecvec 1.0.0<a class="anchor" aria-label="anchor" href="#vecvec-100"></a></h2>
 <p>The <code>vecvec</code> class has been reimplemented using S7, replacing the previous vctrs implementation. Existing code using <code>vecvec</code> objects should continue to work.</p>
 <div class="section level3">
-<h3 id="breaking-changes-development-version">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-development-version"></a></h3>
+<h3 id="breaking-changes-1-0-0">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-1-0-0"></a></h3>
 <ul><li>Removed <code>new_vecvec()</code>, which is replaced by <code>class_vecvec</code> for S7 consistency.</li>
 <li>Extension packages building new vecvec data types will need to use S7 classes that have the parent class <code>class_vecvec</code>.</li>
 <li>The internal data structure for <code>vecvec</code> objects has been overhauled. In practice these internal indices should not be used by users or developers, as the structure can change in the future to accommodate faster variants for special cases (<a href="https://github.com/mitchelloharawild/vecvec/issues/7" class="external-link">#7</a>).</li>
 </ul></div>
 <div class="section level3">
-<h3 id="new-features-development-version">New features<a class="anchor" aria-label="anchor" href="#new-features-development-version"></a></h3>
+<h3 id="new-features-1-0-0">New features<a class="anchor" aria-label="anchor" href="#new-features-1-0-0"></a></h3>
 <ul><li>
 <code>vecvec</code> classed objects now work as matrices and arrays (<a href="https://github.com/mitchelloharawild/vecvec/issues/15" class="external-link">#15</a>).</li>
 <li>
@@ -67,7 +67,7 @@
 <li>Added <code>vctrs</code> methods for backwards compatibility and vctrs interoperability.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="improvements-development-version">Improvements<a class="anchor" aria-label="anchor" href="#improvements-development-version"></a></h3>
+<h3 id="improvements-1-0-0">Improvements<a class="anchor" aria-label="anchor" href="#improvements-1-0-0"></a></h3>
 <ul><li>Substantially faster performance and reduced object size</li>
 <li>Adjacent compatible vectors are now automatically flattened when constructing or modifying a <code>vecvec</code>, reducing fragmentation.</li>
 </ul></div>
