@@ -59,7 +59,6 @@ register_s3_method <- function(pkg, generic, class, fun = NULL) {
 #' }
 vecvec_register <- function(x) {
   vctrs_exports <- getNamespaceExports(asNamespace("vctrs"))
-  vec_cast_generics <- vctrs_exports[startsWith(vctrs_exports, "vec_cast.")]
 
   if (!S7_inherits(x(), class_vecvec)) {
     stop("`x` must be an S7 object extending `vecvec`", call. = FALSE)
@@ -68,6 +67,12 @@ vecvec_register <- function(x) {
   pkg <- attr(x, "package", exact = TRUE)
   nm <- attr(x, "name", exact = TRUE)
   cls <- paste0(pkg, "::", nm)
+
+
+  # --------------------------------------------------------
+  # vctrs::vec_cast() methods
+  # --------------------------------------------------------
+  vec_cast_generics <- vctrs_exports[startsWith(vctrs_exports, "vec_cast.")]
 
   # Register vec_cast.*.<class> methods
   lapply(
@@ -85,5 +90,28 @@ vecvec_register <- function(x) {
     generic = "vec_cast",
     fun = vec_cast_to_vecvec
   )
+
+  # --------------------------------------------------------
+  # vctrs::vec_ptype2() methods
+  # --------------------------------------------------------
+  vec_ptype2_generics <- vctrs_exports[startsWith(vctrs_exports, "vec_ptype2.")]
+
+  # Register vec_ptype2.*.<class> methods
+  lapply(
+    vec_ptype2_generics,
+    register_s3_method,
+    pkg = "vctrs",
+    class = cls,
+    fun = vec_ptype2_vecvec
+  )
+  # Register vec_ptype2.<class>.* methods
+  lapply(
+    sub("^vec_ptype2", cls, vec_ptype2_generics),
+    register_s3_method,
+    pkg = "vctrs",
+    generic = "vec_ptype2",
+    fun = vec_ptype2_vecvec
+  )
+
   invisible(NULL)
 }

@@ -3,26 +3,6 @@
 
   # Register vecvec methods
   vecvec_register(class_vecvec)
-  
-  vctrs_exports <- getNamespaceExports(asNamespace("vctrs"))
-  vec_cast_generics <- vctrs_exports[startsWith(vctrs_exports, "vec_cast.")]
-  vec_ptype2_generics <- vctrs_exports[startsWith(vctrs_exports, "vec_ptype2.")]
-  # Register vec_ptype2.*.vecvec methods
-  lapply(
-    vec_ptype2_generics,
-    register_s3_method,
-    pkg = "vctrs",
-    class = "vecvec::vecvec",
-    fun = vec_ptype2_vecvec
-  )
-  # Register vec_ptype2.vecvec.* methods
-  lapply(
-    sub("^vec_ptype2", "vecvec::vecvec", vec_ptype2_generics),
-    register_s3_method,
-    pkg = "vctrs",
-    generic = "vec_ptype2",
-    fun = vec_ptype2_vecvec
-  )
 
   # Register all methods
   # lapply(
