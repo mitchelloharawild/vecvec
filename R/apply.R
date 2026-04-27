@@ -42,11 +42,7 @@ vecvec_apply <- function(x, .f, ...) {
 #' 
 #' @export
 vecvec_apply_fn <- function(.f, ptype = NULL, SIMPLIFY = !is.null(ptype)) {
-  if (is.primitive(.f)) {
-    fmls <- alist(x = , ... =)
-  } else {
-    fmls <- formals(.f)
-  }
+  fmls <- formals(args(.f))
   args <- names(fmls)[-1L]
   args <- `names<-`(syms(args), args)
   # Remove name of `...` if it exists
