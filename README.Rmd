@@ -45,7 +45,7 @@ remotes::install_github("mitchelloharawild/vecvec")
 
 Use `vecvec()` to create a vecvec. Here we combine three vectors of different types.
 
-```{r construction}
+```{r construction, message = FALSE}
 library(vecvec)
 
 x <- vecvec(as.Date("2025-03-29"), as.POSIXct("2025-01-03 10:05:00"), rnorm(10))
