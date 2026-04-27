@@ -1,4 +1,4 @@
-# vecvec (development version)
+# vecvec 1.0.0
 
 The `vecvec` class has been reimplemented using S7, replacing the previous vctrs
 implementation. Existing code using `vecvec` objects should continue to work.
