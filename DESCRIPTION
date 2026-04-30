@@ -1,6 +1,6 @@
 Package: vecvec
 Title: Construct Mixed Type Data Structures with Vectors of Vectors 
-Version: 1.0.0
+Version: 1.0.0.9000
 Authors@R: c(
       person(
         given = "Mitchell",
