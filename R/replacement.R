@@ -14,6 +14,7 @@
 
   # Recycle `value` to the length of `i`
   replacements <- S7_data(x)[i, ...]
+  if (length(replacements) == 0L) return(x)
   value <- vec_recycle(value, size = length(replacements))
 
   # Remove unreferenced values from `x@x`
@@ -45,7 +46,7 @@
   S7_data(x)[i, ...] <- idx
   
   # Rank local indices
-  S7_data(x) <- vec_rank(as.integer(S7_data(x)))
+  S7_data(x) <- vec_rank(as.integer(S7_data(x)), ties = "dense")
 
   # Crude but fast defragmentation of adjacent same-type vectors
   vecvec_flatten_adj(x)

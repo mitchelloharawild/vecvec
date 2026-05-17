@@ -83,6 +83,14 @@ test_that("`[<-` round-trips through unvecvec after replacement", {
   expect_equal(unvecvec(x, ptype = integer()), expected)
 })
 
+test_that("`[<-` with empty logical index leaves vecvec unchanged", {
+  x <- c(rep(vecvec(1), 3), rep(vecvec(1L), 4))
+  original <- x
+  x[FALSE] <- NA
+  expect_equal(x, original)
+  expect_equal(length(x@x), 2L)
+})
+
 test_that("`[<-` with logical condition containing NAs does not error", {
   x <- vecvec(1:10)
   x[x < 4] <- NA_real_

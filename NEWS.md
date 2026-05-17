@@ -3,6 +3,8 @@
 ## Bug fixes
 
 * Fixed `[<-` value replacement with NA indices.
+* Fixed `[<-` incorrectly mutating a `vecvec` when the index selects no
+  elements (e.g. `x[FALSE] <- NA`). The object is now returned unchanged.
 
 # vecvec 1.0.0
 
