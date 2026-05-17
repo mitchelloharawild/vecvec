@@ -3,12 +3,22 @@
 # @method [<- vecvec::vecvec
 #' @rawNamespace S3method(`[<-`,"vecvec::vecvec")
 `[<-.vecvec::vecvec` <- function(x, i, ..., value) {
+  # When i is missing (e.g. x[, j] <- v), normalise to all valid row indices
+  # so the rest of the function can treat i uniformly.
+  if (missing(i)) {
+    i <- if (...length() > 0L) seq_len(dim(x)[1L]) else seq_len(length(x))
+  }
+
+  # Treat NA positions in a logical index as FALSE, matching base R behaviour
+  if (is.logical(i)) i[is.na(i)] <- FALSE
+
   # Recycle `value` to the length of `i`
   replacements <- S7_data(x)[i, ...]
   value <- vec_recycle(value, size = length(replacements))
 
   # Remove unreferenced values from `x@x`
   vec_rm <- unique(replacements)
+  vec_rm <- vec_rm[!is.na(vec_rm)]
   if (is.array(x)) {
     # Also remove out-of-bounds indices produced
     # by array() when length(x) != prod(dim(x))

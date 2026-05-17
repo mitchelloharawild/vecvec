@@ -1,5 +1,9 @@
 # vecvec (development version)
 
+## Bug fixes
+
+* Fixed `[<-` value replacement with NA indices.
+
 # vecvec 1.0.0
 
 The `vecvec` class has been reimplemented using S7, replacing the previous vctrs
