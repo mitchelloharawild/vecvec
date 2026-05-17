@@ -52,6 +52,7 @@
 <div class="section level3">
 <h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
 <ul><li>Fixed <code>[&lt;-</code> value replacement with NA indices.</li>
+<li>Fixed <code>[&lt;-</code> incorrectly mutating a <code>vecvec</code> when the index selects no elements (e.g. <code>x[FALSE] &lt;- NA</code>). The object is now returned unchanged.</li>
 </ul></div>
 </div>
     <div class="section level2">
