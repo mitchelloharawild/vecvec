@@ -4,6 +4,7 @@
 
 * `print()` method now respects the `max.print` option and prevents ALTREP 
   materialisation.
+* ALTREP vectors are no longer flattened on creation of vecvec objects.
 
 ## Bug fixes
 
