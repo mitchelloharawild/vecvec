@@ -1,5 +1,10 @@
 # vecvec (development version)
 
+## Improvements
+
+* `print()` method now respects the `max.print` option and prevents ALTREP 
+  materialisation.
+
 ## Bug fixes
 
 * Fixed `[<-` value replacement with NA indices.

@@ -114,8 +114,23 @@ unvecvec <- function(x, ptype = NULL) {
 # ------------------------------------------------------------------------------
 # Display methods
 # ------------------------------------------------------------------------------
-method(print, class_vecvec) <- function(x, ...) {
-  vctrs::obj_print(x, ...)
+method(print, class_vecvec) <- function(x, max = getOption("max.print"), ...) {
+  vctrs::obj_print_header(x)
+  
+  # Print values directly to avoid vctrs obj_print ALTREP materialisation
+  print(
+    format(x[seq_len(min(length(x), max))]),
+    quote = FALSE
+  )
+  
+  # Add usual default print footer if there are more values than 'max'
+  if (length(x) > max) {
+    cat(
+      "[ reached 'max' / getOption(\"max.print\") -- omitted ",
+      length(x) - getOption("max.print"),
+      " entries ]"
+    )
+  }
 }
 method(format, class_vecvec) <- function(x, ...) {
   fmt <- vec_c(!!!lapply(x@x, format, ...), .ptype = character())[S7_data(x)]
