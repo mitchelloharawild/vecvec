@@ -75,6 +75,7 @@ overlap_indices <- function(a, b) {
 }
 
 # Checks if an object is an ALTREP vector
+globalVariables("inspect")
 is_altrep <- function(x) {
   internal <- get(".Internal", envir = baseenv())
   out <- utils::capture.output(internal(inspect(x)))
