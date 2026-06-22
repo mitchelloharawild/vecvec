@@ -30,4 +30,4 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 URL: https://pkg.mitchelloharawild.com/vecvec/, https://github.com/mitchelloharawild/vecvec
 BugReports: https://github.com/mitchelloharawild/vecvec/issues
-Config/roxygen2/version: 7.3.3.9000
+Config/roxygen2/version: 8.0.0

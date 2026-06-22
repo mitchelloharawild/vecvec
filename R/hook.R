@@ -38,6 +38,15 @@ register_s3_method <- function(pkg, generic, class, fun = NULL) {
 #' @param x An S7 class object that extends [class_vecvec]. Typically the
 #'   class object created by [S7::new_class()] in your package, e.g.
 #'   `class_myvec`.
+#' @param f_ptype2 The function to register as the `vec_ptype2` method for this
+#'  class. Defaults to `vec_ptype2_vecvec`, guarantees that the common type of
+#'  two vectors is a vecvec vector.
+#' @param f_cast_to The function to register as the `vec_cast.<class>.*` methods
+#'  for this class. Defaults to `vec_cast_to_vecvec`, which attempts to cast 
+#'  other types to vecvec by calling `vecvec()`.
+#' @param f_cast_from The function to register as the `vec_cast.*.<class>` 
+#'  methods for this class. Defaults to `vec_cast_from_vecvec`, which attempts 
+#'  to cast vecvec to other types by calling `unvecvec()`.
 #'
 #' @return `NULL`, invisibly. Called for its side effects.
 #'
@@ -57,7 +66,10 @@ register_s3_method <- function(pkg, generic, class, fun = NULL) {
 #'   vecvec::vecvec_register(class_myvec)
 #' }
 #' }
-vecvec_register <- function(x) {
+vecvec_register <- function(
+  x, f_ptype2 = vec_ptype2_vecvec, 
+  f_cast_to = vec_cast_to_vecvec, f_cast_from = vec_cast_from_vecvec
+) {
   vctrs_exports <- getNamespaceExports(asNamespace("vctrs"))
 
   if (!S7_inherits(x(), class_vecvec)) {
@@ -80,7 +92,7 @@ vecvec_register <- function(x) {
     register_s3_method,
     pkg = "vctrs",
     class = cls,
-    fun = vec_cast_from_vecvec
+    fun = f_cast_from
   )
   # Register vec_cast.<class>.* methods
   lapply(
@@ -88,7 +100,7 @@ vecvec_register <- function(x) {
     register_s3_method,
     pkg = "vctrs",
     generic = "vec_cast",
-    fun = vec_cast_to_vecvec
+    fun = f_cast_to
   )
 
   # --------------------------------------------------------
@@ -102,7 +114,7 @@ vecvec_register <- function(x) {
     register_s3_method,
     pkg = "vctrs",
     class = cls,
-    fun = vec_ptype2_vecvec
+    fun = f_ptype2
   )
   # Register vec_ptype2.<class>.* methods
   lapply(
@@ -110,7 +122,7 @@ vecvec_register <- function(x) {
     register_s3_method,
     pkg = "vctrs",
     generic = "vec_ptype2",
-    fun = vec_ptype2_vecvec
+    fun = f_ptype2
   )
 
   invisible(NULL)

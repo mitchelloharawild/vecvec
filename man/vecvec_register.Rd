@@ -4,12 +4,29 @@
 \alias{vecvec_register}
 \title{Register methods for a vecvec subclass}
 \usage{
-vecvec_register(x)
+vecvec_register(
+  x,
+  f_ptype2 = vec_ptype2_vecvec,
+  f_cast_to = vec_cast_to_vecvec,
+  f_cast_from = vec_cast_from_vecvec
+)
 }
 \arguments{
 \item{x}{An S7 class object that extends \link{class_vecvec}. Typically the
 class object created by \code{\link[S7:new_class]{S7::new_class()}} in your package, e.g.
 \code{class_myvec}.}
+
+\item{f_ptype2}{The function to register as the \code{vec_ptype2} method for this
+class. Defaults to \code{vec_ptype2_vecvec}, guarantees that the common type of
+two vectors is a vecvec vector.}
+
+\item{f_cast_to}{The function to register as the \verb{vec_cast.<class>.*} methods
+for this class. Defaults to \code{vec_cast_to_vecvec}, which attempts to cast
+other types to vecvec by calling \code{vecvec()}.}
+
+\item{f_cast_from}{The function to register as the \verb{vec_cast.*.<class>}
+methods for this class. Defaults to \code{vec_cast_from_vecvec}, which attempts
+to cast vecvec to other types by calling \code{unvecvec()}.}
 }
 \value{
 \code{NULL}, invisibly. Called for its side effects.
