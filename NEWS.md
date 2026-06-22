@@ -1,18 +1,22 @@
-# vecvec (development version)
+# vecvec 1.2.0
+
+## Improvements
+
+* Allow registration of custom `vctrs::vec_ptype2` and `vctrs::vec_cast` 
+  methods.
+* Better printing of empty vecvec objects.
 
 # vecvec 1.1.0
 
 ## Improvements
 
-* `print()` method now respects the `max.print` option and prevents ALTREP 
-  materialisation.
+* `print()` method now respects the `max.print` option and prevents ALTREP materialisation.
 * ALTREP vectors are no longer flattened on creation of vecvec objects.
 
 ## Bug fixes
 
 * Fixed `[<-` value replacement with NA indices.
-* Fixed `[<-` incorrectly mutating a `vecvec` when the index selects no
-  elements (e.g. `x[FALSE] <- NA`). The object is now returned unchanged.
+* Fixed `[<-` incorrectly mutating a `vecvec` when the index selects no elements (e.g. `x[FALSE] <- NA`). The object is now returned unchanged.
 
 # vecvec 1.0.0
 
