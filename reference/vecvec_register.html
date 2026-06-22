@@ -47,7 +47,7 @@ vctrs vector system."><meta property="og:image" content="/logo.svg"><!-- mathjax
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Register methods for a vecvec subclass</h1>
-    <small class="dont-index">Source: <a href="https://github.com/mitchelloharawild/vecvec/blob/main/R/hook.R" class="external-link"><code>R/hook.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/mitchelloharawild/vecvec/blob/v1.1.0/R/hook.R" class="external-link"><code>R/hook.R</code></a></small>
     <div class="hidden name"><code>vecvec_register.Rd</code></div>
     </div>
 
@@ -59,12 +59,7 @@ register the S3 methods that allow a custom
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">vecvec_register</span><span class="op">(</span></span>
-<span>  <span class="va">x</span>,</span>
-<span>  f_ptype2 <span class="op">=</span> <span class="va">vec_ptype2_vecvec</span>,</span>
-<span>  f_cast_to <span class="op">=</span> <span class="va">vec_cast_to_vecvec</span>,</span>
-<span>  f_cast_from <span class="op">=</span> <span class="va">vec_cast_from_vecvec</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">vecvec_register</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -75,24 +70,6 @@ register the S3 methods that allow a custom
 <dd><p>An S7 class object that extends <a href="class_vecvec.html">class_vecvec</a>. Typically the
 class object created by <code><a href="https://rconsortium.github.io/S7/reference/new_class.html" class="external-link">S7::new_class()</a></code> in your package, e.g.
 <code>class_myvec</code>.</p></dd>
-
-
-<dt id="arg-f-ptype-">f_ptype2<a class="anchor" aria-label="anchor" href="#arg-f-ptype-"></a></dt>
-<dd><p>The function to register as the <code>vec_ptype2</code> method for this
-class. Defaults to <code>vec_ptype2_vecvec</code>, guarantees that the common type of
-two vectors is a vecvec vector.</p></dd>
-
-
-<dt id="arg-f-cast-to">f_cast_to<a class="anchor" aria-label="anchor" href="#arg-f-cast-to"></a></dt>
-<dd><p>The function to register as the <code>vec_cast.&lt;class&gt;.*</code> methods
-for this class. Defaults to <code>vec_cast_to_vecvec</code>, which attempts to cast
-other types to vecvec by calling <code><a href="vecvec.html">vecvec()</a></code>.</p></dd>
-
-
-<dt id="arg-f-cast-from">f_cast_from<a class="anchor" aria-label="anchor" href="#arg-f-cast-from"></a></dt>
-<dd><p>The function to register as the <code>vec_cast.*.&lt;class&gt;</code>
-methods for this class. Defaults to <code>vec_cast_from_vecvec</code>, which attempts
-to cast vecvec to other types by calling <code><a href="unvecvec.html">unvecvec()</a></code>.</p></dd>
 
 </dl></div>
     <div id="value">
