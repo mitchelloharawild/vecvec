@@ -8,3 +8,5 @@
 ## R CMD check results
 
 0 errors | 0 warnings | 0 notes
+
+Reverse dependency checks have been performed and there were no changes to worse.
