@@ -118,10 +118,12 @@ method(print, class_vecvec) <- function(x, max = getOption("max.print"), ...) {
   vctrs::obj_print_header(x)
   
   # Print values directly to avoid vctrs obj_print ALTREP materialisation
-  print(
-    format(x[seq_len(min(length(x), max))]),
-    quote = FALSE
-  )
+  if (length(x) > 0L) {
+    print(
+      format(x[seq_len(min(length(x), max))]),
+      quote = FALSE
+    )
+  }
   
   # Add usual default print footer if there are more values than 'max'
   if (length(x) > max) {
