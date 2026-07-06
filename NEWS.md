@@ -1,5 +1,10 @@
 # vecvec (development version)
 
+## Improvements
+
+* Reworked formatting of array structured vecvec vectors to prevent ALTREP
+  materialisation.
+
 # vecvec 1.2.0
 
 ## Improvements

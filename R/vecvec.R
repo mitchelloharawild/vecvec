@@ -115,24 +115,39 @@ unvecvec <- function(x, ptype = NULL) {
 # Display methods
 # ------------------------------------------------------------------------------
 method(print, class_vecvec) <- function(x, max = getOption("max.print"), ...) {
-  vctrs::obj_print_header(x)
-  
-  # Print values directly to avoid vctrs obj_print ALTREP materialisation
-  if (length(x) > 0L) {
-    print(
-      format(x[seq_len(min(length(x), max))]),
-      quote = FALSE
-    )
+  d <- dim(x)
+  cat("<", vec_ptype_full(x), "[", paste0(d %||% length(x), collapse = ","), "]>\n", sep = "")
+
+  n <- length(x)
+  if (n > 0L) {
+    n_show <- min(n, max)
+
+    if (!is.null(d)) {
+      if (n_show < n) {
+        # Map the first n_show display-order (row-major) positions to their
+        # column-major storage indices by permuting the first two dimensions.
+        cm_idx <- aperm(array(seq_len(n), d), c(2L, 1L, seq_along(d)[-(1:2)]))[seq_len(n_show)]
+        fmt_arr <- character(n)
+        fmt_arr[cm_idx] <- format(x[cm_idx])
+        dim(fmt_arr) <- d
+        dimnames(fmt_arr) <- dimnames(x)
+        print(fmt_arr, quote = FALSE, max = n_show)
+      } else {
+        print(format(x), quote = FALSE, max = max)
+      }
+    } else {
+      # Vector: subset before formatting to avoid materialising all n elements.
+      print(format(x[seq_len(n_show)]), quote = FALSE)
+      if (n > max) {
+        cat(sprintf(
+          '[ reached \'max\' / getOption("max.print") -- omitted %d entries ]\n',
+          n - max
+        ))
+      }
+    }
   }
-  
-  # Add usual default print footer if there are more values than 'max'
-  if (length(x) > max) {
-    cat(
-      "[ reached 'max' / getOption(\"max.print\") -- omitted ",
-      length(x) - getOption("max.print"),
-      " entries ]"
-    )
-  }
+
+  invisible(x)
 }
 method(format, class_vecvec) <- function(x, ...) {
   fmt <- vec_c(!!!lapply(x@x, format, ...), .ptype = character())[S7_data(x)]
