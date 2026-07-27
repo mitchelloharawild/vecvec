@@ -53,6 +53,10 @@
 <h3 id="improvements-development-version">Improvements<a class="anchor" aria-label="anchor" href="#improvements-development-version"></a></h3>
 <ul><li>Reworked formatting of array structured vecvec vectors to prevent ALTREP materialisation.</li>
 </ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
+<ul><li>Fixed <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> on a <code>vecvec</code> always erroring. It now wraps the <code>vecvec</code> as a single column instead of trying to cast each element to a <code>data.frame</code>, matching the behaviour of <code>vctrs_vctr</code> classes. This also fixes <code>data.frame(x = vv)</code>, which calls <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> internally on non-atomic columns.</li>
+</ul></div>
 </div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="1.2.0" id="vecvec-120">vecvec 1.2.0<small>2026-06-23</small><a class="anchor" aria-label="anchor" href="#vecvec-120"></a></h2>
@@ -154,7 +158,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
       </footer></div>
