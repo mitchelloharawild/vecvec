@@ -5,6 +5,14 @@
 * Reworked formatting of array structured vecvec vectors to prevent ALTREP
   materialisation.
 
+## Bug fixes
+
+* Fixed `as.data.frame()` on a `vecvec` always erroring. It now wraps the
+  `vecvec` as a single column instead of trying to cast each element to a
+  `data.frame`, matching the behaviour of `vctrs_vctr` classes. This also
+  fixes `data.frame(x = vv)`, which calls `as.data.frame()` internally on
+  non-atomic columns.
+
 # vecvec 1.2.0
 
 ## Improvements

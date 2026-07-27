@@ -47,7 +47,18 @@ method(as.integer, class_vecvec) <- function(x, ...) unvecvec(x, ptype = class_i
 method(as.complex, class_vecvec) <- function(x, ...) unvecvec(x, ptype = class_complex$constructor())
 method(as.character, class_vecvec) <- function(x, ...) unvecvec(x, ptype = class_character$constructor())
 method(as.Date, class_vecvec) <- function(x, ...) unvecvec(x, ptype = class_Date$constructor())
-method(as.data.frame, class_vecvec) <- function(x, ...) unvecvec(x, ptype = class_data.frame$constructor())
+method(as.data.frame, class_vecvec) <- function(
+  x,
+  row.names = NULL,
+  optional = FALSE,
+  ...,
+  nm = paste(deparse(substitute(x), width.cutoff = 500L), collapse = " ")
+) {
+  force(nm)
+  cols <- list(x)
+  if (!optional) names(cols) <- nm
+  vctrs::new_data_frame(cols, n = length(x))
+}
 method(as.POSIXct, class_vecvec) <- function(x, tz = "", ...) {
   unvecvec(x, ptype = class_POSIXct$constructor(tz = tz))
 }
