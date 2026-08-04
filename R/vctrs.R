@@ -144,23 +144,40 @@ vec_ptype2_vecvec <- function(x, y, ...) {
 vec_cast_to_vecvec <- function(x, to, ...) {
   # If input and ptype have incompatible structure, produce flat vecvec type
   if (length(x) != length(to)) return(S7_class(to)(list(x)))
-  
-  # TODO - handle replicated indices
-  if (anyDuplicated(S7_data(to))) {
-    stop("Casting to vecvec with duplicated indices is not supported.", call. = FALSE)
-  }
 
-  # Match index positions and vec_cast the individual vectors
+  # Nothing to cast into
+  if (length(to@x) == 0L) return(to)
+
   idx <- S7_data(to)
   len <- c(0L, cumsum(lengths(to@x[-length(to@x)])))
   pos <- findInterval(idx, len, left.open = TRUE)
-  loc <- vec_split(x, pos)
-  to@x <- .mapply(
-    function(i, val) vec_cast(val, to@x[[i]], ...),
-    list(loc$key, loc$val), NULL
-  )
 
-  to
+  if (!anyDuplicated(idx)) {
+    # Match index positions and vec_cast the individual vectors
+    loc <- vec_split(x, pos)
+    to@x <- .mapply(
+      function(i, val) vec_cast(val, to@x[[i]], ...),
+      list(loc$key, loc$val), NULL
+    )
+
+    return(to)
+  }
+
+  # `to`'s stored positions are duplicated, so several logical elements can
+  # share a single stored value. `x` may supply different values for those
+  # common elements, so we can't simply overwrite in place.
+  loc <- vec_split(seq_along(x), pos)
+  new_x <- vector("list", nrow(loc))
+  new_idx <- integer(length(x))
+  offset <- 0L
+  for (g in seq_len(nrow(loc))) {
+    positions <- loc$val[[g]]
+    new_x[[g]] <- vec_cast(vec_slice(x, positions), to@x[[loc$key[[g]]]], ...)
+    new_idx[positions] <- offset + seq_along(positions)
+    offset <- offset + length(positions)
+  }
+
+  S7_class(to)(x = new_x, i = new_idx)
 }
 vec_cast_from_vecvec <- function(x, to, ...) {
   unvecvec(x, ptype = to)

@@ -187,6 +187,47 @@ test_that("vctrs::vec_cast vecvec to logical", {
   expect_equal(result, c(TRUE, FALSE))
 })
 
+# duplicated indices in `to` (#18-adjacent: compressed vecvecs as targets)
+test_that("vctrs::vec_cast plain vector to vecvec with duplicated indices (single slot)", {
+  to <- rep(vecvec(1.5), 3)
+  expect_equal(S7_data(to), c(1L, 1L, 1L))
+
+  result <- vec_cast(c(1, 2, 3), to)
+  expect_true(is_vecvec(result))
+  expect_equal(vec_size(result), 3L)
+  expect_equal(unvecvec(result), c(1, 2, 3))
+})
+
+test_that("vctrs::vec_cast plain vector to vecvec with duplicated indices casts to slot type", {
+  # Integer input cast against a double-typed slot should produce doubles
+  to <- rep(vecvec(1.5), 3)
+  result <- vec_cast(c(1L, 2L, 3L), to)
+  expect_true(is_vecvec(result))
+  expect_true(is.double(result@x[[1L]]))
+  expect_equal(unvecvec(result), c(1, 2, 3))
+})
+
+test_that("vctrs::vec_cast to vecvec with duplicated indices still works when values coincide", {
+  to <- rep(vecvec(1.5), 3)
+  result <- vec_cast(c(5, 5, 5), to)
+  expect_true(is_vecvec(result))
+  expect_equal(unvecvec(result), c(5, 5, 5))
+})
+
+test_that("vctrs::vec_cast to vecvec with duplicated indices across multiple mixed-type slots", {
+  to <- c(rep(vecvec(1.5), 2), rep(vecvec(2L), 2))
+  expect_equal(S7_data(to), c(1L, 1L, 2L, 2L))
+
+  result <- vec_cast(c(10L, 20L, 30L, 40L), to)
+  expect_true(is_vecvec(result))
+  expect_equal(vec_size(result), 4L)
+  expect_equal(unvecvec(result), c(10, 20, 30, 40))
+  # First slot (double ptype) keeps its cast values as doubles
+  expect_true(is.double(result@x[[1L]]))
+  # Second slot (integer ptype) keeps its cast values as integers
+  expect_true(is.integer(result@x[[2L]]))
+})
+
 # zero-length edge cases
 test_that("vctrs::vec_cast empty vecvec to vecvec is zero-length", {
   result <- vec_cast(class_vecvec(), class_vecvec())
