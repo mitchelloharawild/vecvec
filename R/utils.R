@@ -74,10 +74,10 @@ overlap_indices <- function(a, b) {
   )
 }
 
-# Checks if an object is an ALTREP vector
-globalVariables("inspect")
+# Checks if an object is an ALTREP vector (e.g. a compact seq()-generated
+# sequence, or a deferred/wrapped vector) as opposed to a normal materialised
+# vector. Used to avoid merging adjacent vecvec slots via c() when doing so
+# would force materialisation of an ALTREP vector.
 is_altrep <- function(x) {
-  internal <- get(".Internal", envir = baseenv())
-  out <- utils::capture.output(internal(inspect(x)))
-  any(grepl("compact|wrapper", out))
+  .Call("vecvec_is_altrep", x, PACKAGE = "vecvec")
 }

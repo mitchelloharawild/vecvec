@@ -4,3 +4,8 @@
 .httr-oauth
 .DS_Store
 .quarto
+src/*.o
+src/*.so
+src/*.dll
+src/Makevars.win
+src/*.rds
