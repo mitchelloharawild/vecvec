@@ -49,7 +49,7 @@ method(duplicated, class_vecvec) <- function(x, incomparables = FALSE, ...) {
   # Identify duplicated values within common vector types
   dup <- lapply(loc, function(i) {
     # Compute duplicates on a single vector
-    vec <- unlist(x@x[i], recursive = FALSE)
+    vec <- vec_c(!!!x@x[i])
     res <- duplicated(vec, incomparables = incomparables, ...)
 
     # Restructure result into list of vectors
@@ -74,13 +74,25 @@ method(anyDuplicated, class_vecvec) <- function(x, incomparables = FALSE, ...) {
     function(k) which(vapply(ptypes, identical, logical(1), k))
   )
 
+  # anyDuplicated(fromLast = TRUE) reports the position of the *last* duplicate
+  # rather than the first, so the direction needs to be known up front.
+  fromLast <- isTRUE(list(...)$fromLast)
+
   # Search for any duplicated values within common vector types
   for (i in seq_along(loc)) {
     # Compute duplicates on a single vector
     idx <- loc[[i]]
-    vec <- unlist(x@x[idx], recursive = FALSE)
-    dup <- anyDuplicated(vec, incomparables = incomparables, ...)
-    if (dup > 0L) {
+    vec <- vec_c(!!!x@x[idx])
+    # anyDuplicated() on a classed, non-atomic vector (e.g. a vctrs_rcrd) does
+    # not reliably return the position of the first duplicate (base R quirk),
+    # so locate it via duplicated() instead, as the method above does.
+    dup_pos <- which(duplicated(vec, incomparables = incomparables, ...))
+    dup <- if (length(dup_pos)) {
+      if (fromLast) dup_pos[[length(dup_pos)]] else dup_pos[[1L]]
+    } else {
+      NA_integer_
+    }
+    if (!is.na(dup) && dup > 0L) {
       # Find the actual index of the duplicated value
       len <- c(0L, cumsum(lengths(x@x[idx[-length(idx)]])))
       pos <- findInterval(dup, len, left.open = TRUE)

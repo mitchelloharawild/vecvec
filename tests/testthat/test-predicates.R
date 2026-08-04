@@ -281,3 +281,59 @@ test_that("anyDuplicated() on a zero-length vecvec returns 0L", {
 test_that("anyDuplicated() on a single-element vecvec returns 0L", {
   expect_identical(anyDuplicated(vecvec(1L)), 0L)
 })
+
+# duplicated()/anyDuplicated()/unique() with record (vctrs_rcrd) slots ---------
+#
+# Slots holding a `vctrs_rcrd` (or any class whose `[` doesn't survive
+# `unlist(recursive = FALSE)` reconstruction) used to be silently destructured
+# into their fields instead of concatenated, producing NA (duplicated()) or a
+# false "no duplicates" (anyDuplicated()). See R/predicates.R.
+
+new_myrcrd <- function(a, b) {
+  vctrs::new_rcrd(vctrs::vec_recycle_common(a = a, b = b), class = "myrcrd")
+}
+
+test_that("duplicated() detects duplicates within a single record slot", {
+  rc <- new_myrcrd(c(1, 1, 2), 1)
+  vv <- vecvec(rc)
+  expect_identical(duplicated(vv), duplicated(rc))
+  expect_identical(duplicated(vv), c(FALSE, TRUE, FALSE))
+})
+
+test_that("duplicated() detects duplicates across multiple record slots", {
+  rc1 <- new_myrcrd(c(1, 1, 2), 1)
+  rc2 <- new_myrcrd(c(2, 3), 1)
+  vv <- vecvec(rc1, rc2)
+  plain <- vctrs::vec_c(rc1, rc2)
+  expect_identical(duplicated(vv), duplicated(plain))
+  expect_identical(duplicated(vv), c(FALSE, TRUE, FALSE, TRUE, FALSE))
+})
+
+test_that("anyDuplicated() finds the first duplicate position across record slots", {
+  rc1 <- new_myrcrd(c(1, 1, 2), 1)
+  rc2 <- new_myrcrd(c(2, 3), 1)
+  vv <- vecvec(rc1, rc2)
+  plain <- vctrs::vec_c(rc1, rc2)
+  expect_identical(anyDuplicated(vv), which(duplicated(plain))[[1L]])
+  expect_identical(anyDuplicated(vv), 2L)
+})
+
+test_that("anyDuplicated() returns 0L when no duplicates among record slots", {
+  rc1 <- new_myrcrd(c(1, 2), 1)
+  rc2 <- new_myrcrd(3, 1)
+  vv <- vecvec(rc1, rc2)
+  expect_identical(anyDuplicated(vv), 0L)
+})
+
+test_that("unique() returns correct records for a vecvec with record slots", {
+  rc1 <- new_myrcrd(c(1, 1, 2), 1)
+  rc2 <- new_myrcrd(c(2, 3), 1)
+  vv <- vecvec(rc1, rc2)
+  plain <- vctrs::vec_c(rc1, rc2)
+
+  expect_identical(
+    vctrs::vec_data(unvecvec(unique(vv))),
+    vctrs::vec_data(plain[!duplicated(plain)])
+  )
+  expect_length(unique(vv), 3L)
+})

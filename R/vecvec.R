@@ -93,7 +93,7 @@ unvecvec <- function(x, ptype = NULL) {
   }
 
   if ((len <- length(x)) == 0L) {
-    return(unlist(x@x))
+    return(vec_c(!!!x@x))
   }
 
   # Cast mixed vector types to common type
