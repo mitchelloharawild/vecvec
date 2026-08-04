@@ -270,3 +270,101 @@ test_that("vctrs::vec_sort ascending", {
   vv <- vecvec(c(3L, 1L, 4L, 1L, 5L))
   expect_equal(as.integer(vec_sort(vv)), c(1L, 1L, 3L, 4L, 5L))
 })
+
+# vec_proxy_equal -----------------------------------------------------------
+# `vec_proxy_equal()` used to build one R object per stored value via
+# `as.list(x)`, which is O(unique stored values) dispatch-and-allocate calls
+# and dominates vec_match()/vec_in()/vec_group_id()/vec_count() (and hence
+# dplyr joins/group_by()) on a vecvec column. It is rewritten to compute a
+# proxy per group of same-ptype slots and scatter it into `length(x)` rows
+# via vectorized slicing instead of looping over individual elements.
+
+test_that("vctrs::vec_proxy_equal detects duplicates within a single type", {
+  vv <- vecvec(c(3, 1, 2, 1, 3))
+  # vec_group_id()'s group ids only carry the same information as identity
+  # up to relabelling, so compare via match() rather than exact values.
+  expect_equal(match(vec_group_id(vv), unique(vec_group_id(vv))), c(1L, 2L, 3L, 2L, 1L))
+  # vec_duplicate_detect() flags every element that shares its value with
+  # another element, including the first occurrence (unlike base duplicated()).
+  expect_equal(as.logical(vec_duplicate_detect(vv)), c(TRUE, TRUE, FALSE, TRUE, TRUE))
+  expect_equal(vec_match(vv, vv), c(1L, 2L, 3L, 2L, 1L))
+})
+
+test_that("vctrs::vec_proxy_equal never equates values from different ptypes", {
+  # `5L` and `"5"` are stored in different slots and must never be treated
+  # as duplicates, matching how `duplicated()` only ever compares within a
+  # common-ptype group of slots.
+  vv <- vecvec(5L, "5")
+  expect_false(vec_group_id(vv)[[1]] == vec_group_id(vv)[[2]])
+  expect_false(as.logical(vec_duplicate_detect(vv))[[1]])
+})
+
+test_that("vctrs::vec_proxy_equal unifies same-ptype values across non-adjacent slots", {
+  # Slots 1 and 3 share a ptype (integer) but are separated by a character
+  # slot, so they are not merged by vecvec_flatten_adj(); the value 3 stored
+  # in slot 1 and the value 3 stored in slot 3 must still compare equal.
+  vv <- vecvec(1:3, letters[1:3], c(3L, 5L, 9L))
+  g <- vec_group_id(vv)
+  expect_equal(g[[3]], g[[7]])
+  expect_equal(length(unique(g)), 8L)
+  expect_true(as.logical(vec_duplicate_detect(vv))[[7]])
+})
+
+test_that("vctrs::vec_proxy_equal keeps unassigned (NA-index) elements mutually equal", {
+  vv <- vec_init(class_vecvec(), 4L)
+  expect_true(all(vec_group_id(vv) == vec_group_id(vv)[[1]]))
+  expect_true(all(as.logical(vec_duplicate_detect(vv))))
+})
+
+test_that("vctrs::vec_proxy_equal distinguishes unassigned index from a stored NA value", {
+  vv <- vecvec(c(1, NA, 3))
+  vv <- vec_c(vv, vec_init(class_vecvec(), 1L))
+  # element 2 (stored NA) and element 4 (unassigned index) must not be
+  # grouped together, even though both are considered `is.na()`.
+  expect_false(vec_group_id(vv)[[2]] == vec_group_id(vv)[[4]])
+})
+
+test_that("vctrs::vec_proxy_equal handles rcrd-typed slots without destructuring", {
+  rc <- function(a, b) {
+    vctrs::new_rcrd(vctrs::vec_recycle_common(a = a, b = b), class = "myrcrd")
+  }
+  vv <- vecvec(rc(c(1, 1, 2), 1))
+  g <- vec_group_id(vv)
+  expect_equal(g[[1]], g[[2]])
+  expect_false(g[[1]] == g[[3]])
+  expect_equal(as.logical(vec_duplicate_detect(vv)), c(TRUE, TRUE, FALSE))
+
+  vv2 <- vecvec(rc(c(1, 1, 2), 1), rc(c(2, 3), 1))
+  g2 <- vec_group_id(vv2)
+  expect_equal(g2[[1]], g2[[2]])
+  expect_equal(g2[[3]], g2[[4]])
+  expect_equal(length(unique(g2)), 3L)
+})
+
+test_that("vctrs::vec_proxy_equal matches ground truth for a randomised mixed-type vecvec", {
+  set.seed(42)
+  vv <- vecvec(
+    sample(letters[1:4], 20, replace = TRUE),
+    sample(1:3, 15, replace = TRUE)
+  )
+  g <- as.integer(vec_group_id(vv))
+  grp_sizes <- table(g)
+  expected_dup <- unname(as.vector(grp_sizes[as.character(g)] > 1))
+  expect_equal(as.logical(vec_duplicate_detect(vv)), expected_dup)
+  expect_equal(vec_match(vv, vv), match(g, g))
+  expect_equal(vec_size(vec_unique(vv)), length(unique(g)))
+})
+
+test_that("vctrs::vec_proxy_equal is fast for many unique stored values", {
+  skip_on_cran()
+  big <- vecvec(vctrs::new_rcrd(list(a = 1:20000), class = "myrcrd"))
+  elapsed <- system.time(vctrs::vec_proxy_equal(big))[["elapsed"]]
+  expect_lt(elapsed, 0.1)
+})
+
+test_that("vctrs::vec_proxy_equal stays fast for a highly compressed vecvec", {
+  skip_on_cran()
+  comp <- rep(vecvec(1.5), 20000)
+  elapsed <- system.time(vctrs::vec_proxy_equal(comp))[["elapsed"]]
+  expect_lt(elapsed, 0.1)
+})

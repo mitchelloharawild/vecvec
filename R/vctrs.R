@@ -44,9 +44,61 @@ method(vec_restore, class_vecvec) <- function(x, to, ...) {
 
 # Comparison proxies
 method(vec_proxy_equal, class_vecvec) <- function(x, ...) {
-  # This is inefficient, but seems necessary for vctrs machinery.
-  # Directly using `==` is faster as it applies on overlapping vctrs directly.
-  data_frame(x = as.list(x), na = ifelse(is.na(x), NA, FALSE))
+  # Build the equality proxy slot-wise on same-ptype slots
+  n <- vec_size(x)
+  idx <- S7_data(x)
+
+  # No storage at all -> every element is necessarily an unassigned index.
+  if (length(x@x) == 0L) {
+    return(data_frame(.group = rep(NA_integer_, n)))
+  }
+
+  # Map each stored position to (slot, position-within-slot).
+  slot_len <- lengths(x@x)
+  slot_bounds <- c(0L, cumsum(slot_len))
+  slot <- findInterval(idx, slot_bounds, left.open = TRUE)
+  local_pos <- idx - slot_bounds[slot]
+
+  # Group slots sharing a common ptype, as `duplicated()` does - only slots
+  # with identical ptypes can ever compare equal to one another.
+  ptypes <- lapply(x@x, `[`, 0L)
+  uniq_ptypes <- unique(ptypes)
+  loc <- lapply(
+    uniq_ptypes,
+    function(k) which(vapply(ptypes, identical, logical(1), k))
+  )
+  slot_group <- integer(length(ptypes))
+  for (g in seq_along(loc)) slot_group[loc[[g]]] <- g
+
+  # Per-element group id; unassigned indices (NA) get the reserved NA group.
+  elem_group <- ifelse(is.na(slot), NA_integer_, slot_group[slot])
+
+  result <- data_frame(.group = elem_group)
+  for (g in seq_along(loc)) {
+    member_slots <- loc[[g]]
+    rows <- which(elem_group == g)
+    if (length(rows) == 0L) next
+
+    # Compute the proxy once for the whole ptype group
+    proxy_g <- vec_proxy_equal(vec_c(!!!x@x[member_slots]), ...)
+    if (!is.data.frame(proxy_g)) proxy_g <- data_frame(x = proxy_g)
+
+    # Position of each member row within the group's concatenation.
+    member_lens <- slot_len[member_slots]
+    offsets <- c(0L, cumsum(member_lens))
+    member_rank <- match(slot[rows], member_slots)
+    grp_pos <- offsets[member_rank] + local_pos[rows]
+
+    # Scatter the small per-group proxy into `n` rows via one vectorized
+    # slice, leaving non-member rows as NA placeholders.
+    filled <- vec_init(proxy_g, n)
+    filled <- vec_assign(filled, rows, vec_slice(proxy_g, grp_pos))
+    names(filled) <- paste0("g", g, "_", names(filled))
+
+    result <- vec_cbind(result, filled)
+  }
+
+  result
 }
 method(vec_proxy_compare, class_vecvec) <- function(x, ...) {
   xtfrm(x, ...)
