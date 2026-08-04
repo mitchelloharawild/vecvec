@@ -88,8 +88,11 @@
 #' @method Math vecvec::vecvec
 #' @export
 `Math.vecvec::vecvec` <- function(x, ...) {
-  if (.Generic %in% c("cumsum, cumprod, cummax, cummin")) {
-    rlang::abort("Culumative operations are not yet supported")
+  if (.Generic %in% c("cumsum", "cumprod", "cummax", "cummin")) {
+    rlang::abort(sprintf(
+      "`%s()` is not supported for vecvec objects. Call `unvecvec()` first if the slots share a common type.",
+      .Generic
+    ))
   }
   x@x <- lapply(x@x, .Generic, ...)
   # TODO - Detect if all listed prototypes are compatible, then collapse if flat
