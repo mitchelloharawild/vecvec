@@ -91,6 +91,32 @@ test_that("`[<-` with empty logical index leaves vecvec unchanged", {
   expect_equal(length(x@x), 2L)
 })
 
+test_that("`[<-` does not corrupt other elements sharing compressed storage", {
+  x <- rep(vecvec(1.5), 3)
+  x[2] <- 9
+  expect_equal(as.numeric(x), c(1.5, 9, 1.5))
+})
+
+test_that("`[<-` handles duplicated indices across mixed types", {
+  z <- vecvec(1.5, "a")[c(1, 1, 2, 2)]
+  z[2] <- 9
+  expect_equal(unvecvec(z, ptype = character()), c("1.5", "9", "a", "a"))
+})
+
+test_that("`[<-` works through a data.frame column assignment", {
+  df <- data.frame(i = 1:3)
+  df$v <- rep(vecvec(1.5), 3)
+  df[2, "v"] <- 9
+  expect_equal(as.numeric(df$v), c(1.5, 9, 1.5))
+})
+
+test_that("`[<-` still defragments storage when all sharers are replaced", {
+  x <- rep(vecvec(1.5), 3)
+  x[1:3] <- c(9, 10, 11)
+  expect_equal(as.numeric(x), c(9, 10, 11))
+  expect_equal(length(unlist(x@x)), 3L)
+})
+
 test_that("`[<-` with logical condition containing NAs does not error", {
   x <- vecvec(1:10)
   x[x < 4] <- NA_real_
@@ -229,4 +255,22 @@ test_that("`is.na<-` produces NA of the correct type for numeric slot", {
   is.na(x) <- 2L
   expect_true(is.na(x[[2]]))
   expect_true(is.numeric(x[[2]]))
+})
+
+test_that("`is.na<-` does not NA other elements sharing compressed storage", {
+  x <- rep(vecvec(1.5), 3)
+  is.na(x) <- 1
+  expect_equal(as.numeric(x), c(NA_real_, 1.5, 1.5))
+})
+
+test_that("`is.na<-` NAs all elements when all sharers of a value are NA'd", {
+  x <- rep(vecvec(1.5), 3)
+  is.na(x) <- 1:3
+  expect_true(all(is.na(as.numeric(x))))
+})
+
+test_that("`is.na<-` handles duplicated indices across mixed types", {
+  z <- vecvec(1.5, "a")[c(1, 1, 2, 2)]
+  is.na(z) <- 2
+  expect_equal(unvecvec(z, ptype = character()), c("1.5", NA, "a", "a"))
 })

@@ -17,9 +17,20 @@
   if (length(replacements) == 0L) return(x)
   value <- vec_recycle(value, size = length(replacements))
 
+  # Some stored values referenced by the replaced positions may still be
+  # referenced by *surviving* (non-replaced) positions, e.g. when duplicated
+  # indices share compressed storage (#18). Build a mask, shaped like
+  # `S7_data(x)`, that is TRUE at every position being replaced, so we can
+  # tell which stored values remain referenced by the untouched positions.
+  d <- dim(x)
+  mask <- if (is.null(d)) logical(length(S7_data(x))) else array(FALSE, dim = d)
+  mask[i, ...] <- TRUE
+  still_referenced <- unique(S7_data(x)[!mask])
+
   # Remove unreferenced values from `x@x`
   vec_rm <- unique(replacements)
   vec_rm <- vec_rm[!is.na(vec_rm)]
+  vec_rm <- setdiff(vec_rm, still_referenced)
   if (is.array(x)) {
     # Also remove out-of-bounds indices produced
     # by array() when length(x) != prod(dim(x))
@@ -74,15 +85,61 @@
     }
     value <- which(value)
   }
+  if (length(value) == 0L) return(x)
 
-  # Replace values with NA
-  vec_na <- unique(S7_data(x)[value])
+  idx <- S7_data(x)
+  vec_na <- unique(idx[value])
+  vec_na <- vec_na[!is.na(vec_na)]
+  if (length(vec_na) == 0L) return(x)
+
+  # A stored value referenced by the positions being NA'd may still be
+  # referenced by *surviving* (non-NA'd) positions when they share
+  # compressed storage (#18). NA-ing it in place would incorrectly NA those
+  # survivors too, so split it out into a fresh, private NA entry instead.
+  mask <- logical(length(idx))
+  mask[value] <- TRUE
+  still_referenced <- unique(idx[!mask])
+  vec_na_shared <- intersect(vec_na, still_referenced)
+  vec_na_safe <- setdiff(vec_na, vec_na_shared)
+
   vec_starts <- c(0L, cumsum(lengths(x@x)[-length(x@x)]))
-  vec_idx <- findInterval(vec_na, vec_starts, left.open = TRUE)
-  vec_pos <- vec_split(vec_na - vec_starts[vec_idx], vec_idx)
-  for (k in seq_len(nrow(vec_pos))) {
-    x@x[[vec_pos$key[[k]]]][vec_pos$val[[k]]] <- NA
+
+  # Stored positions with no surviving reference: NA them in place.
+  if (length(vec_na_safe)) {
+    vec_idx <- findInterval(vec_na_safe, vec_starts, left.open = TRUE)
+    vec_pos <- vec_split(vec_na_safe - vec_starts[vec_idx], vec_idx)
+    for (k in seq_len(nrow(vec_pos))) {
+      x@x[[vec_pos$key[[k]]]][vec_pos$val[[k]]] <- NA
+    }
   }
 
-  x
+  # Stored positions still referenced by survivors: give the NA'd positions
+  # their own copy, grouped by slot, and repoint them at it.
+  if (length(vec_na_shared)) {
+    vec_idx <- findInterval(vec_na_shared, vec_starts, left.open = TRUE)
+    vec_pos <- vec_split(vec_na_shared - vec_starts[vec_idx], vec_idx)
+
+    remap_from <- integer(0)
+    remap_to <- integer(0)
+    for (k in seq_len(nrow(vec_pos))) {
+      slot <- vec_pos$key[[k]]
+      local <- vec_pos$val[[k]]
+      elt <- x@x[[slot]][local]
+      is.na(elt) <- TRUE
+      base <- sum(lengths(x@x))
+      x@x <- c(x@x, list(elt))
+      remap_from <- c(remap_from, vec_starts[slot] + local)
+      remap_to <- c(remap_to, base + seq_along(local))
+    }
+
+    m <- match(idx[value], remap_from)
+    touched <- !is.na(m)
+    tmp <- idx[value]
+    tmp[touched] <- remap_to[m[touched]]
+    idx[value] <- tmp
+    S7_data(x) <- idx
+  }
+
+  # Crude but fast defragmentation of adjacent same-type vectors
+  vecvec_flatten_adj(x)
 }
