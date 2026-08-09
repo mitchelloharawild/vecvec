@@ -108,12 +108,11 @@ method(anyDuplicated, class_vecvec) <- function(x, incomparables = FALSE, ...) {
     }
     if (!is.na(dup) && dup > 0L) {
       # Find the actual index of the duplicated value
-      len <- c(0L, cumsum(lengths(x@x[idx[-length(idx)]])))
-      pos <- findInterval(dup, len, left.open = TRUE)
+      at <- vecvec_locate(x@x[idx], dup)
 
       # Position on the original vector is the duplicated index minus the offset
       # of the current vector plus the offset of all previous vectors
-      return(dup - len[pos] + sum(lengths(x@x[seq_len(loc[[i]][[pos]] - 1L)])))
+      return(at$within + sum(lengths(x@x[seq_len(loc[[i]][[at$slot]] - 1L)])))
     }
   }
 

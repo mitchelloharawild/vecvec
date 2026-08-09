@@ -55,9 +55,9 @@ method(vec_proxy_equal, class_vecvec) <- function(x, ...) {
 
   # Map each stored position to (slot, position-within-slot).
   slot_len <- lengths(x@x)
-  slot_bounds <- c(0L, cumsum(slot_len))
-  slot <- findInterval(idx, slot_bounds, left.open = TRUE)
-  local_pos <- idx - slot_bounds[slot]
+  at <- vecvec_locate(x@x, idx)
+  slot <- at$slot
+  local_pos <- at$within
 
   # Group slots sharing a common ptype, as `duplicated()` does - only slots
   # with identical ptypes can ever compare equal to one another.
@@ -149,8 +149,7 @@ vec_cast_to_vecvec <- function(x, to, ...) {
   if (length(to@x) == 0L) return(to)
 
   idx <- S7_data(to)
-  len <- c(0L, cumsum(lengths(to@x[-length(to@x)])))
-  pos <- findInterval(idx, len, left.open = TRUE)
+  pos <- vecvec_locate(to@x, idx)$slot
 
   if (!anyDuplicated(idx)) {
     # Match index positions and vec_cast the individual vectors

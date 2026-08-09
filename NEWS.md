@@ -14,6 +14,10 @@
 
 * Added `is.numeric()` method for `vecvec`, which checks the type of its
   slots rather than the container itself.
+* Added `all.equal()` method for `vecvec`. Previously the default method
+  compared the underlying storage (indices and numeric-only slot content)
+  rather than the represented values, giving misleading results or erroring
+  whenever a slot held a non-numeric type.
 * Fixed `as.data.frame()` on a `vecvec` always erroring. It now wraps the
   `vecvec` as a single column, as is done with atomic vectors.
 * Fixed `[<-` and `is.na<-` corrupting compressed storage shared by other,

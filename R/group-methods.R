@@ -28,19 +28,13 @@
   args <- vec_recycle_common(e1 = e1, e2 = e2)
   n <- vec_size(args[[1L]])
 
-  # Cumulative slot boundaries: map indices -> (slot index, within-slot position).
-  b <- lapply(args, function(a) c(0L, cumsum(lengths(a@x))))
-  slot <- lapply(
-    seq_along(args),
-    function(i) findInterval(S7_data(args[[i]]), b[[i]], left.open = TRUE)
-  )
-  within <- .mapply(
-    function(arg, b, slot) S7_data(arg) - b[slot],
-    list(args, b, slot), NULL
-  )
+  # Map indices -> (slot index, within-slot position).
+  at <- lapply(args, function(a) vecvec_locate(a@x, S7_data(a)))
+  slot <- lapply(at, `[[`, "slot")
+  within <- lapply(at, `[[`, "within")
 
   # Encode the (slot$e1, slot$e2) pair as a single key; contiguous runs define output slots.
-  slot_pair_key <- (slot[[1L]] - 1L) * (length(args$e2@x) + 1L) + slot[[2L]]
+  slot_pair_key <- vecvec_pair_key(slot[[1L]], slot[[2L]], length(args$e2@x))
   out_slot <- cumsum(c(TRUE, slot_pair_key[-1L] != slot_pair_key[-n]))
   n_slots <- out_slot[length(out_slot)]
 

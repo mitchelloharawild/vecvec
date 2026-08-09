@@ -81,3 +81,36 @@ overlap_indices <- function(a, b) {
 is_altrep <- function(x) {
   .Call("vecvec_is_altrep", x, PACKAGE = "vecvec")
 }
+
+# Map global positions (1-based offsets into the concatenation of `slots`)
+# to their (slot, within-slot) location.
+#
+# This is the arithmetic shared by every operation that needs to know which
+# element of a vecvec's @x a stored value lives in - indexing, casting,
+# equality proxies, duplicate detection, comparisons, etc.
+#
+# @param slots A list of vectors, e.g. `x@x`, or a subset of it.
+# @param pos Integer vector of 1-based positions into the concatenation of
+#   `slots`. May contain `NA`, which map to `NA` slot/within-slot values.
+#
+# @return A list with `slot` (which element of `slots` each position falls
+#   in) and `within` (the corresponding 1-based position inside that slot).
+vecvec_locate <- function(slots, pos) {
+  bounds <- c(0L, cumsum(lengths(slots)))
+  slot <- findInterval(pos, bounds, left.open = TRUE)
+  list(slot = slot, within = pos - bounds[slot])
+}
+
+# Encode a pair of per-object slot indices into a single grouping key, such
+# that equal keys imply an equal (slot_x, slot_y) pair. Used to group
+# elements of two vecvecs that draw from the same pair of underlying slots
+# (e.g. for a binary op or a comparison between them).
+#
+# @param slot_x,slot_y Integer vectors of slot indices (as returned by
+#   `vecvec_locate()$slot`), the same length.
+# @param n_y The number of slots in the second object (e.g. `length(y@x)`).
+#
+# @return An integer vector the same length as `slot_x`/`slot_y`.
+vecvec_pair_key <- function(slot_x, slot_y, n_y) {
+  (slot_x - 1L) * (n_y + 1L) + slot_y
+}

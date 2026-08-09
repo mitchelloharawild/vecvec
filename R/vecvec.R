@@ -198,21 +198,18 @@ method(`[`, class_vecvec) <- function(x, i, ...) {
 
   idx_nn <- idx[not_na]
 
-  # Slot start positions in original x@x
-  orig_starts <- c(0L, cumsum(lengths(x@x[-length(x@x)])))
-
-  # Which original slot each selected element belongs to
-  pos <- findInterval(idx_nn, orig_starts, left.open = TRUE)
+  # Which original slot (and within-slot position) each selected element belongs to
+  at <- vecvec_locate(x@x, idx_nn)
+  pos <- at$slot
 
   # Drop entirely unreferenced slots
   keep <- sort(unique(pos))
   all_kept <- length(keep) == length(x@x)
 
   x@x <- x@x[keep]
-  orig_starts <- orig_starts[keep]
 
   new_slot <- match(pos, keep)
-  local_idx <- idx_nn - orig_starts[new_slot] # 1-based within slot
+  local_idx <- at$within # 1-based within slot
 
   # TODO - remove unreferenced values from x@x if *all* references are dropped
   if (!anyDuplicated(idx_nn)) {
@@ -241,10 +238,8 @@ method(`[`, class_vecvec) <- function(x, i, ...) {
 }
 
 method(`[[`, class_vecvec) <- function(x, i, ...) {
-  idx <- S7_data(x)[i]
-  len <- c(0L, cumsum(lengths(x@x[-length(x@x)])))
-  pos <- findInterval(idx, len, left.open = TRUE)
-  x@x[[pos]][[idx - len[pos]]]
+  at <- vecvec_locate(x@x, S7_data(x)[i])
+  x@x[[at$slot]][[at$within]]
 }
 
 # ------------------------------------------------------------------------------
