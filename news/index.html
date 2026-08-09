@@ -56,6 +56,7 @@
 <code><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">duplicated()</a></code>/<code><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">anyDuplicated()</a></code>, <code>vec_proxy_equal()</code>, and casting into a <code>vecvec</code> are now computed slot-wise instead of materialising every element.</li>
 <li>ALTREP detection (used to avoid materialisation when merging adjacent slots) now uses a C-level check rather than parsing <code>.Internal(inspect())</code>.</li>
 <li>Added support for casting into a <code>vecvec</code> with duplicated indices.</li>
+<li>Errors, warnings, and messages now use the <code>cli</code> package.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
