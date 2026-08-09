@@ -89,7 +89,13 @@ vecvec <- function(...) {
 #' @export
 unvecvec <- function(x, ptype = NULL) {
   if (!is_vecvec(x)) {
-    stop("`x` must be a vecvec object", call. = FALSE)
+    cli::cli_abort(
+      c(
+        "{.arg x} must be a {.cls vecvec} object.",
+        "i" = "Create one with {.fn vecvec}."
+      ),
+      call = NULL
+    )
   }
 
   if ((len <- length(x)) == 0L) {

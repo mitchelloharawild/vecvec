@@ -89,10 +89,13 @@
 #' @export
 `Math.vecvec::vecvec` <- function(x, ...) {
   if (.Generic %in% c("cumsum", "cumprod", "cummax", "cummin")) {
-    rlang::abort(sprintf(
-      "`%s()` is not supported for vecvec objects. Call `unvecvec()` first if the slots share a common type.",
-      .Generic
-    ))
+    generic <- .Generic
+    cli::cli_abort(
+      c(
+        "{.fn {generic}} is not supported for {.cls vecvec} objects.",
+        "i" = "Call {.fn unvecvec} first if the slots share a common type."
+      )
+    )
   }
   x@x <- lapply(x@x, .Generic, ...)
   # TODO - Detect if all listed prototypes are compatible, then collapse if flat

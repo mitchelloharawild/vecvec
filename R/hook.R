@@ -1,12 +1,18 @@
 register_s3_method <- function(pkg, generic, class, fun = NULL) {
-  stopifnot(is.character(pkg), length(pkg) == 1)
-  stopifnot(is.character(generic), length(generic) == 1)
-  stopifnot(is.character(class), length(class) == 1)
+  if (!is.character(pkg) || length(pkg) != 1) {
+    cli::cli_abort("{.arg pkg} must be a single string.", call = NULL)
+  }
+  if (!is.character(generic) || length(generic) != 1) {
+    cli::cli_abort("{.arg generic} must be a single string.", call = NULL)
+  }
+  if (!is.character(class) || length(class) != 1) {
+    cli::cli_abort("{.arg class} must be a single string.", call = NULL)
+  }
 
   if (is.null(fun)) {
     fun <- get(paste0(generic, ".", class), envir = parent.frame())
-  } else {
-    stopifnot(is.function(fun))
+  } else if (!is.function(fun)) {
+    cli::cli_abort("{.arg fun} must be a function.", call = NULL)
   }
 
   if (pkg %in% loadedNamespaces()) {
@@ -73,7 +79,13 @@ vecvec_register <- function(
   vctrs_exports <- getNamespaceExports(asNamespace("vctrs"))
 
   if (!S7_inherits(x(), class_vecvec)) {
-    stop("`x` must be an S7 object extending `vecvec`", call. = FALSE)
+    cli::cli_abort(
+      c(
+        "{.arg x} must be an S7 object extending {.cls vecvec}.",
+        "i" = "Create a subclass with {.fn S7::new_class}, setting {.code parent = vecvec::class_vecvec}."
+      ),
+      call = NULL
+    )
   }
 
   pkg <- attr(x, "package", exact = TRUE)

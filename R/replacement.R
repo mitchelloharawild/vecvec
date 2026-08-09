@@ -67,7 +67,13 @@
 #' @rawNamespace S3method(`[[<-`,"vecvec::vecvec")
 `[[<-.vecvec::vecvec` <- function(x, i, value) {
   if (length(i) != 1L) {
-    stop("attempt to replace multiple elements in a vecvec", call. = FALSE)
+    cli::cli_abort(
+      c(
+        "attempt to replace multiple elements in a {.cls vecvec}.",
+        "i" = "Use {.fn [<-} to replace multiple elements at once."
+      ),
+      call = NULL
+    )
   }
 
   x[i] <- value
@@ -81,7 +87,13 @@
 `is.na<-.vecvec::vecvec` <- function(x, value) {
   if (is.logical(value)) {
     if (length(value) != length(x)) {
-      stop("logical subscript has wrong length", call. = FALSE)
+      cli::cli_abort(
+        c(
+          "logical subscript has wrong length",
+          "i" = "{.arg value} has length {length(value)}, but {.arg x} has length {length(x)}."
+        ),
+        call = NULL
+      )
     }
     value <- which(value)
   }

@@ -25,7 +25,13 @@ method(anyNA, class_vecvec) <- function(x, recursive = FALSE) {
 }
 method(na.fail, class_vecvec) <- function(object, ...) {
   if (anyNA(object)) {
-    stop("missing values in object of class 'vecvec'", call. = FALSE)
+    cli::cli_abort(
+      c(
+        "Missing values in object of class {.cls vecvec}.",
+        "i" = "Use {.fn na.omit} or {.fn na.exclude} to remove missing values."
+      ),
+      call = NULL
+    )
   }
   object
 }

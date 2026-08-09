@@ -8,6 +8,7 @@
 * ALTREP detection (used to avoid materialisation when merging adjacent slots)
   now uses a C-level check rather than parsing `.Internal(inspect())`.
 * Added support for casting into a `vecvec` with duplicated indices.
+* Errors, warnings, and messages now use the `cli` package.
 
 ## Bug fixes
 

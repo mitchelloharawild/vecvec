@@ -17,7 +17,8 @@ Description: Mixed type vectors are useful for combining semantically similar
   attributes of each vector. The 'vecvec' data structure facilitates efficient 
   storage and computation across multiple vectors within the same object.
 License: MIT + file LICENSE
-Imports: 
+Imports:
+    cli,
     rlang,
     S7,
     stats,
