@@ -2,16 +2,25 @@
 
 ## Improvements
 
-* Reworked formatting of array structured vecvec vectors to prevent ALTREP
-  materialisation.
+* Reworked formatting of array vecvecs to prevent ALTREP materialisation.
+* `duplicated()`/`anyDuplicated()`, `vec_proxy_equal()`, and casting into a
+  `vecvec` are now computed slot-wise instead of materialising every element.
+* ALTREP detection (used to avoid materialisation when merging adjacent slots)
+  now uses a C-level check rather than parsing `.Internal(inspect())`.
+* Added support for casting into a `vecvec` with duplicated indices.
 
 ## Bug fixes
 
+* Added `is.numeric()` method for `vecvec`, which checks the type of its
+  slots rather than the container itself.
 * Fixed `as.data.frame()` on a `vecvec` always erroring. It now wraps the
-  `vecvec` as a single column instead of trying to cast each element to a
-  `data.frame`, matching the behaviour of `vctrs_vctr` classes. This also
-  fixes `data.frame(x = vv)`, which calls `as.data.frame()` internally on
-  non-atomic columns.
+  `vecvec` as a single column, as is done with atomic vectors.
+* Fixed `[<-` and `is.na<-` corrupting compressed storage shared by other,
+  unreplaced elements when only some of the sharers were overwritten.
+* Fixed `duplicated()`/`anyDuplicated()` incorrectly destructuring `vctrs`
+  record-style slots (e.g. `vctrs_rcrd`) element-by-element.
+* Fixed cumulative `Math` generics (`cumsum()`, `cumprod()`, `cummax()`,
+  `cummin()`) silently erroring.
 
 # vecvec 1.2.0
 
