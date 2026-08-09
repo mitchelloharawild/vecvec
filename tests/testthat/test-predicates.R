@@ -109,6 +109,27 @@ test_that("is.nan() works on a length-1 NaN vecvec", {
   expect_true(is.nan(x))
 })
 
+# is.numeric() -----------------------------------------------------------------
+
+test_that("is.numeric() returns TRUE for a vecvec of numeric slots", {
+  x <- vecvec(1:5, c(1.5, 2.5))
+  expect_true(is.numeric(x))
+})
+
+test_that("is.numeric() returns FALSE for a vecvec of character slots", {
+  x <- vecvec(letters)
+  expect_false(is.numeric(x))
+})
+
+test_that("is.numeric() returns FALSE when only some slots are numeric", {
+  x <- vecvec(1:5, letters[1:3])
+  expect_false(is.numeric(x))
+})
+
+test_that("is.numeric() returns TRUE for a zero-length vecvec", {
+  expect_true(is.numeric(vecvec()))
+})
+
 # is.na() --------------------------------------------------------------------
 
 test_that("is.na() returns FALSE for vecvec with no NAs", {

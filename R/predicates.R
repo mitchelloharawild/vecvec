@@ -2,6 +2,14 @@ method(is.finite, class_vecvec) <- vecvec_apply_fn(is.finite, ptype = logical())
 method(is.infinite, class_vecvec) <- vecvec_apply_fn(is.infinite, ptype = logical())
 method(is.nan, class_vecvec) <- vecvec_apply_fn(is.nan, ptype = logical())
 
+# Type-testing is.*() predicates (is.numeric(), is.character(), ...) normally
+# check the type of the object they're given, not its elements. A vecvec 
+# instead checks the types of its elements, so that a vecvec of numeric vectors 
+# is considered numeric.
+method(is.numeric, class_vecvec) <- function(x) {
+  all(vapply(x@x, is.numeric, logical(1L)))
+}
+
 method(is.na, class_vecvec) <- function(x) {
   # Missing values in vecvec indices or values are both considered NA.
   is.na(S7_data(x)) | unvecvec(vecvec_apply(x, is.na), ptype = logical())
