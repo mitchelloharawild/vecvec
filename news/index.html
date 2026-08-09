@@ -51,11 +51,19 @@
 <h2 class="page-header" data-toc-text="development version" id="vecvec-development-version">vecvec (development version)<a class="anchor" aria-label="anchor" href="#vecvec-development-version"></a></h2>
 <div class="section level3">
 <h3 id="improvements-development-version">Improvements<a class="anchor" aria-label="anchor" href="#improvements-development-version"></a></h3>
-<ul><li>Reworked formatting of array structured vecvec vectors to prevent ALTREP materialisation.</li>
+<ul><li>Reworked formatting of array vecvecs to prevent ALTREP materialisation.</li>
+<li>
+<code><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">duplicated()</a></code>/<code><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">anyDuplicated()</a></code>, <code>vec_proxy_equal()</code>, and casting into a <code>vecvec</code> are now computed slot-wise instead of materialising every element.</li>
+<li>ALTREP detection (used to avoid materialisation when merging adjacent slots) now uses a C-level check rather than parsing <code>.Internal(inspect())</code>.</li>
+<li>Added support for casting into a <code>vecvec</code> with duplicated indices.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
-<ul><li>Fixed <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> on a <code>vecvec</code> always erroring. It now wraps the <code>vecvec</code> as a single column instead of trying to cast each element to a <code>data.frame</code>, matching the behaviour of <code>vctrs_vctr</code> classes. This also fixes <code>data.frame(x = vv)</code>, which calls <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> internally on non-atomic columns.</li>
+<ul><li>Added <code><a href="https://rdrr.io/r/base/numeric.html" class="external-link">is.numeric()</a></code> method for <code>vecvec</code>, which checks the type of its slots rather than the container itself.</li>
+<li>Fixed <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> on a <code>vecvec</code> always erroring. It now wraps the <code>vecvec</code> as a single column, as is done with atomic vectors.</li>
+<li>Fixed <code>[&lt;-</code> and <code>is.na&lt;-</code> corrupting compressed storage shared by other, unreplaced elements when only some of the sharers were overwritten.</li>
+<li>Fixed <code><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">duplicated()</a></code>/<code><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">anyDuplicated()</a></code> incorrectly destructuring <code>vctrs</code> record-style slots (e.g. <code>vctrs_rcrd</code>) element-by-element.</li>
+<li>Fixed cumulative <code>Math</code> generics (<code><a href="https://rdrr.io/r/base/cumsum.html" class="external-link">cumsum()</a></code>, <code><a href="https://rdrr.io/r/base/cumsum.html" class="external-link">cumprod()</a></code>, <code><a href="https://rdrr.io/r/base/cumsum.html" class="external-link">cummax()</a></code>, <code><a href="https://rdrr.io/r/base/cumsum.html" class="external-link">cummin()</a></code>) silently erroring.</li>
 </ul></div>
 </div>
     <div class="section level2">
