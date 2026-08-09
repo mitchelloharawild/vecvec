@@ -61,6 +61,7 @@
 <div class="section level3">
 <h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
 <ul><li>Added <code><a href="https://rdrr.io/r/base/numeric.html" class="external-link">is.numeric()</a></code> method for <code>vecvec</code>, which checks the type of its slots rather than the container itself.</li>
+<li>Added <code><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal()</a></code> method for <code>vecvec</code>. Previously the default method compared the underlying storage (indices and numeric-only slot content) rather than the represented values, giving misleading results or erroring whenever a slot held a non-numeric type.</li>
 <li>Fixed <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> on a <code>vecvec</code> always erroring. It now wraps the <code>vecvec</code> as a single column, as is done with atomic vectors.</li>
 <li>Fixed <code>[&lt;-</code> and <code>is.na&lt;-</code> corrupting compressed storage shared by other, unreplaced elements when only some of the sharers were overwritten.</li>
 <li>Fixed <code><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">duplicated()</a></code>/<code><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">anyDuplicated()</a></code> incorrectly destructuring <code>vctrs</code> record-style slots (e.g. <code>vctrs_rcrd</code>) element-by-element.</li>
