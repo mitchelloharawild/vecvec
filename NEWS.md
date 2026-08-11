@@ -12,6 +12,7 @@
 
 ## Bug fixes
 
+* `[.vecvec` now compacts slots to actually referenced rows.
 * Added `is.numeric()` method for `vecvec`, which checks the type of its
   slots rather than the container itself.
 * Added `all.equal()` method for `vecvec`. Previously the default method

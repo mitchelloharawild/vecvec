@@ -211,19 +211,16 @@ method(`[`, class_vecvec) <- function(x, i, ...) {
   new_slot <- match(pos, keep)
   local_idx <- at$within # 1-based within slot
 
-  # TODO - remove unreferenced values from x@x if *all* references are dropped
-  if (!anyDuplicated(idx_nn)) {
-    slot_lengths <- lengths(x@x)
-    groups <- split(seq_along(new_slot), new_slot)
+  slot_lengths <- lengths(x@x)
+  groups <- split(seq_along(new_slot), new_slot)
 
-    for (k in seq_along(x@x)) {
-      el <- groups[[k]]
-      sel <- local_idx[el]
-      u <- unique(sel)
-      if (length(u) < slot_lengths[k]) {
-        local_idx[el] <- match(sel, u)
-        x@x[[k]] <- x@x[[k]][u]
-      }
+  for (k in seq_along(x@x)) {
+    el <- groups[[k]]
+    sel <- local_idx[el]
+    u <- unique(sel)
+    if (length(u) < slot_lengths[k]) {
+      local_idx[el] <- match(sel, u)
+      x@x[[k]] <- x@x[[k]][u]
     }
   }
 
