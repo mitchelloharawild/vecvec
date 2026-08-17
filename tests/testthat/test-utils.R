@@ -33,3 +33,11 @@ test_that("vecvec() construction merges adjacent non-ALTREP slots of the same ty
   expect_equal(length(x@x), 1L)
   expect_equal(unvecvec(x), c(1.5, 2.5, 3.5))
 })
+
+test_that("vecvec_align() isolates an NA index as its own group instead of dropping everything after it", {
+  x <- vecvec(c(1, 2, 3, 10))[c(1, 2, 3, NA, 4)]
+  y <- vecvec(as.list(10 * (1:5)))
+
+  al <- vecvec_align(list(x, y))
+  expect_equal(al$groups, list(`1` = 1:3, `2` = 4L, `3` = 5L))
+})

@@ -66,6 +66,19 @@ test_that("Binary Ops don't expand when arguments are invariable over replicates
   )
 })
 
+test_that("Binary Ops propagate NA from a missing index in either operand", {
+  # `vecvec_align()` must treat an NA slot as a run boundary rather than
+  # letting it poison `cumsum()` for every position after it - and this
+  # `Ops` method must in turn map those NA groups to a missing index instead
+  # of trying to compute on them.
+  e1 <- vecvec(c(1, 2, 3, 10))[c(1, 2, NA, 4)]
+  e2 <- vecvec(c(1, 2, 3, 10))[c(1, NA, 3, 4)]
+
+  expect_equal(as.numeric(e1 + c(100, 200, 300, 400)), c(101, 202, NA, 410))
+  expect_equal(as.numeric(e1 + e2), c(2, NA, NA, 20))
+  expect_equal(e1 == e2, c(TRUE, NA, NA, TRUE))
+})
+
 test_that("Binary Ops expand when arguments differ across replicated indices", {
   x <- vecvec(1:10, as.double(11:20), 21:30)
 

@@ -28,23 +28,27 @@
   args <- vec_recycle_common(e1 = e1, e2 = e2)
   n <- vec_size(args[[1L]])
 
-  # Map indices -> (slot index, within-slot position).
-  at <- lapply(args, function(a) vecvec_locate(a@x, S7_data(a)))
-  slot <- lapply(at, `[[`, "slot")
-  within <- lapply(at, `[[`, "within")
-
-  # Encode the (slot$e1, slot$e2) pair as a single key; contiguous runs define output slots.
-  slot_pair_key <- vecvec_pair_key(slot[[1L]], slot[[2L]], length(args$e2@x))
-  out_slot <- cumsum(c(TRUE, slot_pair_key[-1L] != slot_pair_key[-n]))
-  n_slots <- out_slot[length(out_slot)]
+  # Map indices -> (slot index, within-slot position), and group positions
+  # into contiguous runs drawing from the same pair of underlying slots.
+  al <- vecvec_align(args)
+  slot <- al$slot
+  within <- al$within
+  groups <- al$groups
+  n_slots <- length(groups)
 
   # For each output slot: compute the op on unique (w$e1, w$e2) pairs and record val_idx.
   # Returns list(vals, val_idx) so result_i can be built without a second pass.
-  groups <- split(seq_len(n), out_slot)
+  # A group whose slot is NA (e1 or e2 is missing at that position) isn't
+  # backed by a real value in either operand's slots, so it's left out of
+  # result_x entirely and mapped to a missing (NA) index in result_i below,
+  # rather than fabricating a value to run .Generic on.
   computed <- lapply(groups, function(pos) {
-    w <- lapply(within, `[`, pos)
     s_idx <- lapply(slot, `[[`, pos[1L])
+    if (anyNA(s_idx)) {
+      return(list(vals = NULL, val_idx = integer(0L)))
+    }
 
+    w <- lapply(within, `[`, pos)
     pair_key <- (w[[1L]] - 1L) * length(args[[2L]]@x[[s_idx[[2L]]]]) + w[[2L]]
     unique_keys <- unique(pair_key)
     first_of <- match(unique_keys, pair_key)
@@ -61,13 +65,17 @@
     )
   })
 
-  result_x <- unname(lapply(computed, `[[`, "vals"))
+  is_na_group <- vapply(computed, function(cs) is.null(cs$vals), logical(1L))
+  result_x <- unname(lapply(computed[!is_na_group], `[[`, "vals"))
 
   # Precompute per-slot offsets once, then scatter val_idx into result_i.
-  offsets <- c(0L, cumsum(lengths(result_x))[-n_slots])
-  result_i <- integer(n)
+  offsets <- if (length(result_x)) c(0L, cumsum(lengths(result_x))[-length(result_x)]) else integer(0L)
+  result_i <- rep(NA_integer_, n)
+  vi <- 0L
   for (s in seq_len(n_slots)) {
-    result_i[groups[[s]]] <- offsets[[s]] + computed[[s]]$val_idx
+    if (is_na_group[[s]]) next
+    vi <- vi + 1L
+    result_i[groups[[s]]] <- offsets[[vi]] + computed[[s]]$val_idx
   }
 
   # TODO - use a method to identify if a better class can be returned.
