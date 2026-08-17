@@ -28,6 +28,25 @@ test_that("unvecvec missing values", {
   )
 })
 
+test_that("unvecvec row-scatters matrix and data.frame results", {
+  # `[<-` on a matrix/data.frame is column selection, not row selection, so
+  # `unvecvec()` must use vec_slice()/vec_assign() (row-respecting) to scatter
+  # values into place instead of single-bracket indexing.
+  m <- matrix(1:8, nrow = 4, ncol = 2, byrow = TRUE)
+  vv <- class_vecvec(x = list(m), i = c(1L, 3L, 2L, 4L, 3L))
+  expect_equal(
+    unname(unvecvec(vv)),
+    unname(m[c(1, 3, 2, 4, 3), , drop = FALSE])
+  )
+
+  df <- data.frame(a = 1:4, b = letters[1:4])
+  vvd <- class_vecvec(x = list(df), i = c(1L, NA, 3L, 2L))
+  expect_equal(
+    unvecvec(vvd),
+    data.frame(a = c(1L, NA, 3L, 2L), b = c("a", NA, "c", "b"))
+  )
+})
+
 
 test_that("Replicating vectors", {
   rand <- rnorm(5, sd = 5)

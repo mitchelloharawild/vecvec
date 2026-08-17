@@ -31,6 +31,11 @@
   record-style slots (e.g. `vctrs_rcrd`) element-by-element.
 * Fixed cumulative `Math` generics (`cumsum()`, `cumprod()`, `cummax()`,
   `cummin()`) silently erroring.
+* Fixed `unvecvec()` scattering values with single-bracket indexing, which is
+  column (not row) selection for matrix and data frame results. This silently
+  gave wrong answers whenever a slot held more than one distinct row, and
+  hard-errored whenever an `NA` index was present. It now uses
+  `vctrs::vec_slice()`/`vctrs::vec_assign()`, which respect rows.
 
 # vecvec 1.2.0
 

@@ -112,8 +112,10 @@ unvecvec <- function(x, ptype = NULL) {
 
   # Construct output single-typed vector
   res <- vec_init(ptype, n = len)
-  pos <- !is.na(S7_data(x))
-  res[pos] <- vec_c(!!!x@x)[S7_data(x)[pos]]
+  pos <- as.vector(!is.na(S7_data(x)))
+  if (any(pos)) {
+    res <- vec_assign(res, pos, vec_slice(vec_c(!!!x@x), S7_data(x)[pos]))
+  }
   res
 }
 
