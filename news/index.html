@@ -57,6 +57,7 @@
 <li>ALTREP detection (used to avoid materialisation when merging adjacent slots) now uses a C-level check rather than parsing <code>.Internal(inspect())</code>.</li>
 <li>Added support for casting into a <code>vecvec</code> with duplicated indices.</li>
 <li>Errors, warnings, and messages now use the <code>cli</code> package.</li>
+<li>Added <code><a href="../reference/vecvec_mapply.html">vecvec_mapply()</a></code>, which applies a vectorised function across multiple (possibly heterogeneously-typed) vectors, batching calls by shared underlying storage slots rather than calling it once per element as <code><a href="https://rdrr.io/r/base/mapply.html" class="external-link">mapply()</a></code> does.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
@@ -68,6 +69,7 @@
 <li>Fixed <code>[&lt;-</code> and <code>is.na&lt;-</code> corrupting compressed storage shared by other, unreplaced elements when only some of the sharers were overwritten.</li>
 <li>Fixed <code><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">duplicated()</a></code>/<code><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">anyDuplicated()</a></code> incorrectly destructuring <code>vctrs</code> record-style slots (e.g. <code>vctrs_rcrd</code>) element-by-element.</li>
 <li>Fixed cumulative <code>Math</code> generics (<code><a href="https://rdrr.io/r/base/cumsum.html" class="external-link">cumsum()</a></code>, <code><a href="https://rdrr.io/r/base/cumsum.html" class="external-link">cumprod()</a></code>, <code><a href="https://rdrr.io/r/base/cumsum.html" class="external-link">cummax()</a></code>, <code><a href="https://rdrr.io/r/base/cumsum.html" class="external-link">cummin()</a></code>) silently erroring.</li>
+<li>Fixed <code><a href="../reference/unvecvec.html">unvecvec()</a></code> scattering values with single-bracket indexing, which is column (not row) selection for matrix and data frame results. This silently gave wrong answers whenever a slot held more than one distinct row, and hard-errored whenever an <code>NA</code> index was present. It now uses <code><a href="https://vctrs.r-lib.org/reference/vec_slice.html" class="external-link">vctrs::vec_slice()</a></code>/<code><a href="https://vctrs.r-lib.org/reference/vec_slice.html" class="external-link">vctrs::vec_assign()</a></code>, which respect rows.</li>
 </ul></div>
 </div>
     <div class="section level2">
