@@ -101,12 +101,6 @@ str(rep(x, each = 10))
 #>  .. $ : Date[1:1], format: "2025-03-29"
 #>  .. $ : POSIXct[1:1], format: "2025-01-03 10:05:00"
 #>  .. $ : num [1:10] 1.263 -0.326 1.33 1.272 0.415 ...
-str(x[c(1,1,1,3,2,2)])
-#> <vecvec::vecvec> int [1:6] 1 1 1 3 2 2
-#>  @ x:List of 3
-#>  .. $ : Date[1:1], format: "2025-03-29"
-#>  .. $ : POSIXct[1:1], format: "2025-01-03 10:05:00"
-#>  .. $ : num [1:10] 1.263 -0.326 1.33 1.272 0.415 ...
 ```
 
 The values in the attribute are unchanged, which allows for efficient
