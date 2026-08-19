@@ -50,6 +50,10 @@
     <div class="section level2">
 <h2 class="page-header" data-toc-text="development version" id="vecvec-development-version">vecvec (development version)<a class="anchor" aria-label="anchor" href="#vecvec-development-version"></a></h2>
 <div class="section level3">
+<h3 id="new-features-development-version">New features<a class="anchor" aria-label="anchor" href="#new-features-development-version"></a></h3>
+<ul><li>Added <code><a href="../reference/vecvec_mapply.html">vecvec_mapply()</a></code>, which applies a vectorised function across multiple (possibly heterogeneously-typed) vectors, batching calls by shared underlying storage slots rather than calling it once per element as <code><a href="https://rdrr.io/r/base/mapply.html" class="external-link">mapply()</a></code> does.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="improvements-development-version">Improvements<a class="anchor" aria-label="anchor" href="#improvements-development-version"></a></h3>
 <ul><li>Reworked formatting of array vecvecs to prevent ALTREP materialisation.</li>
 <li>
@@ -57,7 +61,6 @@
 <li>ALTREP detection (used to avoid materialisation when merging adjacent slots) now uses a C-level check rather than parsing <code>.Internal(inspect())</code>.</li>
 <li>Added support for casting into a <code>vecvec</code> with duplicated indices.</li>
 <li>Errors, warnings, and messages now use the <code>cli</code> package.</li>
-<li>Added <code><a href="../reference/vecvec_mapply.html">vecvec_mapply()</a></code>, which applies a vectorised function across multiple (possibly heterogeneously-typed) vectors, batching calls by shared underlying storage slots rather than calling it once per element as <code><a href="https://rdrr.io/r/base/mapply.html" class="external-link">mapply()</a></code> does.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
