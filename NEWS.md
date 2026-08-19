@@ -1,5 +1,12 @@
 # vecvec (development version)
 
+## New features
+
+* Added `vecvec_mapply()`, which applies a vectorised function across
+  multiple (possibly heterogeneously-typed) vectors, batching calls by
+  shared underlying storage slots rather than calling it once per element
+  as `mapply()` does.
+
 ## Improvements
 
 * Reworked formatting of array vecvecs to prevent ALTREP materialisation.
@@ -9,10 +16,6 @@
   now uses a C-level check rather than parsing `.Internal(inspect())`.
 * Added support for casting into a `vecvec` with duplicated indices.
 * Errors, warnings, and messages now use the `cli` package.
-* Added `vecvec_mapply()`, which applies a vectorised function across
-  multiple (possibly heterogeneously-typed) vectors, batching calls by
-  shared underlying storage slots rather than calling it once per element
-  as `mapply()` does.
 
 ## Bug fixes
 
