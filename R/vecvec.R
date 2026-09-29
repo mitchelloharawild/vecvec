@@ -257,8 +257,10 @@ method(c, class_vecvec) <- function(..., recursive = FALSE) {
   ))
 
   x <- lapply(dots, function(x) x@x)
+  # Collect each input's (offset) indices as list elements, so that a single
+  # zero-length input still unlists to integer() rather than NULL.
   i <- c(
-    S7_data(dots[[1L]]),
+    list(S7_data(dots[[1L]])),
     .mapply(
       function(x, j) S7_data(x) + j,
       list(x = dots[-1L], j = i_offsets),
@@ -268,7 +270,7 @@ method(c, class_vecvec) <- function(..., recursive = FALSE) {
 
   S7_class(..1)(
     x = unlist(x, recursive = FALSE),
-    i = unlist(i, recursive = FALSE)
+    i = as.integer(unlist(i, use.names = FALSE))
   )
 }
 

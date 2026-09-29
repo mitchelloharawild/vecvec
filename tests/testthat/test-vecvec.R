@@ -55,3 +55,15 @@ test_that("Replicating vectors", {
     rep(c(1:10, rand), 5)
   )
 })
+
+test_that("c() of zero-length vecvecs", {
+  v <- vecvec(1:3, letters[1:2])
+
+  # A single empty input previously produced invalid (list) indices
+  expect_identical(c(v[0]), v[0])
+  expect_identical(c(vecvec()), vecvec())
+  expect_length(c(v[0], v[0]), 0L)
+  expect_identical(c(v[0], v), c(v))
+  expect_identical(c(v, v[0]), c(v))
+  expect_identical(vctrs::vec_c(v[0]), v[0])
+})

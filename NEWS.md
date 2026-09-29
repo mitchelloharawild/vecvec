@@ -7,6 +7,11 @@
   than hashing their contents once per row.
 * `vecvec_apply()` now splices `vecvec` results from `.f` into the result
   instead of nesting them, so `unvecvec()` simplifies them directly.
+  
+## Bug fixes
+
+* `c()` of a single zero-length `vecvec` (e.g. `c(x[0])`) no longer errors
+  with "Underlying data must be <integer> not <list>".
 
 # vecvec 1.3.0
 
