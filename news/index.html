@@ -58,6 +58,8 @@
 <div class="section level3">
 <h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
 <ul><li>
+<code>vec_c()</code> and <code>vec_rbind()</code> (and so <code>dplyr::bind_rows()</code>) no longer reorder elements when the inputs’ storage is interleaved, e.g. <code>vec_c(a, b, a)</code> previously returned the elements of <code>b</code> last.</li>
+<li>
 <code><a href="https://rdrr.io/r/base/c.html" class="external-link">c()</a></code> of a single zero-length <code>vecvec</code> (e.g. <code>c(x[0])</code>) no longer errors with “Underlying data must be <integer> not <list>”.</list></integer></li>
 </ul></div>
 </div>
