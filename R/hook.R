@@ -115,6 +115,14 @@ vecvec_register <- function(
     fun = f_cast_to
   )
 
+  # Register vec_cast.<class>.<class>.
+  register_s3_method(
+    pkg = "vctrs",
+    generic = "vec_cast",
+    class = paste0(cls, ".", cls),
+    fun = vec_cast_same_vecvec
+  )
+
   # --------------------------------------------------------
   # vctrs::vec_ptype2() methods
   # --------------------------------------------------------

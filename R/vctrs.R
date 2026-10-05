@@ -179,6 +179,9 @@ vec_cast_to_vecvec <- function(x, to, ...) {
 
   S7_class(to)(x = new_x, i = new_idx)
 }
+# Cast between two vecvecs of the same class. A vecvec holds any mix of slot
+# types, so any vecvec of the class already is a valid value of its type.
+vec_cast_same_vecvec <- function(x, to, ...) x
 vec_cast_from_vecvec <- function(x, to, ...) {
   unvecvec(x, ptype = to)
 }

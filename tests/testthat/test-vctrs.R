@@ -419,3 +419,17 @@ test_that("registered vecvec subclasses have a same-class vec_ptype2 method", {
   expect_s3_class(out, "vecvectest::regtest")
   expect_false(inherits(out, "vctrs:::common_class_fallback"))
 })
+
+test_that("same-class vec_cast/vec_c work after a serialisation round trip", {
+  class_rttest <- S7::new_class("rttest", package = "vecvectest", parent = class_vecvec)
+  vecvec_register(class_rttest)
+  x <- class_rttest(1:2, x = list(c(5, 6)))
+  # Deserialising yields a distinct (non-identical) S7 class object attribute
+  y <- unserialize(serialize(x, NULL))
+  expect_false(identical(attributes(x), attributes(y)))
+  expect_no_error(out <- vctrs::vec_cast(x, vctrs::vec_ptype(y)))
+  expect_s3_class(out, "vecvectest::rttest")
+  expect_no_error(out <- vctrs::vec_c(x, y))
+  expect_length(out, 4L)
+  expect_equal(unvecvec(out), c(5, 6, 5, 6))
+})
