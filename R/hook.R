@@ -136,6 +136,13 @@ vecvec_register <- function(
     generic = "vec_ptype2",
     fun = f_ptype2
   )
+  # Register vec_ptype2.<class>.<class> so s3 fallback is not triggered
+  register_s3_method(
+    pkg = "vctrs",
+    generic = "vec_ptype2",
+    class = paste0(cls, ".", cls),
+    fun = f_ptype2
+  )
 
   invisible(NULL)
 }

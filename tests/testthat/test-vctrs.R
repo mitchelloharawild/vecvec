@@ -409,3 +409,13 @@ test_that("vctrs::vec_proxy_equal stays fast for a highly compressed vecvec", {
   elapsed <- system.time(vctrs::vec_proxy_equal(comp))[["elapsed"]]
   expect_lt(elapsed, 0.1)
 })
+
+test_that("registered vecvec subclasses have a same-class vec_ptype2 method", {
+  class_regtest <- S7::new_class("regtest", package = "vecvectest", parent = class_vecvec)
+  vecvec_register(class_regtest)
+  x <- class_regtest(1:2, x = list(c(5, 6)))
+  y <- class_regtest(1:2, x = list(c(7, 8)))
+  out <- vctrs::vec_ptype2(x, y, `vctrs:::s3_fallback` = 1L)
+  expect_s3_class(out, "vecvectest::regtest")
+  expect_false(inherits(out, "vctrs:::common_class_fallback"))
+})
