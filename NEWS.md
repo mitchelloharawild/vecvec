@@ -10,6 +10,9 @@
   
 ## Bug fixes
 
+* `vec_c()` and `vec_rbind()` (and so `dplyr::bind_rows()`) no longer
+  reorder elements when the inputs' storage is interleaved, e.g.
+  `vec_c(a, b, a)` previously returned the elements of `b` last.
 * `c()` of a single zero-length `vecvec` (e.g. `c(x[0])`) no longer errors
   with "Underlying data must be <integer> not <list>".
 

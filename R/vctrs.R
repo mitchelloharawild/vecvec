@@ -34,12 +34,17 @@ method(vec_restore, class_vecvec) <- function(x, to, ...) {
     0L,
     cumsum(vapply(val[-length(val)], function(x) sum(lengths(x)), integer(1)))
   )
-  idx <- lapply(vec_seq_along(grp), function(i) x$i[grp$loc[[i]]] + len[i])
+  # Offset indices, scattered back to their original row order
+  idx <- x$i
+  for (g in vec_seq_along(grp)) {
+    loc <- grp$loc[[g]]
+    idx[loc] <- idx[loc] + len[g]
+  }
 
   # Restore the vecvec S7 object
   S7_class(to)(
     x = unlist(val, recursive = FALSE),
-    i = unlist(idx, recursive = FALSE)
+    i = idx
   )
 }
 

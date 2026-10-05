@@ -433,3 +433,20 @@ test_that("same-class vec_cast/vec_c work after a serialisation round trip", {
   expect_length(out, 4L)
   expect_equal(unvecvec(out), c(5, 6, 5, 6))
 })
+
+test_that("vec_c/vec_rbind keep row order when storage is interleaved", {
+  a <- vecvec(1:2, letters[1:2])
+  b <- vecvec(as.Date("2026-01-01"))
+  expect_equal(
+    format(vctrs::vec_c(a, b, a)),
+    format(vecvec(1:2, letters[1:2], as.Date("2026-01-01"), 1:2, letters[1:2]))
+  )
+
+  df_a <- data.frame(i = 1:4)
+  df_a$v <- a
+  df_b <- data.frame(i = 99L)
+  df_b$v <- b
+  out <- vctrs::vec_rbind(df_a, df_b, df_a)
+  expect_equal(out$i, c(1:4, 99L, 1:4))
+  expect_equal(format(out$v[5]), format(b))
+})
