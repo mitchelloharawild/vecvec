@@ -19,12 +19,13 @@ method(vec_restore, class_vecvec) <- function(x, to, ...) {
     return(out)
   }
   
-  # Identify groups of vectors
-  # TODO - this destroys altrep
-  grp <- data_frame(key = unique(x$x))
-  grp$loc <- split(seq_along(x$i), match(x$x, grp$key))
+  # Group rows by the address of their vector list (avoids quadratic hashing)
+  addr <- vapply(x$x, rlang::obj_address, character(1L))
+  key <- unique(addr)
+  grp_id <- match(addr, key)
+  grp <- data_frame(key = x$x[match(key, addr)])
+  grp$loc <- split(seq_along(x$i), grp_id)
 
-  # val <- x$x[vapply(grp$loc, `[[`, integer(1), 1L)]
   # vctrs seems to drop list() to NULL internally somewhere? - fix it
   val <- lapply(grp$key, function(x) if (is.null(x)) list() else x)
 

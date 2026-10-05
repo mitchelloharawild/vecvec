@@ -54,3 +54,28 @@ test_that("vecvec_mapply handles empty and fully-missing inputs", {
   r <- vecvec_mapply(list(na_only, na_only), `+`)
   expect_equal(as.numeric(r), c(NA_real_, NA_real_))
 })
+
+test_that("vecvec_apply splices vecvec results instead of nesting them", {
+  x <- class_vecvec(
+    list(c(1.5, 2.5, 3.5), c("a", "b")),
+    i = c(5L, 2L, NA, 1L, 4L, 3L)
+  )
+  # Reordered vecvec with a missing first element
+  f <- function(v) class_vecvec(list(rev(v)), i = c(NA, rev(seq_along(v))[-1]))
+  res <- vecvec_apply(x, f)
+  expect_false(any(vapply(res@x, is_vecvec, logical(1L))))
+  expect_identical(format(res), c("b", "2.5", NA, NA, NA, "3.5"))
+
+  # Mixed plain and nested results
+  y <- vecvec(1:3, c(0.5, 1.5))
+  res <- vecvec_apply(y, function(v) if (is.integer(v)) v * 2L else vecvec(v * 2))
+  expect_identical(unvecvec(res), c(2, 4, 6, 1, 3))
+})
+
+test_that("vec_assign into a vecvec is not quadratic in its size", {
+  v <- vecvec(seq_len(20000) + 0.5, 1:3)
+  r <- vctrs::vec_init(v, length(v))
+  time <- system.time(out <- vctrs::vec_assign(r, seq_along(v), v))
+  expect_identical(unvecvec(out), unvecvec(v))
+  expect_lt(time[["elapsed"]], 1)
+})

@@ -1,5 +1,13 @@
 # vecvec (development version)
 
+## Improvements
+
+* Restoring a `vecvec` from its vctrs proxy is much faster (no longer quadratic
+  in its length). Rows are now grouped by the identity of their slots rather 
+  than hashing their contents once per row.
+* `vecvec_apply()` now splices `vecvec` results from `.f` into the result
+  instead of nesting them, so `unvecvec()` simplifies them directly.
+
 # vecvec 1.3.0
 
 ## New features

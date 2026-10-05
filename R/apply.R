@@ -7,15 +7,30 @@
 #' @param .f A function to apply to each vector
 #' @param ... Additional arguments passed to `.f`
 #' 
-#' @return A vecvec data type with the same structure as `x` but with each 
-#'   vector transformed by `.f`.
-#' 
+#' @return A vecvec data type with the same structure as `x` but with each
+#'   vector transformed by `.f`. If `.f` returns a `vecvec`, its vectors are
+#'   spliced into the result rather than nested within it.
+#'
 #' @export
 vecvec_apply <- function(x, .f, ...) {
   if (vec_is_empty(x)) {
     return(x)
   }
-  x@x <- vecvec_flatten_adj(lapply(x@x, .f, ...))
+  res <- lapply(x@x, .f, ...)
+
+  nested <- vapply(res, is_vecvec, logical(1L))
+  if (any(nested)) {
+    # Splice nested vecvecs in place and remap `x`'s indices
+    within <- lapply(res, seq_along)
+    within[nested] <- lapply(res[nested], S7_data)
+    res[!nested] <- lapply(res[!nested], list)
+    res[nested] <- lapply(res[nested], prop, "x")
+    offset <- cumsum(c(0L, vapply(res, function(v) sum(lengths(v)), integer(1L))))
+    remap <- unlist(Map(`+`, within, offset[-length(offset)]))
+    S7_data(x) <- remap[S7_data(x)]
+    res <- unlist(res, recursive = FALSE)
+  }
+  x@x <- vecvec_flatten_adj(res)
 
   x
 }
