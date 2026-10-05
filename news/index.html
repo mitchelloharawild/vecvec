@@ -49,9 +49,20 @@
 
     <div class="section level2">
 <h2 class="page-header" data-toc-text="development version" id="vecvec-development-version">vecvec (development version)<a class="anchor" aria-label="anchor" href="#vecvec-development-version"></a></h2>
+<div class="section level3">
+<h3 id="improvements-development-version">Improvements<a class="anchor" aria-label="anchor" href="#improvements-development-version"></a></h3>
+<ul><li>Restoring a <code>vecvec</code> from its vctrs proxy is much faster (no longer quadratic in its length). Rows are now grouped by the identity of their slots rather than hashing their contents once per row.</li>
+<li>
+<code><a href="../reference/vecvec_apply.html">vecvec_apply()</a></code> now splices <code>vecvec</code> results from <code>.f</code> into the result instead of nesting them, so <code><a href="../reference/unvecvec.html">unvecvec()</a></code> simplifies them directly.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
+<ul><li>
+<code><a href="https://rdrr.io/r/base/c.html" class="external-link">c()</a></code> of a single zero-length <code>vecvec</code> (e.g. <code>c(x[0])</code>) no longer errors with “Underlying data must be <integer> not <list>”.</list></integer></li>
+</ul></div>
 </div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="1.3.0" id="vecvec-130">vecvec 1.3.0<a class="anchor" aria-label="anchor" href="#vecvec-130"></a></h2>
+<h2 class="page-header" data-toc-text="1.3.0" id="vecvec-130">vecvec 1.3.0<small>2026-08-20</small><a class="anchor" aria-label="anchor" href="#vecvec-130"></a></h2>
 <div class="section level3">
 <h3 id="new-features-1-3-0">New features<a class="anchor" aria-label="anchor" href="#new-features-1-3-0"></a></h3>
 <ul><li>Added <code><a href="../reference/vecvec_mapply.html">vecvec_mapply()</a></code>, which applies a vectorised function across multiple (possibly heterogeneously-typed) vectors, batching calls by shared underlying storage slots rather than calling it once per element as <code><a href="https://rdrr.io/r/base/mapply.html" class="external-link">mapply()</a></code> does.</li>
