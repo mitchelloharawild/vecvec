@@ -61,6 +61,8 @@
 <code>vec_c()</code> and <code>vec_rbind()</code> (and so <code>dplyr::bind_rows()</code>) no longer reorder elements when the inputs’ storage is interleaved, e.g. <code>vec_c(a, b, a)</code> previously returned the elements of <code>b</code> last.</li>
 <li>
 <code><a href="https://rdrr.io/r/base/c.html" class="external-link">c()</a></code> of a single zero-length <code>vecvec</code> (e.g. <code>c(x[0])</code>) no longer errors with “Underlying data must be <integer> not <list>”.</list></integer></li>
+<li>
+<code><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">duplicated()</a></code>, <code><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">anyDuplicated()</a></code> and <code><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique()</a></code> now detect duplicates among elements whose indices point at the same stored value, e.g. after <code>x[c(1, 1)]</code>. Missing indices are now duplicates of each other rather than <code>NA</code>.</li>
 </ul></div>
 </div>
     <div class="section level2">
