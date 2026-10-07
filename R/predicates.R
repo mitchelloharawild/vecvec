@@ -47,12 +47,17 @@ na.drop <- function(object, class = NULL,...) {
 method(na.omit, class_vecvec) <- function(object, ...) na.drop(object, class = "omit", ...)
 method(na.exclude, class_vecvec) <- function(object, ...) na.drop(object, class = "exclude", ...)
 
-method(duplicated, class_vecvec) <- function(x, incomparables = FALSE, ...) {
-  # Special case for empty vecvec vectors
-  if (length(x@x) == 0L) {
-    return(duplicated(S7_data(x), incomparables, ...))
-  }
-
+# Canonical id for each element of a vecvec: the stored position of the first
+# stored value equal to it. Equality is only checked within slots sharing a
+# common ptype (as for `vec_proxy_equal()`), and NA indices are kept as NA so
+# they match each other but not stored missing values.
+#
+# Unlike comparing the stored values directly, this also identifies repeated
+# indices pointing at the same stored value as duplicates.
+#
+# @return A list with `id`, an integer vector the same length as `x`, and
+#   `incomparables`, the ids to pass on to base `duplicated()`.
+vecvec_dup_id <- function(x, incomparables = FALSE) {
   # Find common vector types
   ptypes <- lapply(x@x, `[`, 0L)
   loc <- lapply(
@@ -60,61 +65,36 @@ method(duplicated, class_vecvec) <- function(x, incomparables = FALSE, ...) {
     function(k) which(vapply(ptypes, identical, logical(1), k))
   )
 
-  # Identify duplicated values within common vector types
-  dup <- lapply(loc, function(i) {
-    # Compute duplicates on a single vector
+  slot_len <- lengths(x@x)
+  offsets <- c(0L, cumsum(slot_len))
+  canon <- integer(sum(slot_len))
+  inc <- logical(sum(slot_len))
+  for (i in loc) {
+    # Stored positions of this group's values, in concatenation order
+    pos <- unlist(lapply(i, function(s) offsets[s] + seq_len(slot_len[s])))
     vec <- vec_c(!!!x@x[i])
-    res <- duplicated(vec, incomparables = incomparables, ...)
-
-    # Restructure result into list of vectors
-    idx <- c(0L, cumsum(lengths(x@x[i])))
-    len <- length(i)
-    out <- vector("list", len)
-    for (i in seq_len(len)) {
-      out[[i]] <- res[seq(idx[i] + 1L, idx[i + 1])]
+    grp <- vec_group_id(vec)
+    canon[pos] <- pos[match(grp, grp)]
+    if (!isFALSE(incomparables)) {
+      inc[pos] <- match(vec, incomparables, 0L) > 0L
     }
-    out
-  })
+  }
 
-  x@x[unlist(loc, recursive = FALSE)] <- unlist(dup, recursive = FALSE)
-  unvecvec(x, ptype = logical())
+  id <- canon[S7_data(x)]
+  inc_id <- unique(canon[inc])
+  # Missing indices are treated as missing values
+  if (!isFALSE(incomparables) && anyNA(incomparables)) {
+    inc_id <- c(inc_id, NA_integer_)
+  }
+  list(id = id, incomparables = if (length(inc_id)) inc_id else FALSE)
+}
+
+method(duplicated, class_vecvec) <- function(x, incomparables = FALSE, ...) {
+  id <- vecvec_dup_id(x, incomparables)
+  duplicated(id$id, incomparables = id$incomparables, ...)
 }
 
 method(anyDuplicated, class_vecvec) <- function(x, incomparables = FALSE, ...) {
-  # Find common vector types
-  ptypes <- lapply(x@x, `[`, 0L)
-  loc <- lapply(
-    unique(ptypes),
-    function(k) which(vapply(ptypes, identical, logical(1), k))
-  )
-
-  # anyDuplicated(fromLast = TRUE) reports the position of the *last* duplicate
-  # rather than the first, so the direction needs to be known up front.
-  fromLast <- isTRUE(list(...)$fromLast)
-
-  # Search for any duplicated values within common vector types
-  for (i in seq_along(loc)) {
-    # Compute duplicates on a single vector
-    idx <- loc[[i]]
-    vec <- vec_c(!!!x@x[idx])
-    # anyDuplicated() on a classed, non-atomic vector (e.g. a vctrs_rcrd) does
-    # not reliably return the position of the first duplicate (base R quirk),
-    # so locate it via duplicated() instead, as the method above does.
-    dup_pos <- which(duplicated(vec, incomparables = incomparables, ...))
-    dup <- if (length(dup_pos)) {
-      if (fromLast) dup_pos[[length(dup_pos)]] else dup_pos[[1L]]
-    } else {
-      NA_integer_
-    }
-    if (!is.na(dup) && dup > 0L) {
-      # Find the actual index of the duplicated value
-      at <- vecvec_locate(x@x[idx], dup)
-
-      # Position on the original vector is the duplicated index minus the offset
-      # of the current vector plus the offset of all previous vectors
-      return(at$within + sum(lengths(x@x[seq_len(loc[[i]][[at$slot]] - 1L)])))
-    }
-  }
-
-  0L
+  id <- vecvec_dup_id(x, incomparables)
+  anyDuplicated(id$id, incomparables = id$incomparables, ...)
 }

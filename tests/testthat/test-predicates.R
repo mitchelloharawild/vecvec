@@ -275,6 +275,39 @@ test_that("duplicated() on a single-element vecvec returns FALSE", {
   expect_identical(duplicated(vecvec(42L)), FALSE)
 })
 
+test_that("duplicated() detects repeated indices to the same stored value", {
+  vv <- class_vecvec(list(c("A", "B", "C")), i = c(1L, 1L, 2L, 3L, 3L))
+  expect_identical(duplicated(vv), c(FALSE, TRUE, FALSE, FALSE, TRUE))
+  expect_identical(
+    duplicated(vv, fromLast = TRUE),
+    c(TRUE, FALSE, FALSE, TRUE, FALSE)
+  )
+  expect_length(unique(vv), 3L)
+})
+
+test_that("duplicated() detects equal values stored in different slots", {
+  vv <- class_vecvec(list(c("A", "B"), "A"), i = 1:3)
+  expect_identical(duplicated(vv), c(FALSE, FALSE, TRUE))
+})
+
+test_that("duplicated() treats NA indices as duplicates of each other only", {
+  vv <- class_vecvec(list(c("A", NA)), i = c(1L, 2L, NA, 2L, NA, 1L))
+  expect_identical(duplicated(vv), c(FALSE, FALSE, FALSE, TRUE, TRUE, TRUE))
+})
+
+test_that("duplicated() respects incomparables with repeated indices", {
+  vv <- class_vecvec(list(c("A", NA)), i = c(1L, 2L, NA, 2L, NA, 1L))
+  expect_identical(
+    duplicated(vv, incomparables = "A"),
+    c(FALSE, FALSE, FALSE, TRUE, TRUE, FALSE)
+  )
+  # NA in incomparables also covers missing indices
+  expect_identical(
+    duplicated(vv, incomparables = NA),
+    c(FALSE, FALSE, FALSE, FALSE, FALSE, TRUE)
+  )
+})
+
 # anyDuplicated() --------------------------------------------------------------
 
 test_that("anyDuplicated() returns 0L when no duplicates", {
@@ -293,6 +326,13 @@ test_that("anyDuplicated() fromLast returns index of last duplicate", {
     anyDuplicated(vv, fromLast = TRUE),
     5L
   )
+})
+
+test_that("anyDuplicated() detects repeated indices to the same stored value", {
+  vv <- class_vecvec(list(c("A", "B", "C")), i = c(1L, 2L, 2L, 3L, 3L))
+  expect_identical(anyDuplicated(vv), 3L)
+  expect_identical(anyDuplicated(vv, fromLast = TRUE), 4L)
+  expect_identical(anyDuplicated(vv, incomparables = c("B", "C")), 0L)
 })
 
 test_that("anyDuplicated() on a zero-length vecvec returns 0L", {

@@ -15,6 +15,10 @@
   `vec_c(a, b, a)` previously returned the elements of `b` last.
 * `c()` of a single zero-length `vecvec` (e.g. `c(x[0])`) no longer errors
   with "Underlying data must be <integer> not <list>".
+* `duplicated()`, `anyDuplicated()` and `unique()` now detect duplicates
+  among elements whose indices point at the same stored value, e.g. after
+  `x[c(1, 1)]`. Missing indices are now duplicates of each other rather than
+  `NA`.
 
 # vecvec 1.3.0
 
