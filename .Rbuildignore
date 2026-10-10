@@ -6,3 +6,4 @@
 ^hex$
 ^.github$
 ^CRAN-SUBMISSION$
+^revdep$
