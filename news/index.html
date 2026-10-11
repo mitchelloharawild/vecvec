@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">vecvec</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.3.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.4.0</span>
       </span>
     </div>
 
@@ -48,15 +48,15 @@
     </div>
 
     <div class="section level2">
-<h2 class="page-header" data-toc-text="development version" id="vecvec-development-version">vecvec (development version)<a class="anchor" aria-label="anchor" href="#vecvec-development-version"></a></h2>
+<h2 class="page-header" data-toc-text="1.4.0" id="vecvec-140">vecvec 1.4.0<a class="anchor" aria-label="anchor" href="#vecvec-140"></a></h2>
 <div class="section level3">
-<h3 id="improvements-development-version">Improvements<a class="anchor" aria-label="anchor" href="#improvements-development-version"></a></h3>
+<h3 id="improvements-1-4-0">Improvements<a class="anchor" aria-label="anchor" href="#improvements-1-4-0"></a></h3>
 <ul><li>Restoring a <code>vecvec</code> from its vctrs proxy is much faster (no longer quadratic in its length). Rows are now grouped by the identity of their slots rather than hashing their contents once per row.</li>
 <li>
 <code><a href="../reference/vecvec_apply.html">vecvec_apply()</a></code> now splices <code>vecvec</code> results from <code>.f</code> into the result instead of nesting them, so <code><a href="../reference/unvecvec.html">unvecvec()</a></code> simplifies them directly.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
+<h3 id="bug-fixes-1-4-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-4-0"></a></h3>
 <ul><li>
 <code>vec_c()</code> and <code>vec_rbind()</code> (and so <code>dplyr::bind_rows()</code>) no longer reorder elements when the inputs’ storage is interleaved, e.g. <code>vec_c(a, b, a)</code> previously returned the elements of <code>b</code> last.</li>
 <li>
