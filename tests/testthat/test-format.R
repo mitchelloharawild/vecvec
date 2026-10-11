@@ -19,11 +19,15 @@ test_that("print() on vecvec vector respects max and shows footer", {
 })
 
 test_that("print() on 2D vecvec matrix respects max (1 complete row shown)", {
+  # Base print() truncation footer wording changed in R 4.5.0
+  skip_if(getRversion() < "4.5.0")
   x <- array(vecvec(1:9), dim = c(3L, 3L))
   expect_snapshot(print(x, max = 4L))
 })
 
 test_that("print() on 3D vecvec array respects max (identical structure to base array)", {
+  # Base print() truncation footer wording changed in R 4.5.0
+  skip_if(getRversion() < "4.5.0")
   # This is the canonical example from the task: results should match
   # print(array(1:18, dim = c(3, 3, 2)), max = 6) in structure and values.
   x <- array(vecvec(1:18), dim = c(3L, 3L, 2L))

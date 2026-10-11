@@ -166,3 +166,6 @@ vecvec_align <- function(args) {
 
   list(slot = slot, within = within, groups = split(seq_len(n), group))
 }
+
+# Shim for `%||%`, which is only in base R from 4.4.0.
+`%||%` <- function(x, y) if (is.null(x)) y else x
