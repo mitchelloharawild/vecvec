@@ -57,7 +57,9 @@
   S7_data(x)[i, ...] <- idx
   
   # Rank local indices
-  S7_data(x) <- vec_rank(as.integer(S7_data(x)), ties = "dense")
+  indices <- S7_data(x)
+  indices[] <- vec_rank(as.integer(indices), ties = "dense")
+  S7_data(x) <- indices
 
   # Crude but fast defragmentation of adjacent same-type vectors
   vecvec_flatten_adj(x)

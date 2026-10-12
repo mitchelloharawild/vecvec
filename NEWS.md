@@ -1,5 +1,8 @@
 # vecvec (development version)
 
+* `[<-` preserves array dimensions and dimension names with updated S7.
+* `vecvec_apply()` resolves callbacks before accessing S7 properties, fixing missing-value and vctrs operations.
+
 # vecvec 1.4.0
 
 ## Improvements
