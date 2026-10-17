@@ -16,6 +16,7 @@ vecvec_apply <- function(x, .f, ...) {
   if (vec_is_empty(x)) {
     return(x)
   }
+  .f <- match.fun(.f)
   res <- lapply(x@x, .f, ...)
 
   nested <- vapply(res, is_vecvec, logical(1L))

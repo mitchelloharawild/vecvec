@@ -1,5 +1,7 @@
 # vecvec (development version)
 
+* Updates for compatibility with S7 > 0.2.2.
+
 # vecvec 1.4.0
 
 ## Improvements

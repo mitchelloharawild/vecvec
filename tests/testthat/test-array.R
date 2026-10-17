@@ -282,6 +282,18 @@ test_that("[i, j]<- preserves dim after replacement", {
   expect_equal(dim(x), c(2L, 13L))
 })
 
+test_that("[i, j]<- preserves dimnames after replacement", {
+  x <- array(
+    vecvec(1:6),
+    dim = c(2L, 3L),
+    dimnames = list(c("a", "b"), c("x", "y", "z"))
+  )
+  expected <- dimnames(x)
+  x[1L, 2L] <- 99L
+  expect_identical(dimnames(x), expected)
+  expect_identical(x[[3L]], 99L)
+})
+
 test_that("[i, j]<- preserves vecvec class after replacement", {
   x <- array(vv_int(), dim = c(2L, 13L))
   x[2L, 3L] <- 99L
