@@ -5,7 +5,7 @@ vecvec_flatten_adj <- function(x) {
   }
 
   # Vector prototypes
-  ptypes <- lapply(x, `[`, 0L)
+  ptypes <- lapply(x, vec_slice, 0L)
 
   i <- 1L
   while (i < length(x)) {
@@ -13,7 +13,7 @@ vecvec_flatten_adj <- function(x) {
       identical(ptypes[[i]], ptypes[[i + 1L]]) && 
       !(is_altrep(x[[i]]) || is_altrep(x[[i + 1L]]))
     ) {
-      x[[i]] <- c(x[[i]], x[[i + 1L]])
+      x[[i]] <- vec_c(x[[i]], x[[i + 1L]])
       x <- x[-(i + 1L)]
       ptypes <- ptypes[-(i + 1L)]
     } else {

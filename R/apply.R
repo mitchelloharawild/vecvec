@@ -26,7 +26,7 @@ vecvec_apply <- function(x, .f, ...) {
     within[nested] <- lapply(res[nested], S7_data)
     res[!nested] <- lapply(res[!nested], list)
     res[nested] <- lapply(res[nested], prop, "x")
-    offset <- cumsum(c(0L, vapply(res, function(v) sum(lengths(v)), integer(1L))))
+    offset <- cumsum(c(0L, vapply(res, function(v) sum(list_sizes(v)), integer(1L))))
     remap <- unlist(Map(`+`, within, offset[-length(offset)]))
     S7_data(x) <- remap[S7_data(x)]
     res <- unlist(res, recursive = FALSE)
@@ -161,15 +161,15 @@ vecvec_mapply <- function(.l, .f, ..., ptype = NULL, SIMPLIFY = !is.null(ptype))
     }
 
     group_vals <- lapply(seq_along(.l), function(j) {
-      .l[[j]]@x[[s_idx[[j]]]][within[[j]][pos]]
+      vec_slice(.l[[j]]@x[[s_idx[[j]]]], within[[j]][pos])
     })
     val <- do.call(.f, c(group_vals, list(...)))
 
-    if (length(val) != length(pos)) {
+    if (vec_size(val) != length(pos)) {
       cli::cli_abort(
         c(
-          "{.arg .f} must return a result the same length as the group of positions it was called on.",
-          "i" = "Got a result of length {length(val)} for a group of length {length(pos)}.",
+          "{.arg .f} must return a result the same size as the group of positions it was called on.",
+          "i" = "Got a result of size {vec_size(val)} for a group of size {length(pos)}.",
           "i" = "{.fn vecvec_mapply} calls {.arg .f} once per group of positions that share the same underlying storage slots (like {.fn Ops.vecvec}), not once per element, so {.arg .f} must be vectorised."
         ),
         call = NULL
@@ -183,7 +183,7 @@ vecvec_mapply <- function(.l, .f, ..., ptype = NULL, SIMPLIFY = !is.null(ptype))
 
   # Precompute per-slot offsets once, then scatter each group's results into
   # result_i by position (mirrors Ops.vecvec::vecvec's construction).
-  offsets <- if (length(result_x)) c(0L, cumsum(lengths(result_x))[-length(result_x)]) else integer(0L)
+  offsets <- if (length(result_x)) c(0L, cumsum(list_sizes(result_x))[-length(result_x)]) else integer(0L)
   result_i <- rep(NA_integer_, n)
   vi <- 0L
   for (s in seq_along(groups)) {

@@ -49,7 +49,7 @@
     }
 
     w <- lapply(within, `[`, pos)
-    pair_key <- (w[[1L]] - 1L) * length(args[[2L]]@x[[s_idx[[2L]]]]) + w[[2L]]
+    pair_key <- (w[[1L]] - 1L) * vec_size(args[[2L]]@x[[s_idx[[2L]]]]) + w[[2L]]
     unique_keys <- unique(pair_key)
     first_of <- match(unique_keys, pair_key)
 
@@ -57,7 +57,7 @@
       vals = do.call(
         .Generic,
         .mapply(
-          function(arg, s, w) arg@x[[s]][w][first_of],
+          function(arg, s, w) vec_slice(arg@x[[s]], w[first_of]),
           list(args, s_idx, w), NULL
         )
       ),
@@ -69,7 +69,7 @@
   result_x <- unname(lapply(computed[!is_na_group], `[[`, "vals"))
 
   # Precompute per-slot offsets once, then scatter val_idx into result_i.
-  offsets <- if (length(result_x)) c(0L, cumsum(lengths(result_x))[-length(result_x)]) else integer(0L)
+  offsets <- if (length(result_x)) c(0L, cumsum(list_sizes(result_x))[-length(result_x)]) else integer(0L)
   result_i <- rep(NA_integer_, n)
   vi <- 0L
   for (s in seq_len(n_slots)) {

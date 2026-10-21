@@ -96,7 +96,7 @@ is_altrep <- function(x) {
 # @return A list with `slot` (which element of `slots` each position falls
 #   in) and `within` (the corresponding 1-based position inside that slot).
 vecvec_locate <- function(slots, pos) {
-  bounds <- c(0L, cumsum(lengths(slots)))
+  bounds <- c(0L, cumsum(list_sizes(slots)))
   slot <- findInterval(pos, bounds, left.open = TRUE)
   list(slot = slot, within = pos - bounds[slot])
 }

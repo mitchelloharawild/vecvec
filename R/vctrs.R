@@ -3,7 +3,7 @@
 # proxy/restore
 # This is inefficient but seemingly required for vctrs machinery
 method(vec_proxy, class_vecvec) <- function(x, ...) {
-  data_frame(x = list(x@x), l = sum(lengths(x@x)), i = S7_data(x))
+  data_frame(x = list(x@x), l = sum(list_sizes(x@x)), i = S7_data(x))
 }
 method(vec_restore, class_vecvec) <- function(x, to, ...) {
   if (is_vecvec(x)) return(x)
@@ -12,7 +12,7 @@ method(vec_restore, class_vecvec) <- function(x, to, ...) {
   }
 
   # Fast path for vecvec without merging - just update the indices
-  if(identical(sum(slot_len <- lengths(to@x)), slot_grp <- unique(x$l))) {
+  if(identical(sum(slot_len <- list_sizes(to@x)), slot_grp <- unique(x$l))) {
     S7_data(to) <- x$i
     # Invoke pruning of slots
     out <- to[seq_along(to)]
@@ -32,7 +32,7 @@ method(vec_restore, class_vecvec) <- function(x, to, ...) {
   # Index offsets for each grp
   len <- c(
     0L,
-    cumsum(vapply(val[-length(val)], function(x) sum(lengths(x)), integer(1)))
+    cumsum(vapply(val[-length(val)], function(x) sum(list_sizes(x)), integer(1)))
   )
   # Offset indices, scattered back to their original row order
   idx <- x$i
@@ -60,14 +60,14 @@ method(vec_proxy_equal, class_vecvec) <- function(x, ...) {
   }
 
   # Map each stored position to (slot, position-within-slot).
-  slot_len <- lengths(x@x)
+  slot_len <- list_sizes(x@x)
   at <- vecvec_locate(x@x, idx)
   slot <- at$slot
   local_pos <- at$within
 
   # Group slots sharing a common ptype, as `duplicated()` does - only slots
   # with identical ptypes can ever compare equal to one another.
-  ptypes <- lapply(x@x, `[`, 0L)
+  ptypes <- lapply(x@x, vec_slice, 0L)
   uniq_ptypes <- unique(ptypes)
   loc <- lapply(
     uniq_ptypes,

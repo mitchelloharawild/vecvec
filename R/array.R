@@ -155,7 +155,7 @@ vecvec_abind <- function(..., along = 1L) {
   }
 
   # Offset each argument's storage indices into disjoint ranges of the merged `@x` below.
-  slot_counts <- vapply(dots, function(x) sum(lengths(x@x)), integer(1L))
+  slot_counts <- vapply(dots, function(x) sum(list_sizes(x@x)), integer(1L))
   offsets <- c(0L, cumsum(slot_counts)[-length(dots)])
   idx_arrs <- .mapply(
     function(x, fd, off) {

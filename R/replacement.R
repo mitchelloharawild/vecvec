@@ -34,16 +34,16 @@
   if (is.array(x)) {
     # Also remove out-of-bounds indices produced
     # by array() when length(x) != prod(dim(x))
-    nx <- sum(lengths(x@x))
+    nx <- sum(list_sizes(x@x))
     if (length(x) < nx) {
       vec_rm <- c(vec_rm, seq(from = length(x) + 1L, to = nx))
     }
   }
-  vec_starts <- c(0L, cumsum(lengths(x@x)[-length(x@x)]))
+  vec_starts <- c(0L, cumsum(list_sizes(x@x)[-length(x@x)]))
   vec_idx <- findInterval(vec_rm, vec_starts, left.open = TRUE)
   vec_pos <- vec_split(vec_rm - vec_starts[vec_idx], vec_idx)
   for (k in seq_len(nrow(vec_pos))) {
-    x@x[[vec_pos$key[[k]]]] <- x@x[[vec_pos$key[[k]]]][-vec_pos$val[[k]]]
+    x@x[[vec_pos$key[[k]]]] <- vec_slice(x@x[[vec_pos$key[[k]]]], -vec_pos$val[[k]])
   }
 
   # Append `value` to the end of `x@x` and update `x@i` to point to the new values
@@ -116,14 +116,15 @@
   vec_na_shared <- intersect(vec_na, still_referenced)
   vec_na_safe <- setdiff(vec_na, vec_na_shared)
 
-  vec_starts <- c(0L, cumsum(lengths(x@x)[-length(x@x)]))
+  vec_starts <- c(0L, cumsum(list_sizes(x@x)[-length(x@x)]))
 
   # Stored positions with no surviving reference: NA them in place.
   if (length(vec_na_safe)) {
     vec_idx <- findInterval(vec_na_safe, vec_starts, left.open = TRUE)
     vec_pos <- vec_split(vec_na_safe - vec_starts[vec_idx], vec_idx)
     for (k in seq_len(nrow(vec_pos))) {
-      x@x[[vec_pos$key[[k]]]][vec_pos$val[[k]]] <- NA
+      slot <- x@x[[vec_pos$key[[k]]]]
+      x@x[[vec_pos$key[[k]]]] <- vec_assign(slot, vec_pos$val[[k]], vec_init(slot))
     }
   }
 
@@ -138,9 +139,8 @@
     for (k in seq_len(nrow(vec_pos))) {
       slot <- vec_pos$key[[k]]
       local <- vec_pos$val[[k]]
-      elt <- x@x[[slot]][local]
-      is.na(elt) <- TRUE
-      base <- sum(lengths(x@x))
+      elt <- vec_init(x@x[[slot]], length(local))
+      base <- sum(list_sizes(x@x))
       x@x <- c(x@x, list(elt))
       remap_from <- c(remap_from, vec_starts[slot] + local)
       remap_to <- c(remap_to, base + seq_along(local))

@@ -213,7 +213,7 @@ method(`[`, class_vecvec) <- function(x, i, ...) {
   new_slot <- match(pos, keep)
   local_idx <- at$within # 1-based within slot
 
-  slot_lengths <- lengths(x@x)
+  slot_lengths <- list_sizes(x@x)
   groups <- split(seq_along(new_slot), new_slot)
 
   for (k in seq_along(x@x)) {
@@ -222,12 +222,12 @@ method(`[`, class_vecvec) <- function(x, i, ...) {
     u <- unique(sel)
     if (length(u) < slot_lengths[k]) {
       local_idx[el] <- match(sel, u)
-      x@x[[k]] <- x@x[[k]][u]
+      x@x[[k]] <- vec_slice(x@x[[k]], u)
     }
   }
 
   # Assign new vecvec indices
-  new_starts <- c(0L, cumsum(lengths(x@x[-length(x@x)])))
+  new_starts <- c(0L, cumsum(list_sizes(x@x[-length(x@x)])))
   idx[not_na] <- new_starts[new_slot] + local_idx
   dim(x) <- NULL
   S7_data(x) <- idx
@@ -252,7 +252,7 @@ method(c, class_vecvec) <- function(..., recursive = FALSE) {
   # TODO - reduce structure into a common vecvec
   i_offsets <- cumsum(vapply(
     dots[-length(dots)],
-    function(x) sum(lengths(x@x)),
+    function(x) sum(list_sizes(x@x)),
     integer(1L)
   ))
 

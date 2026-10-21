@@ -59,13 +59,13 @@ method(na.exclude, class_vecvec) <- function(object, ...) na.drop(object, class 
 #   `incomparables`, the ids to pass on to base `duplicated()`.
 vecvec_dup_id <- function(x, incomparables = FALSE) {
   # Find common vector types
-  ptypes <- lapply(x@x, `[`, 0L)
+  ptypes <- lapply(x@x, vec_slice, 0L)
   loc <- lapply(
     unique(ptypes),
     function(k) which(vapply(ptypes, identical, logical(1), k))
   )
 
-  slot_len <- lengths(x@x)
+  slot_len <- list_sizes(x@x)
   offsets <- c(0L, cumsum(slot_len))
   canon <- integer(sum(slot_len))
   inc <- logical(sum(slot_len))

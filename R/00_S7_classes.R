@@ -37,7 +37,7 @@ class_vecvec <- new_class(
   properties = list(
     x = class_list
   ),
-  constructor = function(x = list(), i = seq_len(sum(lengths(x)))) {
+  constructor = function(x = list(), i = seq_len(sum(list_sizes(x)))) {
     new_object(i, x = vecvec_flatten_adj(x))
   },
   validator = function(self) {
