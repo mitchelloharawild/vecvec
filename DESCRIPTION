@@ -20,7 +20,7 @@ License: MIT + file LICENSE
 Imports:
     cli,
     rlang,
-    S7,
+    S7 (>= 0.2.2),
     stats,
     vctrs
 Suggests: 
