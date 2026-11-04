@@ -1,6 +1,17 @@
 # vecvec (development version)
 
+## Improvements
+
 * Updates for compatibility with S7 > 0.2.2.
+
+## Bug fixes
+
+* Slots that are matrices or data frames are now measured and subset by row
+  (with `vec_size()` and `vec_slice()`), instead of by cell or column with
+  `length()` and `[`. This fixes subsetting, replacement, `c()` and
+  `vecvec_apply()` for `vecvec`s containing these vector types.
+* `[<-` on an array `vecvec` (e.g. `x[i, j] <- value`) no longer drops the
+  `dimnames`.
 
 # vecvec 1.4.0
 
