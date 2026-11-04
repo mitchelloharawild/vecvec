@@ -4,7 +4,7 @@
 \alias{class_vecvec}
 \title{S7 class for vecvec}
 \usage{
-class_vecvec(x = list(), i = seq_len(sum(lengths(x))))
+class_vecvec(x = list(), i = seq_len(sum(list_sizes(x))))
 }
 \arguments{
 \item{x}{An unnamed list of arbitrary vectors. The vectors can be of
