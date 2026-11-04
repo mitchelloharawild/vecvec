@@ -49,8 +49,17 @@
 
     <div class="section level2">
 <h2 class="page-header" data-toc-text="development version" id="vecvec-development-version">vecvec (development version)<a class="anchor" aria-label="anchor" href="#vecvec-development-version"></a></h2>
+<div class="section level3">
+<h3 id="improvements-development-version">Improvements<a class="anchor" aria-label="anchor" href="#improvements-development-version"></a></h3>
 <ul><li>Updates for compatibility with S7 &gt; 0.2.2.</li>
 </ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
+<ul><li>Slots that are matrices or data frames are now measured and subset by row (with <code>vec_size()</code> and <code>vec_slice()</code>), instead of by cell or column with <code><a href="https://rdrr.io/r/base/length.html" class="external-link">length()</a></code> and <code>[</code>. This fixes subsetting, replacement, <code><a href="https://rdrr.io/r/base/c.html" class="external-link">c()</a></code> and <code><a href="../reference/vecvec_apply.html">vecvec_apply()</a></code> for <code>vecvec</code>s containing these vector types.</li>
+<li>
+<code>[&lt;-</code> on an array <code>vecvec</code> (e.g. <code>x[i, j] &lt;- value</code>) no longer drops the <code>dimnames</code>.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="1.4.0" id="vecvec-140">vecvec 1.4.0<small>2026-10-12</small><a class="anchor" aria-label="anchor" href="#vecvec-140"></a></h2>
 <div class="section level3">
