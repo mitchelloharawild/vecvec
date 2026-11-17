@@ -9,3 +9,4 @@ src/*.so
 src/*.dll
 src/Makevars.win
 src/*.rds
+*-checklogs*/
