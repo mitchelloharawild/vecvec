@@ -63,7 +63,7 @@ Internally, the vectors are stored separately in the attributes.
 ``` r
 str(x)
 #> <vecvec::vecvec> int [1:12] 1 2 3 4 5 6 7 8 9 10 ...
-#>  @ x:List of 3
+#>  @ x: List of 3
 #>  .. $ : Date[1:1], format: "2025-03-29"
 #>  .. $ : POSIXct[1:1], format: "2025-01-03 10:05:00"
 #>  .. $ : num [1:10] 1.263 -0.326 1.33 1.272 0.415 ...
@@ -88,7 +88,7 @@ x[1]
 #> [1] 2025-03-29
 str(x[1])
 #> <vecvec::vecvec> int 1
-#>  @ x:List of 1
+#>  @ x: List of 1
 #>  .. $ : Date[1:1], format: "2025-03-29"
 ```
 
@@ -97,7 +97,7 @@ When a vecvec is replicated, only the indexing is replicated.
 ``` r
 str(rep(x, each = 10))
 #> <vecvec::vecvec> int [1:120] 1 1 1 1 1 1 1 1 1 1 ...
-#>  @ x:List of 3
+#>  @ x: List of 3
 #>  .. $ : Date[1:1], format: "2025-03-29"
 #>  .. $ : POSIXct[1:1], format: "2025-01-03 10:05:00"
 #>  .. $ : num [1:10] 1.263 -0.326 1.33 1.272 0.415 ...
@@ -110,7 +110,7 @@ replicated).
 ``` r
 str(rep(x, each = 10) + 100)
 #> <vecvec::vecvec> int [1:120] 1 1 1 1 1 1 1 1 1 1 ...
-#>  @ x:List of 3
+#>  @ x: List of 3
 #>  .. $ : Date[1:1], format: "2025-07-07"
 #>  .. $ : POSIXct[1:1], format: "2025-01-03 10:06:40"
 #>  .. $ : num [1:10] 101.3 99.7 101.3 101.3 100.4 ...
@@ -123,7 +123,7 @@ vecvec is
 ``` r
 str(rep(x, each = 10) + 1:120)
 #> <vecvec::vecvec> int [1:120] 1 2 3 4 5 6 7 8 9 10 ...
-#>  @ x:List of 3
+#>  @ x: List of 3
 #>  .. $ : Date[1:10], format: "2025-03-30" "2025-03-31" ...
 #>  .. $ : POSIXct[1:10], format: "2025-01-03 10:05:11" "2025-01-03 10:05:12" ...
 #>  .. $ : num [1:100] 22.3 23.3 24.3 25.3 26.3 ...
