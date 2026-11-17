@@ -1,4 +1,4 @@
-# vecvec (development version)
+# vecvec 1.5.0
 
 ## Improvements
 
