@@ -43,7 +43,7 @@ static R_altrep_class_t vecvec_alt_class;
 // as.double() method, so the base agrees with as.numeric(). Plain vectors are
 // read directly. Falls back to the raw storage if the method fails.
 static SEXP slot_as_double(SEXP slot) {
-  if (!OBJECT(slot) || Rf_isFactor(slot)) return slot;
+  if (!Rf_isObject(slot) || Rf_isFactor(slot)) return slot;
   SEXPTYPE t = TYPEOF(slot);
   if (t != REALSXP && t != INTSXP && t != LGLSXP) return slot;
   SEXP call = PROTECT(Rf_lang2(Rf_install("as.double"), slot));
