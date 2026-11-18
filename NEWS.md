@@ -9,6 +9,9 @@
   every position that shares a slot combination (in position order), so it must
   be vectorised and element-wise, as documented.
 
+* Merging adjacent same-type slots (in `class_vecvec()`, `c()`, etc.) is now
+  linear in the number of slots rather than quadratic.
+
 # vecvec 1.5.0
 
 ## Improvements
