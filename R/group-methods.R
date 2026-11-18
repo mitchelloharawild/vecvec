@@ -49,7 +49,10 @@
     }
 
     w <- lapply(within, `[`, pos)
-    pair_key <- (w[[1L]] - 1L) * vec_size(args[[2L]]@x[[s_idx[[2L]]]]) + w[[2L]]
+    # Key in doubles: integer arithmetic overflows (to NA) once
+    # (w1 - 1) * size(e2's slot) passes .Machine$integer.max, which would
+    # collapse every later pair onto one value. Doubles are exact to 2^53.
+    pair_key <- (as.double(w[[1L]]) - 1) * vec_size(args[[2L]]@x[[s_idx[[2L]]]]) + w[[2L]]
     unique_keys <- unique(pair_key)
     first_of <- match(unique_keys, pair_key)
 

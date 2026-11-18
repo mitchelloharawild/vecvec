@@ -92,3 +92,25 @@ test_that("Binary Ops expand when arguments differ across replicated indices", {
     c(100L, 100L, 100)
   )
 })
+
+test_that("Ops on long slots doesn't overflow the pair key", {
+  n <- 1e5
+  expect_no_warning(v <- as.double(unvecvec(vecvec(as.double(1:n)) + vecvec(as.double(1:n)))))
+  expect_equal(v, 2 * (1:n))
+
+  # Unbalanced slot sizes whose product passes 2^31
+  a <- vecvec(as.double(1:5e4))
+  b <- vecvec(as.double(1:5e4))
+  expect_no_warning(r <- as.double(unvecvec(a * b)))
+  expect_equal(r, as.double(1:5e4)^2)
+  expect_no_warning(r <- as.double(unvecvec(a + vecvec(1))))
+  expect_equal(r, as.double(1:5e4) + 1)
+})
+
+test_that("Ops computes duplicate operand pairs once", {
+  a <- vecvec(c(1, 2))[rep(1:2, 1e4)]
+  b <- vecvec(c(10, 20))[rep(1:2, 1e4)]
+  x <- a + b
+  expect_equal(as.double(unvecvec(x)), rep(c(11, 22), 1e4))
+  expect_equal(length(x@x[[1L]]), 2L)
+})
