@@ -1,3 +1,14 @@
+# vecvec (development version)
+
+## Improvements
+
+* `vecvec_mapply()` and `Ops` now call `.f` / the operator once per distinct
+  combination of underlying slots, rather than once per contiguous run of
+  positions. Interleaved vectors (e.g. from `x[order(...)]`) no longer make one
+  call per element, and `Ops` is no longer quadratic for them. `.f` receives
+  every position that shares a slot combination (in position order), so it must
+  be vectorised and element-wise, as documented.
+
 # vecvec 1.5.0
 
 ## Improvements

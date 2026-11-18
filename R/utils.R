@@ -120,8 +120,8 @@ vecvec_pair_key <- function(slot_x, slot_y, n_y) {
 # Align multiple same-length vecvec objects to a common element-position
 # grouping: locates each argument's underlying (slot, within-slot) position
 # for every element (via `vecvec_locate()`), then partitions positions into
-# maximal contiguous runs that draw from the same tuple of underlying slots
-# across all arguments.
+# groups that draw from the same tuple of underlying slots across all
+# arguments (not necessarily contiguous).
 #
 # A run boundary occurs wherever *any* argument's slot index changes between
 # consecutive positions - equivalent to encoding the tuple of slot indices as
@@ -151,20 +151,13 @@ vecvec_align <- function(args) {
   if (n == 0L) {
     return(list(slot = slot, within = within, groups = list()))
   }
-  # A missing (NA) slot index - from an NA position in one of the args - must
-  # not be allowed to `NA`-poison `changed` via `!=`, since `cumsum()` would
-  # then propagate that `NA` to every subsequent position (and `split()`
-  # would silently drop the lot). Treat it as always a boundary instead, so
-  # an NA position forms its own singleton run rather than corrupting runs
-  # after it.
-  changed <- Reduce(`|`, lapply(slot, function(s) {
-    prev <- s[-n]
-    curr <- s[-1L]
-    c(TRUE, is.na(prev) | is.na(curr) | curr != prev)
-  }))
-  group <- cumsum(changed)
+  # Group by the combination of slots, wherever the positions are. Positions
+  # with a missing (NA) slot index in some arg share a group per NA pattern;
+  # consumers skip any group whose first position has an NA slot.
+  names(slot) <- paste0("s", seq_along(slot))
+  groups <- vctrs::vec_group_loc(vctrs::new_data_frame(slot, n = n))$loc
 
-  list(slot = slot, within = within, groups = split(seq_len(n), group))
+  list(slot = unname(slot), within = within, groups = groups)
 }
 
 # Shim for `%||%`, which is only in base R from 4.4.0.
