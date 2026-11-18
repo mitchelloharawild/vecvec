@@ -193,6 +193,11 @@ vv_index <- function(x) {
   idx
 }
 
+# Re-mirror the ALTREP data in the `_vecvec` attribute after the attributes of
+# `x` were replaced wholesale. `identical()` only sees attributes and the base
+# data, so this is what makes it tell vecvecs apart (see `vecvec_alt_new()`).
+vv_mirror <- function(x) .Call("vecvec_alt_mirror", x, PACKAGE = "vecvec")
+
 # Replace the index of a vecvec (like `S7_data<-`, the dim/dimnames/names of 
 # `value` are used for the result).
 `vv_index<-` <- function(x, value) {
@@ -201,7 +206,7 @@ vv_index <- function(x) {
   va <- attributes(value)
   out <- vv_alt(value, vv_slots(x))
   attributes(out) <- c(at, va[intersect(names(va), c("dim", "dimnames", "names"))])
-  out
+  vv_mirror(out)
 }
 
 # Rebuild the ALTREP base of a vecvec so that it resolves against `slots`, the
@@ -209,5 +214,5 @@ vv_index <- function(x) {
 vv_rebuild <- function(x, slots) {
   out <- .Call("vecvec_alt_rebuild", x, slots, PACKAGE = "vecvec")
   attributes(out) <- attributes(x)
-  out
+  vv_mirror(out)
 }

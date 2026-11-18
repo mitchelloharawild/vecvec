@@ -11,6 +11,12 @@
   `as.double()` method, so the base agrees with `as.numeric()`.
   `is.integer()` is now `FALSE`.
 
+* `identical()` now tells `vecvec`s with different values or indices apart. The
+  stored vectors and index are mirrored in a `_vecvec` attribute (the same
+  object as the ALTREP data, so it uses no extra memory and is serialized once),
+  as `identical()` can't see ALTREP data and the base resolves non-numeric slots
+  to `NA`. Previously it was `TRUE` for e.g. `vecvec("a")` and `vecvec("b")`.
+
 * Updates for compatibility with S7 > 0.2.2.
 
 ## Bug fixes

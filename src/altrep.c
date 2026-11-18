@@ -113,11 +113,40 @@ static const void *vv_dataptr_or_null(SEXP x) {
   return d2 == R_NilValue ? NULL : REAL(d2);
 }
 
-// The index and stored vectors are serialized (the stored vectors are therefore
-// written twice, as data1 and as the `x` attribute); resolved values are not.
-static SEXP vv_serialized_state(SEXP x) { return R_altrep_data1(x); }
+// The index and stored vectors are mirrored in the `_vecvec` attribute, which
+// is the very same list object as data1 (so costs no memory). `identical()`
+// only looks at attributes and the base data, never at ALTREP data1, so without
+// the mirror it can't tell vecvecs apart whose slots resolve to NA (character,
+// factors, lists, records...) or that differ only in their index.
+//
+// When serializing, the mirror attribute already carries the data, so the
+// ALTREP state is just a placeholder (so nothing is written twice). It is
+// restored from the attribute by `vv_unserialize_ex()`. Without a mirror (e.g.
+// when R's generic wrapper ALTREP encloses a vecvec base, or the attribute was
+// removed) the state is the full data1.
+static SEXP vv_mirror_sym;
+
+static SEXP vv_serialized_state(SEXP x) {
+  SEXP m = Rf_getAttrib(x, vv_mirror_sym);
+  if (TYPEOF(m) == VECSXP && Rf_xlength(m) == 2) return Rf_allocVector(INTSXP, 0);
+  return R_altrep_data1(x);
+}
 static SEXP vv_unserialize(SEXP cls, SEXP state) {
   return R_new_altrep(vecvec_alt_class, state, R_NilValue);
+}
+static SEXP vv_unserialize_ex(SEXP cls, SEXP state, SEXP attr, int objf, int levs) {
+  SEXP data = state;
+  if (TYPEOF(state) != VECSXP) {
+    data = R_NilValue;
+    for (SEXP a = attr; a != R_NilValue; a = CDR(a))
+      if (TAG(a) == vv_mirror_sym) { data = CAR(a); break; }
+    if (TYPEOF(data) != VECSXP || Rf_xlength(data) != 2)
+      Rf_error("Can't restore a vecvec: its `_vecvec` attribute is missing.");
+  }
+  SEXP ans = PROTECT(R_new_altrep(vecvec_alt_class, data, R_NilValue));
+  for (SEXP a = attr; a != R_NilValue; a = CDR(a)) Rf_setAttrib(ans, TAG(a), CAR(a));
+  UNPROTECT(1);
+  return ans;
 }
 static SEXP vv_duplicate(SEXP x, Rboolean deep) {
   // data1 is immutable, so is shared. The cache is rebuilt on demand.
@@ -142,10 +171,12 @@ SEXP vecvec_alt_new(SEXP index, SEXP slots) {
   SET_VECTOR_ELT(d, 1, slots);
   MARK_NOT_MUTABLE(bare);
   MARK_NOT_MUTABLE(d);
-  SEXP out = R_new_altrep(vecvec_alt_class, d, R_NilValue);
-  UNPROTECT(2);
+  SEXP out = PROTECT(R_new_altrep(vecvec_alt_class, d, R_NilValue));
+  Rf_setAttrib(out, vv_mirror_sym, d);
+  UNPROTECT(3);
   return out;
 }
+
 
 // Setting attributes on a shared ALTREP vector (e.g. `dim(x) <- ...`) makes R
 // wrap it in a generic wrapper ALTREP, with the original as data1. Find the
@@ -161,6 +192,25 @@ static SEXP vv_unwrap(SEXP x) {
   return x;
 }
 
+// Returns `x` as a plain (unwrapped) vecvec base vector that carries the
+// attributes of `x` and the `_vecvec` mirror of its ALTREP data. Run after
+// attributes were set wholesale. Setting attributes on a shared ALTREP vector
+// wraps it in R's generic wrapper, which would be serialized together with its
+// own copy of the attributes (so the mirror would be written twice). No data is
+// copied, as the new vector shares data1.
+SEXP vecvec_alt_mirror(SEXP x) {
+  SEXP d = R_altrep_data1(vv_unwrap(x));
+  SEXP ans = PROTECT(R_new_altrep(vecvec_alt_class, d, R_NilValue));
+  Rf_copyMostAttrib(x, ans);
+  SEXP a;
+  if ((a = Rf_getAttrib(x, R_DimSymbol)) != R_NilValue) Rf_setAttrib(ans, R_DimSymbol, a);
+  if ((a = Rf_getAttrib(x, R_DimNamesSymbol)) != R_NilValue) Rf_setAttrib(ans, R_DimNamesSymbol, a);
+  if ((a = Rf_getAttrib(x, R_NamesSymbol)) != R_NilValue) Rf_setAttrib(ans, R_NamesSymbol, a);
+  Rf_setAttrib(ans, vv_mirror_sym, d);
+  UNPROTECT(1);
+  return ans;
+}
+
 SEXP vecvec_alt_index(SEXP x) { return VV_INDEX(vv_unwrap(x)); }
 
 SEXP vecvec_alt_slots(SEXP x) { return VV_SLOTS(vv_unwrap(x)); }
@@ -172,6 +222,7 @@ SEXP vecvec_alt_rebuild(SEXP x, SEXP slots) {
 }
 
 void vecvec_init_altrep(DllInfo *dll) {
+  vv_mirror_sym = Rf_install("_vecvec");
   vecvec_alt_class = R_make_altreal_class("vecvec_alt", "vecvec", dll);
   R_set_altrep_Length_method(vecvec_alt_class, vv_length);
   R_set_altreal_Elt_method(vecvec_alt_class, vv_elt);
@@ -180,5 +231,6 @@ void vecvec_init_altrep(DllInfo *dll) {
   R_set_altvec_Dataptr_or_null_method(vecvec_alt_class, vv_dataptr_or_null);
   R_set_altrep_Serialized_state_method(vecvec_alt_class, vv_serialized_state);
   R_set_altrep_Unserialize_method(vecvec_alt_class, vv_unserialize);
+  R_set_altrep_UnserializeEX_method(vecvec_alt_class, vv_unserialize_ex);
   R_set_altrep_Duplicate_method(vecvec_alt_class, vv_duplicate);
 }

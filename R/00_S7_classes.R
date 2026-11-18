@@ -45,7 +45,7 @@ class_vecvec <- new_class(
   ),
   constructor = function(x = list(), i = seq_len(sum(list_sizes(x)))) {
     x <- vecvec_flatten_adj(x)
-    new_object(vv_alt(i, x))
+    vv_mirror(new_object(vv_alt(i, x)))
   },
   validator = function(self) {
     vec <- vapply(self@x, vec_is, logical(1L))
