@@ -37,17 +37,15 @@ class_vecvec <- new_class(
   properties = list(
     x = new_property(
       class_list,
-      # Rebuild the ALTREP base whenever the stored vectors change
-      setter = function(self, value) {
-        out <- vv_rebuild(self, value)
-        attr(out, "x") <- value
-        out
-      }
+      # The stored vectors live in the ALTREP base (not an attribute), so they
+      # are serialized only once. Rebuild the base whenever they change.
+      getter = function(self) vv_slots(self),
+      setter = function(self, value) vv_rebuild(self, value)
     )
   ),
   constructor = function(x = list(), i = seq_len(sum(list_sizes(x)))) {
     x <- vecvec_flatten_adj(x)
-    new_object(vv_alt(i, x), x = x)
+    new_object(vv_alt(i, x))
   },
   validator = function(self) {
     vec <- vapply(self@x, vec_is, logical(1L))

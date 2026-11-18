@@ -180,6 +180,9 @@ vv_alt <- function(i, slots) {
   .Call("vecvec_alt_new", as.integer(i), slots, PACKAGE = "vecvec")
 }
 
+# The stored vectors of a vecvec (the value of `@x`), held by the ALTREP base.
+vv_slots <- function(x) .Call("vecvec_alt_slots", x, PACKAGE = "vecvec")
+
 # The integer index of a vecvec, with its dim/dimnames/names.
 vv_index <- function(x) {
   idx <- .Call("vecvec_alt_index", x, PACKAGE = "vecvec")
@@ -196,7 +199,7 @@ vv_index <- function(x) {
   at <- attributes(x)
   at[c("dim", "dimnames", "names")] <- NULL
   va <- attributes(value)
-  out <- vv_alt(value, attr(x, "x", exact = TRUE))
+  out <- vv_alt(value, vv_slots(x))
   attributes(out) <- c(at, va[intersect(names(va), c("dim", "dimnames", "names"))])
   out
 }

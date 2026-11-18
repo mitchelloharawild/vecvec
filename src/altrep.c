@@ -146,6 +146,8 @@ static SEXP vv_unwrap(SEXP x) {
 
 SEXP vecvec_alt_index(SEXP x) { return VV_INDEX(vv_unwrap(x)); }
 
+SEXP vecvec_alt_slots(SEXP x) { return VV_SLOTS(vv_unwrap(x)); }
+
 // A fresh vecvec ALTREP (without attributes) with the index of `x` and new
 // stored vectors.
 SEXP vecvec_alt_rebuild(SEXP x, SEXP slots) {
