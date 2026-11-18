@@ -159,7 +159,7 @@ vecvec_abind <- function(..., along = 1L) {
   offsets <- c(0L, cumsum(slot_counts)[-length(dots)])
   idx_arrs <- .mapply(
     function(x, fd, off) {
-      idx <- S7_data(x) + off
+      idx <- vv_index(x) + off
       dim(idx) <- fd
       idx
     },
@@ -199,4 +199,21 @@ vecvec_abind <- function(..., along = 1L) {
 #' @rawNamespace S3method(rbind,"vecvec::vecvec")
 `rbind.vecvec::vecvec` <- function(..., deparse.level = 1) {
   vecvec_abind(..., along = 1L)
+}
+
+# The ALTREP base of a vecvec resolves to the stored values, so base methods
+# that permute the base vector (`t()`, `aperm()`) must permute the index.
+
+# @method t vecvec::vecvec
+#' @rawNamespace S3method(t,"vecvec::vecvec")
+`t.vecvec::vecvec` <- function(x) {
+  vv_index(x) <- t(vv_index(x))
+  x
+}
+
+# @method aperm vecvec::vecvec
+#' @rawNamespace S3method(aperm,"vecvec::vecvec")
+`aperm.vecvec::vecvec` <- function(a, perm = NULL, ...) {
+  vv_index(a) <- aperm(vv_index(a), perm = perm, ...)
+  a
 }

@@ -33,12 +33,21 @@
 #' @export
 class_vecvec <- new_class(
   "vecvec",
-  parent = class_integer,
+  parent = class_double,
   properties = list(
-    x = class_list
+    x = new_property(
+      class_list,
+      # Rebuild the ALTREP base whenever the stored vectors change
+      setter = function(self, value) {
+        out <- vv_rebuild(self, value)
+        attr(out, "x") <- value
+        out
+      }
+    )
   ),
   constructor = function(x = list(), i = seq_len(sum(list_sizes(x)))) {
-    new_object(i, x = vecvec_flatten_adj(x))
+    x <- vecvec_flatten_adj(x)
+    new_object(vv_alt(i, x), x = x)
   },
   validator = function(self) {
     vec <- vapply(self@x, vec_is, logical(1L))

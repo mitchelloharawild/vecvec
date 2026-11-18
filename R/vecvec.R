@@ -112,9 +112,9 @@ unvecvec <- function(x, ptype = NULL) {
 
   # Construct output single-typed vector
   res <- vec_init(ptype, n = len)
-  pos <- as.vector(!is.na(S7_data(x)))
+  pos <- as.vector(!is.na(vv_index(x)))
   if (any(pos)) {
-    res <- vec_assign(res, pos, vec_slice(vec_c(!!!x@x), S7_data(x)[pos]))
+    res <- vec_assign(res, pos, vec_slice(vec_c(!!!x@x), vv_index(x)[pos]))
   }
   res
 }
@@ -158,7 +158,7 @@ method(print, class_vecvec) <- function(x, max = getOption("max.print"), ...) {
   invisible(x)
 }
 method(format, class_vecvec) <- function(x, ...) {
-  fmt <- vec_c(!!!lapply(x@x, format, ...), .ptype = character())[S7_data(x)]
+  fmt <- vec_c(!!!lapply(x@x, format, ...), .ptype = character())[vv_index(x)]
   dim(fmt) <- dim(x)
   dimnames(fmt) <- dimnames(x)
   fmt
@@ -191,7 +191,7 @@ is_vecvec <- function(x) S7_inherits(x, class_vecvec)
 # Indexing methods
 # ------------------------------------------------------------------------------
 method(`[`, class_vecvec) <- function(x, i, ...) {
-  idx <- S7_data(x)[i, ...]
+  idx <- vv_index(x)[i, ...]
   not_na <- !is.na(idx)
 
   if (!any(not_na)) {
@@ -230,14 +230,14 @@ method(`[`, class_vecvec) <- function(x, i, ...) {
   new_starts <- c(0L, cumsum(list_sizes(x@x[-length(x@x)])))
   idx[not_na] <- new_starts[new_slot] + local_idx
   dim(x) <- NULL
-  S7_data(x) <- idx
+  vv_index(x) <- idx
   dim(x) <- dim(idx)
 
   x
 }
 
 method(`[[`, class_vecvec) <- function(x, i, ...) {
-  at <- vecvec_locate(x@x, S7_data(x)[i])
+  at <- vecvec_locate(x@x, vv_index(x)[i])
   x@x[[at$slot]][[at$within]]
 }
 
@@ -260,9 +260,9 @@ method(c, class_vecvec) <- function(..., recursive = FALSE) {
   # Collect each input's (offset) indices as list elements, so that a single
   # zero-length input still unlists to integer() rather than NULL.
   i <- c(
-    list(S7_data(dots[[1L]])),
+    list(vv_index(dots[[1L]])),
     .mapply(
-      function(x, j) S7_data(x) + j,
+      function(x, j) vv_index(x) + j,
       list(x = dots[-1L], j = i_offsets),
       NULL
     )

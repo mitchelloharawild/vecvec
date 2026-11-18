@@ -143,7 +143,7 @@ vecvec_pair_key <- function(slot_x, slot_y, n_y) {
 #   - `groups`: positions partitioned into contiguous runs that share a fixed
 #     tuple of underlying slots, as returned by `split()`.
 vecvec_align <- function(args) {
-  at <- lapply(args, function(a) vecvec_locate(a@x, S7_data(a)))
+  at <- lapply(args, function(a) vecvec_locate(a@x, vv_index(a)))
   slot <- lapply(at, `[[`, "slot")
   within <- lapply(at, `[[`, "within")
 
@@ -169,3 +169,42 @@ vecvec_align <- function(args) {
 
 # Shim for `%||%`, which is only in base R from 4.4.0.
 `%||%` <- function(x, y) if (is.null(x)) y else x
+
+# The base vector of a vecvec is an ALTREP double vector that resolves to the
+# stored *values* (so base R / C code never sees raw indices). The index lives
+# in the ALTREP and is accessed with these helpers instead of `S7_data()`.
+
+# Create the (attribute-free) ALTREP base vector for an integer index into the
+# list of stored vectors `slots`.
+vv_alt <- function(i, slots) {
+  .Call("vecvec_alt_new", as.integer(i), slots, PACKAGE = "vecvec")
+}
+
+# The integer index of a vecvec, with its dim/dimnames/names.
+vv_index <- function(x) {
+  idx <- .Call("vecvec_alt_index", x, PACKAGE = "vecvec")
+  for (a in c("dim", "dimnames", "names")) {
+    v <- attr(x, a, exact = TRUE)
+    if (!is.null(v)) attr(idx, a) <- v
+  }
+  idx
+}
+
+# Replace the index of a vecvec (like `S7_data<-`, the dim/dimnames/names of 
+# `value` are used for the result).
+`vv_index<-` <- function(x, value) {
+  at <- attributes(x)
+  at[c("dim", "dimnames", "names")] <- NULL
+  va <- attributes(value)
+  out <- vv_alt(value, attr(x, "x", exact = TRUE))
+  attributes(out) <- c(at, va[intersect(names(va), c("dim", "dimnames", "names"))])
+  out
+}
+
+# Rebuild the ALTREP base of a vecvec so that it resolves against `slots`, the
+# new value of `@x`.
+vv_rebuild <- function(x, slots) {
+  out <- .Call("vecvec_alt_rebuild", x, slots, PACKAGE = "vecvec")
+  attributes(out) <- attributes(x)
+  out
+}

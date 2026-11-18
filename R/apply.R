@@ -23,12 +23,12 @@ vecvec_apply <- function(x, .f, ...) {
   if (any(nested)) {
     # Splice nested vecvecs in place and remap `x`'s indices
     within <- lapply(res, seq_along)
-    within[nested] <- lapply(res[nested], S7_data)
+    within[nested] <- lapply(res[nested], vv_index)
     res[!nested] <- lapply(res[!nested], list)
     res[nested] <- lapply(res[nested], prop, "x")
     offset <- cumsum(c(0L, vapply(res, function(v) sum(list_sizes(v)), integer(1L))))
     remap <- unlist(Map(`+`, within, offset[-length(offset)]))
-    S7_data(x) <- remap[S7_data(x)]
+    vv_index(x) <- remap[vv_index(x)]
     res <- unlist(res, recursive = FALSE)
   }
   x@x <- vecvec_flatten_adj(res)

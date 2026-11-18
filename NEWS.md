@@ -2,6 +2,13 @@
 
 ## Improvements
 
+* The base vector of a `vecvec` is now an ALTREP double vector that resolves to
+  the stored values, instead of an integer index. Base R and C code that reads a
+  `vecvec` directly, such as `lm()`, `data.matrix()` and `prcomp()` on data
+  frames with `vecvec` columns, now uses the values rather than the indices.
+  Stored values with no numeric reading (e.g. character) resolve to `NA`.
+  `is.integer()` is now `FALSE`.
+
 * Updates for compatibility with S7 > 0.2.2.
 
 ## Bug fixes

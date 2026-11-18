@@ -12,10 +12,10 @@ method(is.numeric, class_vecvec) <- function(x) {
 
 method(is.na, class_vecvec) <- function(x) {
   # Missing values in vecvec indices or values are both considered NA.
-  is.na(S7_data(x)) | unvecvec(vecvec_apply(x, is.na), ptype = logical())
+  is.na(vv_index(x)) | unvecvec(vecvec_apply(x, is.na), ptype = logical())
 }
 method(anyNA, class_vecvec) <- function(x, recursive = FALSE) {
-  if (anyNA(S7_data(x))) return(TRUE)
+  if (anyNA(vv_index(x))) return(TRUE)
   
   for (v in x@x) {
     if (anyNA(v, recursive = recursive)) return(TRUE)
@@ -80,7 +80,7 @@ vecvec_dup_id <- function(x, incomparables = FALSE) {
     }
   }
 
-  id <- canon[S7_data(x)]
+  id <- canon[vv_index(x)]
   inc_id <- unique(canon[inc])
   # Missing indices are treated as missing values
   if (!isFALSE(incomparables) && anyNA(incomparables)) {

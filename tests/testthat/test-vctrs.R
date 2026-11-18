@@ -190,7 +190,7 @@ test_that("vctrs::vec_cast vecvec to logical", {
 # duplicated indices in `to` (#18-adjacent: compressed vecvecs as targets)
 test_that("vctrs::vec_cast plain vector to vecvec with duplicated indices (single slot)", {
   to <- rep(vecvec(1.5), 3)
-  expect_equal(S7_data(to), c(1L, 1L, 1L))
+  expect_equal(vv_index(to), c(1L, 1L, 1L))
 
   result <- vec_cast(c(1, 2, 3), to)
   expect_true(is_vecvec(result))
@@ -216,7 +216,7 @@ test_that("vctrs::vec_cast to vecvec with duplicated indices still works when va
 
 test_that("vctrs::vec_cast to vecvec with duplicated indices across multiple mixed-type slots", {
   to <- c(rep(vecvec(1.5), 2), rep(vecvec(2L), 2))
-  expect_equal(S7_data(to), c(1L, 1L, 2L, 2L))
+  expect_equal(vv_index(to), c(1L, 1L, 2L, 2L))
 
   result <- vec_cast(c(10L, 20L, 30L, 40L), to)
   expect_true(is_vecvec(result))

@@ -31,8 +31,8 @@ method(all.equal, class_vecvec) <- function(target, current, ...) {
     return(TRUE)
   }
 
-  idx_t <- S7_data(target)
-  idx_c <- S7_data(current)
+  idx_t <- vv_index(target)
+  idx_c <- vv_index(current)
   na_t <- is.na(idx_t)
   na_c <- is.na(idx_c)
 
