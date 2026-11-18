@@ -51,7 +51,8 @@
 <h2 class="page-header" data-toc-text="1.5.0" id="vecvec-150">vecvec 1.5.0<a class="anchor" aria-label="anchor" href="#vecvec-150"></a></h2>
 <div class="section level3">
 <h3 id="improvements-1-5-0">Improvements<a class="anchor" aria-label="anchor" href="#improvements-1-5-0"></a></h3>
-<ul><li>Updates for compatibility with S7 &gt; 0.2.2.</li>
+<ul><li><p>The base vector of a <code>vecvec</code> is now an ALTREP double vector that resolves to the stored values, instead of an integer index. Base R and C code that reads a <code>vecvec</code> directly, such as <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code>, <code><a href="https://rdrr.io/r/base/data.matrix.html" class="external-link">data.matrix()</a></code> and <code><a href="https://rdrr.io/r/stats/prcomp.html" class="external-link">prcomp()</a></code> on data frames with <code>vecvec</code> columns, now uses the values rather than the indices. Stored values with no numeric reading (e.g. character) resolve to <code>NA</code>. <code><a href="https://rdrr.io/r/base/integer.html" class="external-link">is.integer()</a></code> is now <code>FALSE</code>.</p></li>
+<li><p>Updates for compatibility with S7 &gt; 0.2.2.</p></li>
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-1-5-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-5-0"></a></h3>
