@@ -185,7 +185,9 @@ method(format, class_vecvec) <- function(x, ...) {
 #' is_vecvec(1:3)
 #'
 #' @export
-is_vecvec <- function(x) S7_inherits(x, class_vecvec)
+# `inherits()` on the S7 class vector is equivalent to S7_inherits() here and
+# avoids S7's per-call overhead; this check runs once per input in c().
+is_vecvec <- function(x) inherits(x, "vecvec::vecvec")
 
 # ------------------------------------------------------------------------------
 # Indexing methods
@@ -249,24 +251,14 @@ method(c, class_vecvec) <- function(..., recursive = FALSE) {
   is_vv <- vapply(dots, is_vecvec, logical(1L))
   dots[!is_vv] <- lapply(dots[!is_vv], vecvec)
 
-  # TODO - reduce structure into a common vecvec
-  i_offsets <- cumsum(vapply(
-    dots[-length(dots)],
-    function(x) sum(list_sizes(x@x)),
-    integer(1L)
-  ))
-
-  x <- lapply(dots, function(x) x@x)
-  # Collect each input's (offset) indices as list elements, so that a single
+  # Read each input's slots once through the cheap internal accessor (`@x`
+  # dispatches through S7), then offset each input's indices past the slots of
+  # the inputs before it. Collect indices as list elements so that a single
   # zero-length input still unlists to integer() rather than NULL.
-  i <- c(
-    list(vv_index(dots[[1L]])),
-    .mapply(
-      function(x, j) vv_index(x) + j,
-      list(x = dots[-1L], j = i_offsets),
-      NULL
-    )
-  )
+  x <- lapply(dots, vv_slots)
+  n_x <- vapply(x, function(s) sum(list_sizes(s)), integer(1L))
+  offset <- c(0L, cumsum(n_x)[-length(n_x)])
+  i <- .mapply(function(v, j) vv_index(v) + j, list(dots, offset), NULL)
 
   S7_class(..1)(
     x = unlist(x, recursive = FALSE),
