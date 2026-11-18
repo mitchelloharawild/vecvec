@@ -38,6 +38,22 @@ static R_altrep_class_t vecvec_alt_class;
 #define VV_INDEX(x) VECTOR_ELT(R_altrep_data1(x), 0)
 #define VV_SLOTS(x) VECTOR_ELT(R_altrep_data1(x), 1)
 
+// Classed numeric slots (e.g. mixtime's cyclical time, whose storage is a
+// chronon count rather than the cyclical position) are read through their
+// as.double() method, so the base agrees with as.numeric(). Plain vectors are
+// read directly. Falls back to the raw storage if the method fails.
+static SEXP slot_as_double(SEXP slot) {
+  if (!OBJECT(slot) || Rf_isFactor(slot)) return slot;
+  SEXPTYPE t = TYPEOF(slot);
+  if (t != REALSXP && t != INTSXP && t != LGLSXP) return slot;
+  SEXP call = PROTECT(Rf_lang2(Rf_install("as.double"), slot));
+  int err = 0;
+  SEXP v = R_tryEvalSilent(call, R_BaseEnv, &err);
+  UNPROTECT(1);
+  if (err || TYPEOF(v) != REALSXP || XLENGTH(v) != XLENGTH(slot)) return slot;
+  return v;
+}
+
 static double slot_value(SEXP slot, R_xlen_t j) {
   switch (TYPEOF(slot)) {
   case REALSXP: return REAL(slot)[j];
@@ -67,9 +83,10 @@ static SEXP vv_resolve(SEXP x) {
   double *fp = REAL(flat);
   R_xlen_t pos = 0;
   for (R_xlen_t s = 0; s < nslots; s++) {
-    SEXP slot = VECTOR_ELT(slots, s);
+    SEXP slot = PROTECT(slot_as_double(VECTOR_ELT(slots, s)));
     R_xlen_t m = Rf_xlength(slot);
     for (R_xlen_t j = 0; j < m; j++) fp[pos++] = slot_value(slot, j);
+    UNPROTECT(1);
   }
 
   SEXP res = PROTECT(Rf_allocVector(REALSXP, n));

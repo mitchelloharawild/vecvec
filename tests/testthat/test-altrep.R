@@ -49,3 +49,16 @@ test_that("the index survives serialization", {
   expect_identical(vv_index(y), vv_index(x))
   expect_equal(unvecvec(y), unvecvec(x))
 })
+
+test_that("classed numeric slots resolve through as.double()", {
+  registerS3method(
+    "as.double", "vv_test_cyclical",
+    function(x, ...) as.double(unclass(x)) + 1
+  )
+  cyc <- structure(c(0L, 1L, 2L), class = "vv_test_cyclical")
+  # Index 3, 1, 2 into the slot: raw storage would give 2, 0, 1
+  expect_equal(as.vector(vv_alt(c(3L, 1L, 2L), list(cyc))), c(3, 1, 2))
+  # Unclassed slots are still read directly
+  y <- vecvec(c(5, 6), 1:2)
+  expect_equal(as.vector(unclass(y)), c(5, 6, 1, 2))
+})

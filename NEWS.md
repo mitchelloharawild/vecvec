@@ -7,6 +7,8 @@
   `vecvec` directly, such as `lm()`, `data.matrix()` and `prcomp()` on data
   frames with `vecvec` columns, now uses the values rather than the indices.
   Stored values with no numeric reading (e.g. character) resolve to `NA`.
+  Classed numeric vectors (e.g. cyclical time) resolve through their
+  `as.double()` method, so the base agrees with `as.numeric()`.
   `is.integer()` is now `FALSE`.
 
 * Updates for compatibility with S7 > 0.2.2.
