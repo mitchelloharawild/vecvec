@@ -98,23 +98,32 @@ unvecvec <- function(x, ptype = NULL) {
     )
   }
 
+  # Single-type: the values are already of one type
+  if (vv_is_typed(x)) {
+    slot <- vv_slots(x)[[1L]]
+    return(if (is.null(ptype)) slot else vec_cast_unsafe(slot, to = ptype))
+  }
+
+  slots <- vv_slots(x)
   if ((len <- length(x)) == 0L) {
-    return(vec_c(!!!x@x))
+    return(if (is.null(ptype)) vec_c(!!!slots) else vec_slice(ptype, 0L))
   }
 
   # Cast mixed vector types to common type
   if (is.null(ptype)) {
-    ptype <- vec_ptype_common(!!!x@x) %||% logical()
+    ptype <- vec_ptype_common(!!!slots) %||% logical()
     # Use safe casting from vctrs
     vec_cast_unsafe <- vec_cast
   }
-  x@x <- lapply(x@x, vec_cast_unsafe, to = ptype)
+  slots <- lapply(slots, vec_cast_unsafe, to = ptype)
 
   # Construct output single-typed vector
+  idx <- vv_index(x)
+  attributes(idx) <- NULL
   res <- vec_init(ptype, n = len)
-  pos <- as.vector(!is.na(vv_index(x)))
+  pos <- !is.na(idx)
   if (any(pos)) {
-    res <- vec_assign(res, pos, vec_slice(vec_c(!!!x@x), vv_index(x)[pos]))
+    res <- vec_assign(res, pos, vec_slice(vec_c(!!!slots), idx[pos]))
   }
   res
 }
@@ -193,49 +202,18 @@ is_vecvec <- function(x) inherits(x, "vecvec::vecvec")
 # Indexing methods
 # ------------------------------------------------------------------------------
 method(`[`, class_vecvec) <- function(x, i, ...) {
+  # Single-type: subset the values directly
+  if (vv_is_typed(x)) {
+    return(vv_with_data(x, vv_data(x)[i, ...]))
+  }
+
+  # Mixed-type: subset the index, keeping only the stored values it uses
   idx <- vv_index(x)[i, ...]
-  not_na <- !is.na(idx)
-
-  if (!any(not_na)) {
-    return(S7_class(x)(x = list(), i = idx))
-  }
-
-  idx_nn <- idx[not_na]
-
-  # Which original slot (and within-slot position) each selected element belongs to
-  at <- vecvec_locate(x@x, idx_nn)
-  pos <- at$slot
-
-  # Drop entirely unreferenced slots
-  keep <- sort(unique(pos))
-  all_kept <- length(keep) == length(x@x)
-
-  x@x <- x@x[keep]
-
-  new_slot <- match(pos, keep)
-  local_idx <- at$within # 1-based within slot
-
-  slot_lengths <- list_sizes(x@x)
-  groups <- split(seq_along(new_slot), new_slot)
-
-  for (k in seq_along(x@x)) {
-    el <- groups[[k]]
-    sel <- local_idx[el]
-    u <- unique(sel)
-    if (length(u) < slot_lengths[k]) {
-      local_idx[el] <- match(sel, u)
-      x@x[[k]] <- vec_slice(x@x[[k]], u)
-    }
-  }
-
-  # Assign new vecvec indices
-  new_starts <- c(0L, cumsum(list_sizes(x@x[-length(x@x)])))
-  idx[not_na] <- new_starts[new_slot] + local_idx
-  dim(x) <- NULL
-  vv_index(x) <- idx
-  dim(x) <- dim(idx)
-
-  x
+  ii <- idx
+  attributes(ii) <- NULL
+  cmp <- vv_compact(vv_slots(x), ii)
+  attributes(cmp$index) <- attributes(idx)
+  vv_rebuild(x, cmp$slots, cmp$index)
 }
 
 method(`[[`, class_vecvec) <- function(x, i, ...) {
@@ -250,6 +228,18 @@ method(c, class_vecvec) <- function(..., recursive = FALSE) {
   dots <- unname(rlang::list2(...))
   is_vv <- vapply(dots, is_vecvec, logical(1L))
   dots[!is_vv] <- lapply(dots[!is_vv], vecvec)
+
+  # Single-type inputs of the same type: combine their values
+  ptype <- vv_typed_ptype(dots[[1L]])
+  if (!is.null(ptype) && all(vapply(dots, function(v) identical(vv_typed_ptype(v), ptype), logical(1L)))) {
+    data <- lapply(dots, function(v) {
+      d <- vv_data(v)
+      attr(d, "dim") <- NULL
+      attr(d, "dimnames") <- NULL
+      d
+    })
+    return(vv_with_data(dots[[1L]], do.call(base::c, data)))
+  }
 
   # Read each input's slots once through the cheap internal accessor (`@x`
   # dispatches through S7), then offset each input's indices past the slots of

@@ -60,9 +60,10 @@ test_that("Binary Ops don't expand when arguments are invariable over replicates
   expected <- rep(c(1:10, 11:20, 21:30), each = 10) + 100
   expect_equal(result_vals, expected)
 
+  # The two integer vectors are stored together
   expect_equal(
     lengths(result@x),
-    c(10L, 10L, 10L)
+    c(20L, 10L)
   )
 })
 
@@ -89,7 +90,7 @@ test_that("Binary Ops expand when arguments differ across replicated indices", {
   expect_equal(result_vals, expected)
   expect_equal(
     lengths(result@x),
-    c(100L, 100L, 100)
+    c(200L, 100L)
   )
 })
 
@@ -107,10 +108,16 @@ test_that("Ops on long slots doesn't overflow the pair key", {
   expect_equal(r, as.double(1:5e4) + 1)
 })
 
-test_that("Ops computes duplicate operand pairs once", {
-  a <- vecvec(c(1, 2))[rep(1:2, 1e4)]
-  b <- vecvec(c(10, 20))[rep(1:2, 1e4)]
+test_that("Ops computes duplicate operand pairs of mixed-type vecvecs once", {
+  a <- vecvec(c(1, 2), 3L)[rep(1:3, 1e4)]
+  b <- vecvec(c(10, 20), 30L)[rep(1:3, 1e4)]
   x <- a + b
-  expect_equal(as.double(unvecvec(x)), rep(c(11, 22), 1e4))
-  expect_equal(length(x@x[[1L]]), 2L)
+  expect_equal(as.double(unvecvec(x)), rep(c(11, 22, 33), 1e4))
+  expect_equal(lengths(x@x), c(2L, 1L))
+})
+
+test_that("Ops doesn't expand a size one operand of a mixed-type vecvec", {
+  a <- vecvec(c(1, 2), 3L)[rep(1:3, 1e4)]
+  x <- a + 1L
+  expect_equal(lengths(x@x), c(2L, 1L))
 })

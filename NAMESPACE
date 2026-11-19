@@ -14,10 +14,15 @@ S3method(aperm,"vecvec::vecvec")
 S3method(as.double,"vecvec::vecvec")
 S3method(as.vector,"vecvec::vecvec")
 S3method(cbind,"vecvec::vecvec")
+S3method(makepredictcall,"vecvec::vecvec")
 S3method(rbind,"vecvec::vecvec")
 S3method(t,"vecvec::vecvec")
 S3method(vec_cast,"vecvec::vecvec")
 S3method(vec_ptype2,"vecvec::vecvec.vecvec::vecvec")
+S3method(vecvec_storage_is_value,Date)
+S3method(vecvec_storage_is_value,POSIXct)
+S3method(vecvec_storage_is_value,default)
+S3method(vecvec_storage_is_value,difftime)
 export(class_vecvec)
 export(cor)
 export(cov)
@@ -30,13 +35,19 @@ export(vecvec_apply)
 export(vecvec_apply_fn)
 export(vecvec_mapply)
 export(vecvec_register)
+export(vecvec_storage_is_value)
 import(S7)
 import(vctrs)
-importFrom(rlang,expr)
-importFrom(rlang,exprs)
-importFrom(rlang,quo)
-importFrom(rlang,quos)
-importFrom(rlang,sym)
-importFrom(rlang,syms)
-importFrom(stats,median)
+importFrom(rlang,
+  expr,
+  exprs,
+  quo,
+  quos,
+  sym,
+  syms
+)
+importFrom(stats,
+  makepredictcall,
+  median
+)
 useDynLib(vecvec, .registration = TRUE)

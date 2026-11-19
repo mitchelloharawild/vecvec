@@ -15,7 +15,8 @@ vecvec_apply(x, .f, ...)
 }
 \value{
 A vecvec data type with the same structure as \code{x} but with each
-vector transformed by \code{.f}.
+vector transformed by \code{.f}. If \code{.f} returns a \code{vecvec}, its vectors are
+spliced into the result rather than nested within it.
 }
 \description{
 The \code{vecvec_apply()} function applies a function \code{.f} to each vector in the

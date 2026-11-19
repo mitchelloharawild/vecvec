@@ -201,12 +201,13 @@ vecvec_abind <- function(..., along = 1L) {
   vecvec_abind(..., along = 1L)
 }
 
-# The ALTREP base of a vecvec resolves to the stored values, so base methods
-# that permute the base vector (`t()`, `aperm()`) must permute the index.
+# Transposing permutes the data of a vecvec: the values of a single-type vecvec
+# and the index of a mixed-type one, which is what base t() and aperm() do.
 
 # @method t vecvec::vecvec
 #' @rawNamespace S3method(t,"vecvec::vecvec")
 `t.vecvec::vecvec` <- function(x) {
+  if (vv_is_typed(x)) return(vv_with_data(x, t(vv_data(x))))
   vv_index(x) <- t(vv_index(x))
   x
 }
@@ -214,6 +215,7 @@ vecvec_abind <- function(..., along = 1L) {
 # @method aperm vecvec::vecvec
 #' @rawNamespace S3method(aperm,"vecvec::vecvec")
 `aperm.vecvec::vecvec` <- function(a, perm = NULL, ...) {
+  if (vv_is_typed(a)) return(vv_with_data(a, aperm(vv_data(a), perm = perm, ...)))
   vv_index(a) <- aperm(vv_index(a), perm = perm, ...)
   a
 }

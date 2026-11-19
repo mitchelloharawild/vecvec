@@ -10,10 +10,10 @@ test_that("vecvec_mapply applies .f element-wise (correctness), batched by share
 })
 
 test_that("vecvec_mapply calls .f once per group of shared slots, not once per element", {
-  # A structured input with 3 underlying slots should only need 3 calls to
-  # `.f`, regardless of how many elements it represents - this is the whole
-  # point of batching by vecvec_align() groups rather than mapply()-ing
-  # element by element.
+  # A structured input with 2 underlying slots (the integer vectors are stored
+  # together) should only need 2 calls to `.f`, regardless of how many
+  # elements it represents - this is the whole point of batching by
+  # vecvec_align() groups rather than mapply()-ing element by element.
   x <- vecvec(1:10, as.double(11:20), 21:30)
 
   calls <- 0L
@@ -22,7 +22,7 @@ test_that("vecvec_mapply calls .f once per group of shared slots, not once per e
     a + b
   })
 
-  expect_equal(calls, 3L)
+  expect_equal(calls, 2L)
   expect_equal(as.numeric(r), 2 * c(1:10, 11:20, 21:30))
 })
 
@@ -64,7 +64,8 @@ test_that("vecvec_apply splices vecvec results instead of nesting them", {
   f <- function(v) class_vecvec(list(rev(v)), i = c(NA, rev(seq_along(v))[-1]))
   res <- vecvec_apply(x, f)
   expect_false(any(vapply(res@x, is_vecvec, logical(1L))))
-  expect_identical(format(res), c("b", "2.5", NA, NA, NA, "3.5"))
+  # Missing values of a stored vector are formatted with it, a missing index is NA
+  expect_identical(format(res), c("b ", "2.5", NA, " NA", "NA", "3.5"))
 
   # Mixed plain and nested results
   y <- vecvec(1:3, c(0.5, 1.5))

@@ -1,51 +1,42 @@
 # vctrs compatibility methods
 
 # proxy/restore
-# This is inefficient but seemingly required for vctrs machinery
+# Each row of the proxy holds the (shared) list of stored vectors of the vecvec
+# it came from, and its index into them. Slicing and combining proxies keeps
+# the rows with their stored vectors, so restoring needs no information from
+# `to` other than its class.
 method(vec_proxy, class_vecvec) <- function(x, ...) {
-  data_frame(x = list(x@x), l = sum(list_sizes(x@x)), i = vv_index(x))
+  i <- vv_index(x)
+  attributes(i) <- NULL
+  data_frame(x = list(vv_slots(x)), i = i)
 }
 method(vec_restore, class_vecvec) <- function(x, to, ...) {
   if (is_vecvec(x)) return(x)
+  # vctrs treats all vecvecs of a class as one type, so a prototype (as from
+  # vec_ptype()) doesn't depend on the types a vecvec holds.
   if (vec_size(x) == 0L) {
     return(S7_class(to)())
   }
 
-  # Fast path for vecvec without merging - just update the indices
-  if(identical(sum(slot_len <- list_sizes(to@x)), slot_grp <- unique(x$l))) {
-    vv_index(to) <- x$i
-    # Invoke pruning of slots
-    out <- to[seq_along(to)]
-    return(out)
-  }
-  
-  # Group rows by the address of their vector list (avoids quadratic hashing)
-  addr <- vapply(x$x, rlang::obj_address, character(1L))
-  key <- unique(addr)
-  grp_id <- match(addr, key)
-  grp <- data_frame(key = x$x[match(key, addr)])
-  grp$loc <- split(seq_along(x$i), grp_id)
+  # Group rows by the stored vectors they index into (the same object, so
+  # cheap to compare), keeping groups in order of first appearance.
+  grp_id <- .Call("vecvec_group_identity", x$x, PACKAGE = "vecvec")
+  first <- which(!duplicated(grp_id))
+  # Rows initialised by vctrs (e.g. with vec_init()) hold NULL
+  val <- lapply(x$x[first], function(s) if (is.null(s)) list() else s)
 
-  # vctrs seems to drop list() to NULL internally somewhere? - fix it
-  val <- lapply(grp$key, function(x) if (is.null(x)) list() else x)
-
-  # Index offsets for each grp
-  len <- c(
-    0L,
-    cumsum(vapply(val[-length(val)], function(x) sum(list_sizes(x)), integer(1)))
-  )
-  # Offset indices, scattered back to their original row order
   idx <- x$i
-  for (g in vec_seq_along(grp)) {
-    loc <- grp$loc[[g]]
-    idx[loc] <- idx[loc] + len[g]
+  if (length(val) > 1L) {
+    # Offset each group's indices past the stored vectors of earlier groups
+    len <- vapply(val, function(s) sum(list_sizes(s)), integer(1L))
+    idx <- idx + c(0L, cumsum(len))[grp_id]
   }
 
-  # Restore the vecvec S7 object
-  S7_class(to)(
-    x = unlist(val, recursive = FALSE),
-    i = idx
-  )
+  # Rows that are all missing (e.g. from vec_init()) keep the types of `to`
+  slots <- unlist(val, recursive = FALSE)
+  if (length(slots) == 0L) slots <- vv_slots(to)
+
+  vv_rebuild(to, slots, idx)
 }
 
 # Comparison proxies

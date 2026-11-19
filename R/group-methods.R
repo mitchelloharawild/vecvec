@@ -21,12 +21,19 @@
   }
 
   # Binary operation (complete method on values)
-  # Convert to vecvec before recycling so vctrs repeats indices rather than
-  # expanding the underlying vector (which would defeat compression).
+  # Convert to vecvec and recycle indices rather than values, so that repeated
+  # values aren't expanded (which would defeat compression).
   if (!is_vecvec(e1)) e1 <- vecvec(e1) else class_vv <- S7_class(e1)
   if (!is_vecvec(e2)) e2 <- vecvec(e2) else class_vv <- S7_class(e2)
-  args <- vec_recycle_common(e1 = e1, e2 = e2)
-  n <- vec_size(args[[1L]])
+  args <- list(e1 = e1, e2 = e2)
+  n <- vec_size_common(!!!lapply(args, function(a) as.vector(vv_index(a))))
+
+  # Single-type operands: one call on their values (which recycles a size one
+  # operand)
+  if (vv_is_typed(e1) && vv_is_typed(e2)) {
+    res <- do.call(.Generic, list(vv_slots(e1)[[1L]], vv_slots(e2)[[1L]]))
+    return(if (bool_op) res else class_vv(list(res)))
+  }
 
   # Map indices -> (slot index, within-slot position), and group positions
   # into contiguous runs drawing from the same pair of underlying slots.
@@ -52,7 +59,7 @@
     # Key in doubles: integer arithmetic overflows (to NA) once
     # (w1 - 1) * size(e2's slot) passes .Machine$integer.max, which would
     # collapse every later pair onto one value. Doubles are exact to 2^53.
-    pair_key <- (as.double(w[[1L]]) - 1) * vec_size(args[[2L]]@x[[s_idx[[2L]]]]) + w[[2L]]
+    pair_key <- (as.double(w[[1L]]) - 1) * vec_size(vv_slots(args[[2L]])[[s_idx[[2L]]]]) + w[[2L]]
     unique_keys <- unique(pair_key)
     first_of <- match(unique_keys, pair_key)
 
@@ -60,7 +67,7 @@
       vals = do.call(
         .Generic,
         .mapply(
-          function(arg, s, w) vec_slice(arg@x[[s]], w[first_of]),
+          function(arg, s, w) vec_slice(vv_slots(arg)[[s]], w[first_of]),
           list(args, s_idx, w), NULL
         )
       ),

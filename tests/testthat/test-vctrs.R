@@ -190,7 +190,6 @@ test_that("vctrs::vec_cast vecvec to logical", {
 # duplicated indices in `to` (#18-adjacent: compressed vecvecs as targets)
 test_that("vctrs::vec_cast plain vector to vecvec with duplicated indices (single slot)", {
   to <- rep(vecvec(1.5), 3)
-  expect_equal(vv_index(to), c(1L, 1L, 1L))
 
   result <- vec_cast(c(1, 2, 3), to)
   expect_true(is_vecvec(result))
@@ -215,7 +214,7 @@ test_that("vctrs::vec_cast to vecvec with duplicated indices still works when va
 })
 
 test_that("vctrs::vec_cast to vecvec with duplicated indices across multiple mixed-type slots", {
-  to <- c(rep(vecvec(1.5), 2), rep(vecvec(2L), 2))
+  to <- class_vecvec(list(1.5, 2L), i = c(1L, 1L, 2L, 2L))
   expect_equal(vv_index(to), c(1L, 1L, 2L, 2L))
 
   result <- vec_cast(c(10L, 20L, 30L, 40L), to)
@@ -358,11 +357,16 @@ test_that("vctrs::vec_proxy_equal keeps unassigned (NA-index) elements mutually 
 })
 
 test_that("vctrs::vec_proxy_equal distinguishes unassigned index from a stored NA value", {
-  vv <- vecvec(c(1, NA, 3))
+  vv <- vecvec(c(1, NA, 3), "a")
   vv <- vec_c(vv, vec_init(class_vecvec(), 1L))
-  # element 2 (stored NA) and element 4 (unassigned index) must not be
+  # element 2 (stored NA) and element 5 (unassigned index) must not be
   # grouped together, even though both are considered `is.na()`.
-  expect_false(vec_group_id(vv)[[2]] == vec_group_id(vv)[[4]])
+  expect_false(vec_group_id(vv)[[2]] == vec_group_id(vv)[[5]])
+
+  # A single-type vecvec has no unassigned indices: they are missing values of
+  # its type
+  vv <- vec_c(vecvec(c(1, NA, 3)), vec_init(class_vecvec(), 1L))
+  expect_true(vec_group_id(vv)[[2]] == vec_group_id(vv)[[4]])
 })
 
 test_that("vctrs::vec_proxy_equal handles rcrd-typed slots without destructuring", {

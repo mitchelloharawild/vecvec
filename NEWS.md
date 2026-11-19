@@ -9,32 +9,56 @@
   every position that shares a slot combination (in position order), so it must
   be vectorised and element-wise, as documented.
 
-* Merging adjacent same-type slots (in `class_vecvec()`, `c()`, etc.) is now
-  linear in the number of slots rather than quadratic.
-
 # vecvec 1.5.0
 
 ## Improvements
 
-* The base vector of a `vecvec` is now an ALTREP double vector that resolves to
-  the stored values, instead of an integer index. Base R and C code that reads a
-  `vecvec` directly, such as `lm()`, `data.matrix()` and `prcomp()` on data
-  frames with `vecvec` columns, now uses the values rather than the indices.
-  Stored values with no numeric reading (e.g. character) resolve to `NA`.
-  Classed numeric vectors (e.g. cyclical time) resolve through their
-  `as.double()` method, so the base agrees with `as.numeric()`. This includes
-  methods that S7 registers for `as.double()` under the name `as.numeric`.
-  `is.integer()` is now `FALSE`. A `vecvec` whose values C code copied into a
-  new vector along with its attributes (as `tidyr::gather()` does for id
-  columns) recovers its index from those values. Values written into the base
-  in place (as R's arithmetic does for `unclass(x) * 2`) are kept by copies and
-  serialization.
+* A `vecvec` whose elements all share one type is now stored as the data of
+  that type: a single-type `vecvec` of numbers, strings or dates is an ordinary
+  vector of those values, with the type's attributes kept in a zero-length
+  prototype. Base R and C code that reads a `vecvec` directly now sees its
+  values, so `lm()`, `glm()`, `model.matrix()`, `prcomp()` and `data.matrix()`
+  work on single-type `vecvec` columns as they do on the plain vectors.
+  Subsetting, arithmetic, `c()`, `vec_slice()` and `vec_c()` of single-type
+  `vecvec`s are much faster.
 
-* `identical()` now tells `vecvec`s with different values or indices apart. The
-  stored vectors and index are mirrored in a `_vecvec` attribute (the same
-  object as the ALTREP data, so it uses no extra memory and is serialized once),
-  as `identical()` can't see ALTREP data and the base resolves non-numeric slots
-  to `NA`. Previously it was `TRUE` for e.g. `vecvec("a")` and `vecvec("b")`.
+* A `vecvec` of mixed types keeps the integer index into its stored vectors as
+  its data, but modelling functions (anything using `model.frame()`) now error
+  for it rather than fitting on the index. The same goes for a single type
+  whose data isn't its value, like a factor's codes. Packages can declare that
+  the data of their vector class is its value with a
+  `vecvec_storage_is_value()` method.
+
+* `is.numeric()` is now `TRUE` only for a single numeric type whose data is
+  its value (so not for mixed numeric types, dates or factors), following the
+  contract of `is.numeric()` methods in base R.
+
+* Everything a `vecvec` needs is in its data and attributes, so code that
+  copies a vector's data and attributes in C (data.table, tidyr, reshape2,
+  collapse, serialization) produces a correct `vecvec`, whatever its types.
+
+* Vectors of the same type are now always stored together, not only when
+  adjacent, so a `vecvec` is single-type exactly when all of its elements share
+  a type (including attributes, e.g. a factor's levels). Missing values without
+  a type (logical `NA`) don't count as another type, so `c(x, NA)` and
+  `x[i] <- NA` keep a single-type `vecvec` single-type.
+
+* `identical()` tells `vecvec`s with different values apart. Previously it was
+  `TRUE` for e.g. `vecvec("a")` and `vecvec("b")`.
+
+## Breaking changes
+
+* `class()` of a `vecvec` no longer includes `"integer"` (or `"double"`), and
+  `typeof()` is the type of its values (single-type) or `"integer"` (mixed).
+
+* Packages that extend `class_vecvec` must be reinstalled after updating
+  vecvec, as S7 copies a parent class into the packages that extend it when
+  they're installed. Loading such a package errors with a message saying which
+  package to reinstall.
+
+* Single-type `vecvec`s no longer share storage between repeated elements
+  (e.g. after `rep()`), as their data is their values. Mixed-type `vecvec`s
+  still do.
 
 * Updates for compatibility with S7 > 0.2.2.
 

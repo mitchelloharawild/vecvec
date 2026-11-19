@@ -111,9 +111,19 @@ test_that("is.nan() works on a length-1 NaN vecvec", {
 
 # is.numeric() -----------------------------------------------------------------
 
-test_that("is.numeric() returns TRUE for a vecvec of numeric slots", {
+test_that("is.numeric() is TRUE for a single numeric type", {
+  expect_true(is.numeric(vecvec(1:5)))
+  expect_true(is.numeric(vecvec(c(1.5, 2.5))))
+})
+
+test_that("is.numeric() is FALSE for mixed numeric types, whose data is an index", {
   x <- vecvec(1:5, c(1.5, 2.5))
-  expect_true(is.numeric(x))
+  expect_false(is.numeric(x))
+})
+
+test_that("is.numeric() follows the single type", {
+  expect_false(is.numeric(vecvec(Sys.Date())))
+  expect_false(is.numeric(vecvec(factor("a"))))
 })
 
 test_that("is.numeric() returns FALSE for a vecvec of character slots", {
@@ -126,8 +136,9 @@ test_that("is.numeric() returns FALSE when only some slots are numeric", {
   expect_false(is.numeric(x))
 })
 
-test_that("is.numeric() returns TRUE for a zero-length vecvec", {
-  expect_true(is.numeric(vecvec()))
+test_that("is.numeric() of a zero-length vecvec follows its type", {
+  expect_false(is.numeric(vecvec()))
+  expect_true(is.numeric(vecvec(1:3)[0]))
 })
 
 # is.na() --------------------------------------------------------------------
@@ -291,20 +302,24 @@ test_that("duplicated() detects equal values stored in different slots", {
 })
 
 test_that("duplicated() treats NA indices as duplicates of each other only", {
+  # A missing index of a single-type vecvec is a missing value of its type
   vv <- class_vecvec(list(c("A", NA)), i = c(1L, 2L, NA, 2L, NA, 1L))
-  expect_identical(duplicated(vv), c(FALSE, FALSE, FALSE, TRUE, TRUE, TRUE))
+  expect_identical(duplicated(vv), c(FALSE, FALSE, TRUE, TRUE, TRUE, TRUE))
+
+  vv <- class_vecvec(list(c("A", NA), 1), i = c(1L, 2L, NA, 2L, NA, 1L, 3L))
+  expect_identical(duplicated(vv), c(FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, FALSE))
 })
 
 test_that("duplicated() respects incomparables with repeated indices", {
-  vv <- class_vecvec(list(c("A", NA)), i = c(1L, 2L, NA, 2L, NA, 1L))
+  vv <- class_vecvec(list(c("A", NA), 1), i = c(1L, 2L, NA, 2L, NA, 1L, 3L))
   expect_identical(
     duplicated(vv, incomparables = "A"),
-    c(FALSE, FALSE, FALSE, TRUE, TRUE, FALSE)
+    c(FALSE, FALSE, FALSE, TRUE, TRUE, FALSE, FALSE)
   )
   # NA in incomparables also covers missing indices
   expect_identical(
     duplicated(vv, incomparables = NA),
-    c(FALSE, FALSE, FALSE, FALSE, FALSE, TRUE)
+    c(FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE)
   )
 })
 

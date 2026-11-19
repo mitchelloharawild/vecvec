@@ -13,27 +13,27 @@
 #'
 #' @export
 vecvec_apply <- function(x, .f, ...) {
-  if (vec_is_empty(x)) {
+  if (length(x) == 0L) {
     return(x)
   }
   .f <- match.fun(.f)
-  res <- lapply(x@x, .f, ...)
+  res <- lapply(vv_slots(x), .f, ...)
+  idx <- vv_index(x)
 
   nested <- vapply(res, is_vecvec, logical(1L))
   if (any(nested)) {
     # Splice nested vecvecs in place and remap `x`'s indices
-    within <- lapply(res, seq_along)
-    within[nested] <- lapply(res[nested], vv_index)
+    within <- lapply(res, vec_seq_along)
+    within[nested] <- lapply(res[nested], function(v) as.vector(vv_index(v)))
     res[!nested] <- lapply(res[!nested], list)
-    res[nested] <- lapply(res[nested], prop, "x")
+    res[nested] <- lapply(res[nested], vv_slots)
     offset <- cumsum(c(0L, vapply(res, function(v) sum(list_sizes(v)), integer(1L))))
-    remap <- unlist(Map(`+`, within, offset[-length(offset)]))
-    vv_index(x) <- remap[vv_index(x)]
+    remap <- unlist(.mapply(`+`, list(within, offset[-length(offset)]), NULL))
+    idx[] <- remap[idx]
     res <- unlist(res, recursive = FALSE)
   }
-  x@x <- vecvec_flatten_adj(res)
 
-  x
+  vv_rebuild(x, res, idx)
 }
 
 #' Function factory for vecvec_apply
@@ -141,8 +141,7 @@ vecvec_mapply <- function(.l, .f, ..., ptype = NULL, SIMPLIFY = !is.null(ptype))
 
   is_vv <- vapply(.l, is_vecvec, logical(1L))
   .l[!is_vv] <- lapply(.l[!is_vv], vecvec)
-  .l <- vec_recycle_common(!!!.l)
-  n <- vec_size(.l[[1L]])
+  n <- vec_size_common(!!!lapply(.l, function(a) as.vector(vv_index(a))))
 
   # Group positions by their underlying combination of storage slots (shared
   # with Ops.vecvec::vecvec), so `.f` can be called once per group on whole
@@ -161,7 +160,7 @@ vecvec_mapply <- function(.l, .f, ..., ptype = NULL, SIMPLIFY = !is.null(ptype))
     }
 
     group_vals <- lapply(seq_along(.l), function(j) {
-      vec_slice(.l[[j]]@x[[s_idx[[j]]]], within[[j]][pos])
+      vec_slice(vv_slots(.l[[j]])[[s_idx[[j]]]], within[[j]][pos])
     })
     val <- do.call(.f, c(group_vals, list(...)))
 

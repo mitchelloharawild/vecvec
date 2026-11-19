@@ -9,8 +9,8 @@ class_vecvec(x = list(), i = seq_len(sum(list_sizes(x))))
 \arguments{
 \item{x}{An unnamed list of arbitrary vectors. The vectors can be of
 different types and lengths, but they must all be vectors (according to
-\link[vctrs:vec_is]{vctrs::vec_is}). Adjacent vectors of the same type will be combined
-together into a single vector.}
+\link[vctrs:vec_is]{vctrs::vec_is}). Vectors of the same type are combined together into a
+single vector.}
 
 \item{i}{A vector of integers specifying the location of each element in \code{x}
 as if they were combined in order. The values in \code{i} must be between 1 and
@@ -26,6 +26,22 @@ A vector of vectors of S7 object of class \code{class_vecvec}.
 designed to be performant with minimal checks on the inputs. Direct use of
 \code{class_vecvec()} is useful for developers, but for users it is recommended to
 use \code{\link[=vecvec]{vecvec()}} to create vecvec objects.
+}
+\details{
+A vecvec is stored in one of two forms, chosen automatically from its
+contents:
+\itemize{
+\item \strong{single-type}: every element has the same type, held in an atomic
+vector (numbers, strings, dates, ...). The vecvec's data \emph{is} that vector's
+data, so base R code that reads it directly (such as \code{lm()} or
+\code{model.matrix()}) sees its values.
+\item \strong{mixed-type}: anything else. The vecvec's data is an integer index into
+the stored vectors. Modelling functions error for mixed-type vecvecs rather
+than fit on the index.
+}
+
+Vectors of the same type (with identical attributes) are always combined, so
+a vecvec is single-type exactly when all of its elements share one type.
 }
 \examples{
 # Create a vecvec prototype

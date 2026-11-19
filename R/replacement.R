@@ -1,5 +1,3 @@
-# This causes fragmentation as new values are appended to vector list
-# A defragmentation function would be useful (#18)
 # @method [<- vecvec::vecvec
 #' @rawNamespace S3method(`[<-`,"vecvec::vecvec")
 `[<-.vecvec::vecvec` <- function(x, i, ..., value) {
@@ -12,60 +10,47 @@
   # Treat NA positions in a logical index as FALSE, matching base R behaviour
   if (is.logical(i)) i[is.na(i)] <- FALSE
 
-  # Recycle `value` to the length of `i`
-  replacements <- vv_index(x)[i, ...]
-  if (length(replacements) == 0L) return(x)
-  value <- vec_recycle(value, size = length(replacements))
+  # Recycle `value` to the number of replaced positions
+  idx <- vv_index(x)
+  n <- length(idx[i, ...])
+  if (n == 0L) return(x)
+  value <- vec_recycle(value, size = n)
 
-  # Some stored values referenced by the replaced positions may still be
-  # referenced by *surviving* (non-replaced) positions, e.g. when duplicated
-  # indices share compressed storage (#18). Build a mask, shaped like
-  # `vv_index(x)`, that is TRUE at every position being replaced, so we can
-  # tell which stored values remain referenced by the untouched positions.
-  d <- dim(x)
-  mask <- if (is.null(d)) logical(length(vv_index(x))) else array(FALSE, dim = d)
-  mask[i, ...] <- TRUE
-  still_referenced <- unique(vv_index(x)[!mask])
-
-  # Remove unreferenced values from `x@x`
-  vec_rm <- unique(replacements)
-  vec_rm <- vec_rm[!is.na(vec_rm)]
-  vec_rm <- setdiff(vec_rm, still_referenced)
-  if (is.array(x)) {
-    # Also remove out-of-bounds indices produced
-    # by array() when length(x) != prod(dim(x))
-    nx <- sum(list_sizes(x@x))
-    if (length(x) < nx) {
-      vec_rm <- c(vec_rm, seq(from = length(x) + 1L, to = nx))
+  # Single-type value of the same type: replace the values directly
+  if (vv_is_typed(x)) {
+    p <- vv_typed_ptype(x)
+    val <- if (is_vecvec(value)) {
+      if (vv_is_typed(value) && identical(vv_typed_ptype(value), p)) vv_data(value)
+    } else if (vv_can_type(value) && identical(vv_atomic_ptype(value), p)) {
+      value
+    }
+    if (!is.null(val)) {
+      attributes(val) <- NULL
+      data <- vv_data(x)
+      data[i, ...] <- val
+      return(vv_with_data(x, data))
     }
   }
-  vec_starts <- c(0L, cumsum(list_sizes(x@x)[-length(x@x)]))
-  vec_idx <- findInterval(vec_rm, vec_starts, left.open = TRUE)
-  vec_pos <- vec_split(vec_rm - vec_starts[vec_idx], vec_idx)
-  for (k in seq_len(nrow(vec_pos))) {
-    x@x[[vec_pos$key[[k]]]] <- vec_slice(x@x[[vec_pos$key[[k]]]], -vec_pos$val[[k]])
-  }
 
-  # Append `value` to the end of `x@x` and update `x@i` to point to the new values
+  # Otherwise append the new values to the stored vectors and point the
+  # replaced positions at them. Stored values no longer used are dropped.
+  slots <- vv_slots(x)
+  offset <- sum(list_sizes(slots))
   if (is_vecvec(value)) {
-    x@x <- c(x@x, value@x)
-    idx <- vv_index(value) + length(x)
+    new_idx <- vv_index(value)
+    attributes(new_idx) <- NULL
+    slots <- c(slots, vv_slots(value))
   } else {
-    x@x <- c(x@x, list(value))
-    idx <- seq_along(value) + length(x)
+    new_idx <- vec_seq_along(value)
+    slots <- c(slots, list(value))
   }
-  indices <- vv_index(x)
-  indices[i, ...] <- idx
-  vv_index(x) <- indices
-  
-  
-  # Rank local indices
-  indices <- vv_index(x)
-  indices[] <- vec_rank(as.integer(indices), ties = "dense")
-  vv_index(x) <- indices
+  idx[i, ...] <- new_idx + offset
 
-  # Crude but fast defragmentation of adjacent same-type vectors
-  vecvec_flatten_adj(x)
+  ii <- idx
+  attributes(ii) <- NULL
+  cmp <- vv_compact(slots, ii)
+  attributes(cmp$index) <- attributes(idx)
+  vv_rebuild(x, cmp$slots, cmp$index)
 }
 
 #' @method [[<- vecvec::vecvec
@@ -85,7 +70,8 @@
   x
 }
 
-# The vector values are set to NA rather than the vecvec index being set to NA.
+# The vector values are set to (typed) NA rather than the vecvec index being set
+# to NA, so each element keeps its type.
 
 # @method is.na<- vecvec::vecvec
 #' @rawNamespace S3method(`is.na<-`,"vecvec::vecvec")
@@ -104,59 +90,6 @@
   }
   if (length(value) == 0L) return(x)
 
-  idx <- vv_index(x)
-  vec_na <- unique(idx[value])
-  vec_na <- vec_na[!is.na(vec_na)]
-  if (length(vec_na) == 0L) return(x)
-
-  # A stored value referenced by the positions being NA'd may still be
-  # referenced by *surviving* (non-NA'd) positions when they share
-  # compressed storage (#18). NA-ing it in place would incorrectly NA those
-  # survivors too, so split it out into a fresh, private NA entry instead.
-  mask <- logical(length(idx))
-  mask[value] <- TRUE
-  still_referenced <- unique(idx[!mask])
-  vec_na_shared <- intersect(vec_na, still_referenced)
-  vec_na_safe <- setdiff(vec_na, vec_na_shared)
-
-  vec_starts <- c(0L, cumsum(list_sizes(x@x)[-length(x@x)]))
-
-  # Stored positions with no surviving reference: NA them in place.
-  if (length(vec_na_safe)) {
-    vec_idx <- findInterval(vec_na_safe, vec_starts, left.open = TRUE)
-    vec_pos <- vec_split(vec_na_safe - vec_starts[vec_idx], vec_idx)
-    for (k in seq_len(nrow(vec_pos))) {
-      slot <- x@x[[vec_pos$key[[k]]]]
-      x@x[[vec_pos$key[[k]]]] <- vec_assign(slot, vec_pos$val[[k]], vec_init(slot))
-    }
-  }
-
-  # Stored positions still referenced by survivors: give the NA'd positions
-  # their own copy, grouped by slot, and repoint them at it.
-  if (length(vec_na_shared)) {
-    vec_idx <- findInterval(vec_na_shared, vec_starts, left.open = TRUE)
-    vec_pos <- vec_split(vec_na_shared - vec_starts[vec_idx], vec_idx)
-
-    remap_from <- integer(0)
-    remap_to <- integer(0)
-    for (k in seq_len(nrow(vec_pos))) {
-      slot <- vec_pos$key[[k]]
-      local <- vec_pos$val[[k]]
-      elt <- vec_init(x@x[[slot]], length(local))
-      base <- sum(list_sizes(x@x))
-      x@x <- c(x@x, list(elt))
-      remap_from <- c(remap_from, vec_starts[slot] + local)
-      remap_to <- c(remap_to, base + seq_along(local))
-    }
-
-    m <- match(idx[value], remap_from)
-    touched <- !is.na(m)
-    tmp <- idx[value]
-    tmp[touched] <- remap_to[m[touched]]
-    idx[value] <- tmp
-    vv_index(x) <- idx
-  }
-
-  # Crude but fast defragmentation of adjacent same-type vectors
-  vecvec_flatten_adj(x)
+  x[value] <- vecvec_apply(x[value], function(v) vec_init(v, vec_size(v)))
+  x
 }

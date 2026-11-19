@@ -62,5 +62,10 @@ test_that("all.equal() compares vecvec against a plain vector", {
 test_that("all.equal() detects NA mismatches", {
   vv1 <- vecvec(c(1, 2, 3))
   vv2 <- vv1[c(1, 2, NA)]
+  expect_match(all.equal(vv1, vv2), "NA")
+
+  # A missing index of a mixed-type vecvec
+  vv1 <- vecvec(c(1, 2, 3), "a")
+  vv2 <- vv1[c(1, 2, NA, 4)]
   expect_match(all.equal(vv1, vv2), "missing")
 })
