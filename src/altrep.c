@@ -22,7 +22,14 @@ SEXP vecvec_is_altrep(SEXP x) {
 //
 //   data1: list(<integer index, 1-based into the concatenated slots, or NA>,
 //               <list of stored vectors>)    -- immutable once created
-//   data2: NULL, or the resolved doubles (a cache)
+//   data2: NULL, or the resolved doubles (a cache), or once a writable
+//          pointer to them was handed out, list(<cache>, <pristine copy>)
+//
+// C code may write through a writable pointer (`REAL()`), and R's arithmetic
+// reuses an unshared operand for its result, so `unclass(x) * 2` writes into
+// the cache. Once the cache differs from its pristine copy, it (not the index)
+// holds the values: copies keep it, it is serialized as a plain double, and the
+// index of a vecvec is recovered from it (see `vv_unwrap()`).
 //
 // The stored vectors are held in data1 (shared, not copied, with the `x`
 // attribute) rather than looked up from attributes because base R functions
@@ -42,14 +49,25 @@ static R_altrep_class_t vecvec_alt_class;
 // chronon count rather than the cyclical position) are read through their
 // as.double() method, so the base agrees with as.numeric(). Plain vectors are
 // read directly. Falls back to the raw storage if the method fails.
+//
+// The method is found by `vv_as_double()` (in R), which also finds methods
+// that S7 registers for `as.double()` under the name `as.numeric`.
+static SEXP vv_namespace(void) {
+  SEXP name = PROTECT(Rf_mkString("vecvec"));
+  SEXP ns = R_FindNamespace(name);
+  UNPROTECT(1);
+  return ns;
+}
+
 static SEXP slot_as_double(SEXP slot) {
   if (!Rf_isObject(slot) || Rf_isFactor(slot)) return slot;
   SEXPTYPE t = TYPEOF(slot);
   if (t != REALSXP && t != INTSXP && t != LGLSXP) return slot;
-  SEXP call = PROTECT(Rf_lang2(Rf_install("as.double"), slot));
+  SEXP ns = PROTECT(vv_namespace());
+  SEXP call = PROTECT(Rf_lang2(Rf_install("vv_as_double"), slot));
   int err = 0;
-  SEXP v = R_tryEvalSilent(call, R_BaseEnv, &err);
-  UNPROTECT(1);
+  SEXP v = R_tryEvalSilent(call, ns, &err);
+  UNPROTECT(2);
   if (err || TYPEOF(v) != REALSXP || XLENGTH(v) != XLENGTH(slot)) return slot;
   return v;
 }
@@ -72,6 +90,7 @@ static double slot_value(SEXP slot, R_xlen_t j) {
 
 static SEXP vv_resolve(SEXP x) {
   SEXP d2 = R_altrep_data2(x);
+  if (TYPEOF(d2) == VECSXP) return VECTOR_ELT(d2, 0);
   if (d2 != R_NilValue) return d2;
 
   SEXP index = VV_INDEX(x), slots = VV_SLOTS(x);
@@ -107,10 +126,32 @@ static R_xlen_t vv_region(SEXP x, R_xlen_t i, R_xlen_t n, double *buf) {
   for (R_xlen_t j = 0; j < m; j++) buf[j] = r[i + j];
   return m;
 }
-static void *vv_dataptr(SEXP x, Rboolean writable) { return REAL(vv_resolve(x)); }
+static void *vv_dataptr(SEXP x, Rboolean writable) {
+  SEXP res = vv_resolve(x);
+  if (writable && TYPEOF(R_altrep_data2(x)) != VECSXP) {
+    PROTECT(res);
+    SEXP pristine = PROTECT(Rf_duplicate(res));
+    SEXP d2 = PROTECT(Rf_allocVector(VECSXP, 2));
+    SET_VECTOR_ELT(d2, 0, res);
+    SET_VECTOR_ELT(d2, 1, pristine);
+    R_set_altrep_data2(x, d2);
+    UNPROTECT(3);
+  }
+  return REAL(res);
+}
 static const void *vv_dataptr_or_null(SEXP x) {
   SEXP d2 = R_altrep_data2(x);
-  return d2 == R_NilValue ? NULL : REAL(d2);
+  if (TYPEOF(d2) == VECSXP) return REAL_RO(VECTOR_ELT(d2, 0));
+  return d2 == R_NilValue ? NULL : REAL_RO(d2);
+}
+
+// Whether the cache was written to, so no longer matches the index.
+static int vv_modified(SEXP x) {
+  SEXP d2 = R_altrep_data2(x);
+  if (TYPEOF(d2) != VECSXP) return 0;
+  SEXP cache = VECTOR_ELT(d2, 0), pristine = VECTOR_ELT(d2, 1);
+  R_xlen_t n = XLENGTH(cache);
+  return n && memcmp(REAL_RO(cache), REAL_RO(pristine), n * sizeof(double)) != 0;
 }
 
 // The index and stored vectors are mirrored in the `_vecvec` attribute, which
@@ -124,11 +165,18 @@ static const void *vv_dataptr_or_null(SEXP x) {
 // restored from the attribute by `vv_unserialize_ex()`. Without a mirror (e.g.
 // when R's generic wrapper ALTREP encloses a vecvec base, or the attribute was
 // removed) the state is the full data1.
+//
+// The mirror is only trusted when it *is* data1. Copying attributes between
+// vecvecs (`attributes(a) <- attributes(b)`, `mostattributes<-`) leaves `a`
+// with `b`'s mirror, and restoring `a` from that would silently give `b`.
 static SEXP vv_mirror_sym;
 
 static SEXP vv_serialized_state(SEXP x) {
-  SEXP m = Rf_getAttrib(x, vv_mirror_sym);
-  if (TYPEOF(m) == VECSXP && Rf_xlength(m) == 2) return Rf_allocVector(INTSXP, 0);
+  // Written values are serialized as a plain double: R does so when the state
+  // is a C NULL pointer (not R_NilValue).
+  if (vv_modified(x)) return NULL;
+  if (Rf_getAttrib(x, vv_mirror_sym) == R_altrep_data1(x))
+    return Rf_allocVector(INTSXP, 0);
   return R_altrep_data1(x);
 }
 static SEXP vv_unserialize(SEXP cls, SEXP state) {
@@ -145,18 +193,31 @@ static SEXP vv_unserialize_ex(SEXP cls, SEXP state, SEXP attr, int objf, int lev
   }
   SEXP ans = PROTECT(R_new_altrep(vecvec_alt_class, data, R_NilValue));
   for (SEXP a = attr; a != R_NilValue; a = CDR(a)) Rf_setAttrib(ans, TAG(a), CAR(a));
+  // Re-point a (possibly stale) mirror at the restored data.
+  if (Rf_getAttrib(ans, vv_mirror_sym) != R_NilValue) Rf_setAttrib(ans, vv_mirror_sym, data);
   UNPROTECT(1);
   return ans;
 }
 static SEXP vv_duplicate(SEXP x, Rboolean deep) {
-  // data1 is immutable, so is shared. The cache is rebuilt on demand.
-  SEXP ans = PROTECT(R_new_altrep(vecvec_alt_class, R_altrep_data1(x), R_NilValue));
+  // data1 is immutable, so is shared. The cache is rebuilt on demand, unless
+  // it was written to: then the copy keeps the written values (sharing the
+  // pristine copy, which is never written).
+  SEXP d2 = R_NilValue;
+  if (vv_modified(x)) {
+    SEXP old = R_altrep_data2(x);
+    d2 = PROTECT(Rf_allocVector(VECSXP, 2));
+    SET_VECTOR_ELT(d2, 0, Rf_duplicate(VECTOR_ELT(old, 0)));
+    SET_VECTOR_ELT(d2, 1, VECTOR_ELT(old, 1));
+  } else {
+    PROTECT(d2);
+  }
+  SEXP ans = PROTECT(R_new_altrep(vecvec_alt_class, R_altrep_data1(x), d2));
   Rf_copyMostAttrib(x, ans);
   SEXP a;
   if ((a = Rf_getAttrib(x, R_DimSymbol)) != R_NilValue) Rf_setAttrib(ans, R_DimSymbol, a);
   if ((a = Rf_getAttrib(x, R_DimNamesSymbol)) != R_NilValue) Rf_setAttrib(ans, R_DimNamesSymbol, a);
   if ((a = Rf_getAttrib(x, R_NamesSymbol)) != R_NilValue) Rf_setAttrib(ans, R_NamesSymbol, a);
-  UNPROTECT(1);
+  UNPROTECT(2);
   return ans;
 }
 
@@ -181,15 +242,46 @@ SEXP vecvec_alt_new(SEXP index, SEXP slots) {
 // Setting attributes on a shared ALTREP vector (e.g. `dim(x) <- ...`) makes R
 // wrap it in a generic wrapper ALTREP, with the original as data1. Find the
 // vecvec ALTREP underneath.
-static SEXP vv_unwrap(SEXP x) {
+//
+// C code that copies a vecvec into a freshly allocated double vector and then
+// copies its attributes (e.g. tidyr's gather() repeating id columns) leaves a
+// plain double of resolved values carrying a stale `_vecvec` mirror. The base
+// is then rebuilt by `vv_recover()` (in R), which works out the index from
+// those values. So is the base of a vecvec whose cache was written to. The result is a new, unprotected object: callers must protect
+// it before allocating.
+static SEXP vv_find_base(SEXP x) {
   while (ALTREP(x) && !R_altrep_inherits(x, vecvec_alt_class)) {
     SEXP inner = R_altrep_data1(x);
     if (!ALTREP(inner)) break;
     x = inner;
   }
-  if (!ALTREP(x) || !R_altrep_inherits(x, vecvec_alt_class))
+  return ALTREP(x) && R_altrep_inherits(x, vecvec_alt_class) ? x : R_NilValue;
+}
+
+// The `_vecvec` mirror of a vecvec whose ALTREP base was lost.
+static SEXP vv_lost_mirror(SEXP x) {
+  SEXP m = Rf_getAttrib(x, vv_mirror_sym);
+  if (TYPEOF(m) == VECSXP && Rf_xlength(m) == 2 && TYPEOF(x) == REALSXP) return m;
+  if (Rf_inherits(x, "vecvec::vecvec"))
+    Rf_error("Can't find the stored vectors of a vecvec: it was copied without its `_vecvec` attribute.");
+  Rf_error("`x` is not a vecvec base vector.");
+}
+
+static SEXP vv_unwrap(SEXP x) {
+  SEXP y = vv_find_base(x), data;
+  if (y != R_NilValue) {
+    if (!vv_modified(y)) return y;
+    data = R_altrep_data1(y);
+  } else {
+    data = vv_lost_mirror(x);
+  }
+  SEXP ns = PROTECT(vv_namespace());
+  SEXP call = PROTECT(Rf_lang3(Rf_install("vv_recover"), x, data));
+  SEXP out = Rf_eval(call, ns);
+  UNPROTECT(2);
+  if (!ALTREP(out) || !R_altrep_inherits(out, vecvec_alt_class))
     Rf_error("`x` is not a vecvec base vector.");
-  return x;
+  return out;
 }
 
 // Returns `x` as a plain (unwrapped) vecvec base vector that carries the
@@ -199,7 +291,7 @@ static SEXP vv_unwrap(SEXP x) {
 // own copy of the attributes (so the mirror would be written twice). No data is
 // copied, as the new vector shares data1.
 SEXP vecvec_alt_mirror(SEXP x) {
-  SEXP d = R_altrep_data1(vv_unwrap(x));
+  SEXP d = PROTECT(R_altrep_data1(vv_unwrap(x)));
   SEXP ans = PROTECT(R_new_altrep(vecvec_alt_class, d, R_NilValue));
   Rf_copyMostAttrib(x, ans);
   SEXP a;
@@ -207,18 +299,26 @@ SEXP vecvec_alt_mirror(SEXP x) {
   if ((a = Rf_getAttrib(x, R_DimNamesSymbol)) != R_NilValue) Rf_setAttrib(ans, R_DimNamesSymbol, a);
   if ((a = Rf_getAttrib(x, R_NamesSymbol)) != R_NilValue) Rf_setAttrib(ans, R_NamesSymbol, a);
   Rf_setAttrib(ans, vv_mirror_sym, d);
-  UNPROTECT(1);
+  UNPROTECT(2);
   return ans;
 }
 
 SEXP vecvec_alt_index(SEXP x) { return VV_INDEX(vv_unwrap(x)); }
 
-SEXP vecvec_alt_slots(SEXP x) { return VV_SLOTS(vv_unwrap(x)); }
+// The stored vectors don't depend on the index, so a vecvec whose base was lost
+// reads them from its mirror without recovering the index.
+SEXP vecvec_alt_slots(SEXP x) {
+  SEXP y = vv_find_base(x);
+  return y != R_NilValue ? VV_SLOTS(y) : VECTOR_ELT(vv_lost_mirror(x), 1);
+}
 
 // A fresh vecvec ALTREP (without attributes) with the index of `x` and new
 // stored vectors.
 SEXP vecvec_alt_rebuild(SEXP x, SEXP slots) {
-  return vecvec_alt_new(VV_INDEX(vv_unwrap(x)), slots);
+  SEXP base = PROTECT(vv_unwrap(x));
+  SEXP out = vecvec_alt_new(VV_INDEX(base), slots);
+  UNPROTECT(1);
+  return out;
 }
 
 void vecvec_init_altrep(DllInfo *dll) {

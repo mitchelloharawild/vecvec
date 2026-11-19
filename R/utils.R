@@ -202,6 +202,66 @@ vv_mirror <- function(x) .Call("vecvec_alt_mirror", x, PACKAGE = "vecvec")
   vv_mirror(out)
 }
 
+# The numeric reading of a stored vector, as `as.double()` gives it. The
+# S3 method is looked up explicitly, as `as.double()` methods can be out of
+# reach of internal dispatch: S7 registers `method(as.double, cls)` under the
+# name `as.numeric.<cls>` (which `as.double()` never dispatches to), and a
+# package whose namespace binds `as.double` (as `S7::method(as.double, cls) <-`
+# does) registers its NAMESPACE `as.double` methods in its own S3 table.
+vv_as_double <- function(x) {
+  if (is.object(x) && !is.factor(x)) {
+    for (cls in class(x)) {
+      f <- utils::getS3method("as.double", cls, optional = TRUE) %||%
+        utils::getS3method("as.numeric", cls, optional = TRUE)
+      if (!is.null(f)) return(as.double(f(x)))
+    }
+  }
+  as.double(x)
+}
+
+# Rebuild the ALTREP base of `x` from `m`, the data (index and stored vectors)
+# its values were resolved from. `x` is either a plain double vector of
+# resolved values carrying a stale `_vecvec` mirror, which is what C code leaves
+# when it copies a vecvec's values into a new vector and then copies its
+# attributes (e.g. tidyr's gather() repeating id columns), or a base whose
+# resolved values were written to in place. The index is worked out from the
+# values, either as repeats of the original vecvec (as from `rep()`), or by
+# matching values whenever each value identifies one stored element.
+vv_recover <- function(x, m = attr(x, "_vecvec", exact = TRUE)) {
+  idx <- m[[1L]]
+  slots <- m[[2L]]
+  val <- x
+  attributes(val) <- NULL
+  orig <- as.double(vv_alt(idx, slots))
+  n <- length(val)
+  n0 <- length(orig)
+
+  new_idx <- NULL
+  if (n == 0L) {
+    new_idx <- integer()
+  } else if (n0 > 0L && n %% n0 == 0L && identical(val, rep_len(orig, n))) {
+    new_idx <- rep_len(idx, n)
+  } else {
+    # Each value must point at a single index of the original vecvec.
+    first <- match(orig, orig)
+    same <- idx == idx[first] | (is.na(idx) & is.na(idx[first]))
+    pos <- match(val, orig)
+    ambiguous <- orig[!same]
+    if (!anyNA(pos) && !any(val %in% ambiguous)) new_idx <- idx[pos]
+  }
+  if (is.null(new_idx)) {
+    cli::cli_abort(
+      c(
+        "Can't recover a vecvec whose values were copied without its index.",
+        "i" = "C code copied the vecvec's values into a new vector, and they don't identify the stored elements.",
+        "i" = "Use {.fn vctrs::vec_slice} or {.fn rep} to subset or repeat vecvecs."
+      ),
+      call = NULL
+    )
+  }
+  vv_alt(new_idx, slots)
+}
+
 # Rebuild the ALTREP base of a vecvec so that it resolves against `slots`, the
 # new value of `@x`.
 vv_rebuild <- function(x, slots) {

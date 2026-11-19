@@ -8,3 +8,4 @@
 ^CRAN-SUBMISSION$
 ^revdep$
 ^.*-checklogs.*$
+^_dev$

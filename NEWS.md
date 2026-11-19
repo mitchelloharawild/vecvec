@@ -22,8 +22,13 @@
   frames with `vecvec` columns, now uses the values rather than the indices.
   Stored values with no numeric reading (e.g. character) resolve to `NA`.
   Classed numeric vectors (e.g. cyclical time) resolve through their
-  `as.double()` method, so the base agrees with `as.numeric()`.
-  `is.integer()` is now `FALSE`.
+  `as.double()` method, so the base agrees with `as.numeric()`. This includes
+  methods that S7 registers for `as.double()` under the name `as.numeric`.
+  `is.integer()` is now `FALSE`. A `vecvec` whose values C code copied into a
+  new vector along with its attributes (as `tidyr::gather()` does for id
+  columns) recovers its index from those values. Values written into the base
+  in place (as R's arithmetic does for `unclass(x) * 2`) are kept by copies and
+  serialization.
 
 * `identical()` now tells `vecvec`s with different values or indices apart. The
   stored vectors and index are mirrored in a `_vecvec` attribute (the same

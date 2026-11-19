@@ -7,7 +7,7 @@ method(vec_cast_unsafe, list(class_any, class_vecvec)) <- function(x, to) {
 }
 method(vec_cast_unsafe, list(class_any, class_logical)) <- function(x, to) as.logical(x)
 method(vec_cast_unsafe, list(class_any, class_integer)) <- function(x, to) as.integer(x)
-method(vec_cast_unsafe, list(class_any, class_double)) <- function(x, to) as.double(x)
+method(vec_cast_unsafe, list(class_any, class_double)) <- function(x, to) vv_as_double(x)
 method(vec_cast_unsafe, list(class_any, class_complex)) <- function(x, to) as.complex(x)
 method(vec_cast_unsafe, list(class_any, class_character)) <- function(x, to) as.character(x)
 method(vec_cast_unsafe, list(class_any, class_raw)) <- function(x, to) as.raw(x)
