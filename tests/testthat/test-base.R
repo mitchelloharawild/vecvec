@@ -167,30 +167,22 @@ test_that("models error for mixed-type vecvecs", {
   expect_error(prcomp(df))
 })
 
-test_that("models error for types whose data isn't their value", {
-  df <- model_data(x = vecvec(factor(c("a", "b", "a", "b", "c", "c"))))
-  expect_snapshot(error = TRUE, lm(y ~ x, df))
-  expect_false(is.numeric(df$x))
-
+test_that("models error for a single type held as an index", {
   df <- model_data(x = vecvec(vctrs::new_rcrd(list(a = 1:6))))
   expect_snapshot(error = TRUE, lm(y ~ x, df))
+  expect_false(is.numeric(df$x))
 })
 
-test_that("classes can declare that their data is their value", {
-  local_value_class <- function(x) structure(x, class = "vv_test_value")
-  df <- model_data(x = vecvec(local_value_class(c(1, 2, 3, 4, 5, 7))))
-  expect_error(lm(y ~ x, df), "isn't the same as its values")
-
-  registerS3method(
-    "vecvec_storage_is_value", "vv_test_value", function(x) TRUE,
-    envir = asNamespace("vecvec")
+test_that("models use the data of any single type, as for the plain vector", {
+  # Whether the data of a classed type is sensible in a model is up to the type
+  k <- structure(c(1, 2, 3, 4, 5, 7), class = "vv_test_class")
+  df <- model_data(x = vecvec(k))
+  expect_true(is.numeric(df$x))
+  expect_equal(
+    coef(lm(y ~ x, df)),
+    coef(lm(y ~ x, model_data(x = c(1, 2, 3, 4, 5, 7))))
   )
-  fit <- coef(lm(y ~ x, df))
-  registerS3method(
-    "vecvec_storage_is_value", "vv_test_value", function(x) FALSE,
-    envir = asNamespace("vecvec")
-  )
-  expect_equal(fit, coef(lm(y ~ x, model_data(x = c(1, 2, 3, 4, 5, 7)))))
+  expect_false(is.numeric(vecvec(as.Date("2020-01-01"))))
 })
 
 # Copies made by C code ---------------------------------------------------------

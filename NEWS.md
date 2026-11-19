@@ -24,14 +24,11 @@
 
 * A `vecvec` of mixed types keeps the integer index into its stored vectors as
   its data, but modelling functions (anything using `model.frame()`) now error
-  for it rather than fitting on the index. The same goes for a single type
-  whose data isn't its value, like a factor's codes. Packages can declare that
-  the data of their vector class is its value with a
-  `vecvec_storage_is_value()` method.
+  for it rather than fitting on the index.
 
-* `is.numeric()` is now `TRUE` only for a single numeric type whose data is
-  its value (so not for mixed numeric types, dates or factors), following the
-  contract of `is.numeric()` methods in base R.
+* `is.numeric()` is now `TRUE` only for a single-type `vecvec` whose type is
+  numeric (so not for mixed numeric types), following the contract of
+  `is.numeric()` methods in base R.
 
 * Everything a `vecvec` needs is in its data and attributes, so code that
   copies a vector's data and attributes in C (data.table, tidyr, reshape2,
