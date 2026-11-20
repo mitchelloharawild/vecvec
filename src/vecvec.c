@@ -1,5 +1,6 @@
 #include <R.h>
 #include <Rinternals.h>
+#include <string.h>
 
 // Group the elements of a list by identity (the same R object, not equal
 // values), numbering groups from 1 in order of first appearance.
@@ -72,4 +73,52 @@ SEXP vecvec_index_check(SEXP index, SEXP size) {
     if (v < 1 || v > m) oob = 1; else any_valid = 1;
   }
   return Rf_ScalarInteger(oob | (any_valid ? 0 : 2));
+}
+
+// The data of a single-type vecvec is often an ALTREP wrapper (R wraps a long
+// vector instead of copying it when its attributes change). Base c() and rep()
+// read wrappers one element at a time, which is several times slower than
+// copying their data, so vecvec copies the data directly (through the
+// read-only data pointers, which wrappers give without copying).
+
+static void copy_atomic(SEXP to, R_xlen_t at, SEXP from) {
+  R_xlen_t n = XLENGTH(from);
+  switch (TYPEOF(from)) {
+  case LGLSXP: memcpy(LOGICAL(to) + at, LOGICAL_RO(from), n * sizeof(int)); break;
+  case INTSXP: memcpy(INTEGER(to) + at, INTEGER_RO(from), n * sizeof(int)); break;
+  case REALSXP: memcpy(REAL(to) + at, REAL_RO(from), n * sizeof(double)); break;
+  case CPLXSXP: memcpy(COMPLEX(to) + at, COMPLEX_RO(from), n * sizeof(Rcomplex)); break;
+  case RAWSXP: memcpy(RAW(to) + at, RAW_RO(from), n * sizeof(Rbyte)); break;
+  case STRSXP:
+    for (R_xlen_t i = 0; i < n; i++) SET_STRING_ELT(to, at + i, STRING_ELT(from, i));
+    break;
+  default: Rf_error("Can't copy a vector of type %s.", Rf_type2char(TYPEOF(from)));
+  }
+}
+
+// Concatenate a list of atomic vectors of one type (without attributes).
+SEXP vecvec_concat(SEXP x) {
+  R_xlen_t k = XLENGTH(x), n = 0;
+  if (k == 0) Rf_error("`x` must have at least one vector.");
+  SEXPTYPE type = TYPEOF(VECTOR_ELT(x, 0));
+  for (R_xlen_t j = 0; j < k; j++) {
+    if (TYPEOF(VECTOR_ELT(x, j)) != type) Rf_error("The vectors must all have one type.");
+    n += XLENGTH(VECTOR_ELT(x, j));
+  }
+  SEXP out = PROTECT(Rf_allocVector(type, n));
+  R_xlen_t at = 0;
+  for (R_xlen_t j = 0; j < k; j++) {
+    copy_atomic(out, at, VECTOR_ELT(x, j));
+    at += XLENGTH(VECTOR_ELT(x, j));
+  }
+  UNPROTECT(1);
+  return out;
+}
+
+// A copy of the data of an atomic vector, without attributes.
+SEXP vecvec_materialise(SEXP x) {
+  SEXP out = PROTECT(Rf_allocVector(TYPEOF(x), XLENGTH(x)));
+  copy_atomic(out, 0, x);
+  UNPROTECT(1);
+  return out;
 }

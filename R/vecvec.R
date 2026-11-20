@@ -238,7 +238,12 @@ method(c, class_vecvec) <- function(..., recursive = FALSE) {
       attr(d, "dimnames") <- NULL
       d
     })
-    return(vv_with_data(dots[[1L]], do.call(base::c, data)))
+    out <- if (any(vapply(data, function(d) !is.null(names(d)), logical(1L)))) {
+      do.call(base::c, data)
+    } else {
+      .Call("vecvec_concat", data, PACKAGE = "vecvec")
+    }
+    return(vv_with_data(dots[[1L]], out))
   }
 
   # Read each input's slots once through the cheap internal accessor (`@x`

@@ -3,6 +3,13 @@ method(is.infinite, class_vecvec) <- vecvec_apply_fn(is.infinite, ptype = logica
 method(is.nan, class_vecvec) <- vecvec_apply_fn(is.nan, ptype = logical())
 
 method(is.na, class_vecvec) <- function(x) {
+  # A single-type vecvec: the type's own method, keeping dim, dimnames and names
+  if (vv_is_typed(x)) {
+    res <- is.na(vv_typed_slot(x))
+    at <- attributes(vv_data(x))
+    if (!is.null(at)) attributes(res) <- at
+    return(res)
+  }
   # Missing values in vecvec indices or values are both considered NA.
   is.na(vv_index(x)) | unvecvec(vecvec_apply(x, is.na), ptype = logical())
 }

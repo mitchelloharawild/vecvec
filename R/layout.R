@@ -306,6 +306,15 @@ vv_new_data <- function(slots, index) {
   attributes(index) <- NULL
   slots <- unname(as.list(slots))
 
+  # A single atomic slot used once, in order (as when rebuilding the result of
+  # a function of a single-type vecvec's values)
+  if (length(slots) == 1L && vv_can_type(slot <- slots[[1L]]) &&
+      vv_is_identity(index, vec_size(slot))) {
+    data <- slot
+    attributes(data) <- c(layout, list(vecvec_ptype = vv_atomic_ptype(slot)))
+    return(data)
+  }
+
   n <- vv_normalise(slots, index)
   slots <- n$slots
   index <- n$index
@@ -395,4 +404,15 @@ vv_abort_outdated_class <- function() {
     )
   }
   cli::cli_abort(msg, call = NULL)
+}
+
+# `class(x, i)` for an S7 class extending class_vecvec, building a plain vecvec
+# directly (as new_object() would, without validating the values of a result
+# that vecvec computed itself).
+vv_construct <- function(class, x, i = seq_len(sum(list_sizes(x)))) {
+  if (!identical(class, class_vecvec)) return(class(x, i))
+  out <- vv_new_data(x, i)
+  attr(out, "S7_class") <- class_vecvec
+  class(out) <- c("vecvec::vecvec", "S7_object")
+  out
 }

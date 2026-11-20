@@ -37,7 +37,7 @@
   # operand)
   if (vv_is_typed(e1) && vv_is_typed(e2)) {
     res <- do.call(.Generic, list(vv_slots(e1)[[1L]], vv_slots(e2)[[1L]]))
-    return(if (bool_op) res else class_vv(list(res)))
+    return(if (bool_op) res else vv_construct(class_vv, list(res)))
   }
 
   # Map indices -> (slot index, within-slot position), and group positions
@@ -170,6 +170,6 @@ vv_ops_scalar <- function(op, e1, e2, bool_op) {
   })
   idx <- vv_index(big)
   attributes(idx) <- NULL
-  res <- class_vv(slots, idx)
+  res <- vv_construct(class_vv, slots, idx)
   if (bool_op) unvecvec(res) else res
 }

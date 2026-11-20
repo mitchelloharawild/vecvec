@@ -336,3 +336,26 @@ test_that("values of a type read back from a file are still of that type", {
   expect_true(vv_is_typed(vctrs::vec_c(x, y)))
   expect_true(vv_is_typed(vctrs::vec_ptype2(x, y)))
 })
+
+test_that("single-type c(), rep(), is.na() and arithmetic match the plain vector", {
+  for (v in list(c(1.5, NA, 3), c(2L, NA), c(TRUE, NA), c("a", NA), c(1i, NA), as.raw(1:2),
+                 as.Date("2024-01-01") + 0:1, factor(c("p", "q")))) {
+    x <- vecvec(v)
+    expect_identical(c(x, x), vecvec(c(v, v)))
+    expect_identical(c(x, x[1]), vecvec(c(v, v[1])))
+    expect_identical(rep(x, 2), vecvec(rep(v, 2)))
+    expect_identical(rep(x, each = 2, length.out = 3), vecvec(rep(v, each = 2, length.out = 3)))
+    expect_identical(is.na(x), is.na(v))
+  }
+  # Names and dims are kept, as for the plain vector
+  x <- vecvec(c(1, NA))
+  names(x) <- c("a", "b")
+  expect_identical(is.na(x), c(a = FALSE, b = TRUE))
+  expect_identical(names(c(x, x)), c("a", "b", "a", "b"))
+  m <- vecvec(1:4)
+  dim(m) <- c(2L, 2L)
+  expect_identical(dim(is.na(m)), c(2L, 2L))
+
+  expect_identical(vecvec(1:3) + 1L, vecvec(2:4))
+  expect_identical(sqrt(vecvec(c(4, 9))), vecvec(c(2, 3)))
+})
