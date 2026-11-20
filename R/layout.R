@@ -414,7 +414,18 @@ vv_abort_outdated_class <- function() {
 vv_construct <- function(class, x, i = seq_len(sum(list_sizes(x)))) {
   if (!identical(class, class_vecvec)) return(class(x, i))
   out <- vv_new_data(x, i)
-  attr(out, "S7_class") <- class_vecvec
-  class(out) <- c("vecvec::vecvec", "S7_object")
+  attributes(out) <- c(attributes(out), vv_object_attrs())
   out
 }
+
+# The attributes S7 gives a plain vecvec (its class, and how S7 records the S7
+# class, which depends on the version of S7). They're taken from an empty
+# vecvec made in this session, once.
+vv_object_attrs <- function() {
+  if (is.null(vv_object_cache$attrs)) {
+    at <- attributes(class_vecvec())
+    vv_object_cache$attrs <- at[!names(at) %in% c(vv_layout_attrs, vv_ptype_attr, vv_slots_attr)]
+  }
+  vv_object_cache$attrs
+}
+vv_object_cache <- new.env(parent = emptyenv())
