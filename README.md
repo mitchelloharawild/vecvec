@@ -63,7 +63,7 @@ Internally, the vectors are stored separately in the attributes.
 ``` r
 str(x)
 #> <vecvec::vecvec> int [1:12] 1 2 3 4 5 6 7 8 9 10 ...
-#>  @ x: List of 3
+#>  @ x:List of 3
 #>  .. $ : Date[1:1], format: "2025-03-29"
 #>  .. $ : POSIXct[1:1], format: "2025-01-03 10:05:00"
 #>  .. $ : num [1:10] 1.263 -0.326 1.33 1.272 0.415 ...
@@ -87,8 +87,8 @@ x[1]
 #> <date*[1]>
 #> [1] 2025-03-29
 str(x[1])
-#> <vecvec::vecvec> int 1
-#>  @ x: List of 1
+#> <vecvec::vecvec> num 20176
+#>  @ x:List of 1
 #>  .. $ : Date[1:1], format: "2025-03-29"
 ```
 
@@ -97,7 +97,7 @@ When a vecvec is replicated, only the indexing is replicated.
 ``` r
 str(rep(x, each = 10))
 #> <vecvec::vecvec> int [1:120] 1 1 1 1 1 1 1 1 1 1 ...
-#>  @ x: List of 3
+#>  @ x:List of 3
 #>  .. $ : Date[1:1], format: "2025-03-29"
 #>  .. $ : POSIXct[1:1], format: "2025-01-03 10:05:00"
 #>  .. $ : num [1:10] 1.263 -0.326 1.33 1.272 0.415 ...
@@ -110,7 +110,7 @@ replicated).
 ``` r
 str(rep(x, each = 10) + 100)
 #> <vecvec::vecvec> int [1:120] 1 1 1 1 1 1 1 1 1 1 ...
-#>  @ x: List of 3
+#>  @ x:List of 3
 #>  .. $ : Date[1:1], format: "2025-07-07"
 #>  .. $ : POSIXct[1:1], format: "2025-01-03 10:06:40"
 #>  .. $ : num [1:10] 101.3 99.7 101.3 101.3 100.4 ...
@@ -123,8 +123,42 @@ vecvec is
 ``` r
 str(rep(x, each = 10) + 1:120)
 #> <vecvec::vecvec> int [1:120] 1 2 3 4 5 6 7 8 9 10 ...
-#>  @ x: List of 3
+#>  @ x:List of 3
 #>  .. $ : Date[1:10], format: "2025-03-30" "2025-03-31" ...
 #>  .. $ : POSIXct[1:10], format: "2025-01-03 10:05:11" "2025-01-03 10:05:12" ...
 #>  .. $ : num [1:100] 22.3 23.3 24.3 25.3 26.3 ...
+```
+
+## Single-type vecvecs
+
+A vecvec whose elements all share one type is stored as an ordinary
+vector of those values, so it works like the plain vector, including in
+base R modelling functions.
+
+``` r
+y <- vecvec(c(2.5, 1, 4))
+str(y)
+#> <vecvec::vecvec> num [1:3] 2.5 1 4
+#>  @ x:List of 1
+#>  .. $ : num [1:3] 2.5 1 4
+coef(lm(c(1, 2, 3) ~ y))
+#> (Intercept)           y 
+#>   1.1666667   0.3333333
+```
+
+Models need values of a single type, so they error for a mixed-type
+vecvec (and for a vecvec of factors, whose class models rely on). Use
+`unvecvec()` to convert it first.
+
+``` r
+z <- vecvec(1:2, 0.5)
+lm(c(1, 2, 3) ~ z)
+#> Error:
+#> ! Can't use `z` in a model: it is a mixed-type vecvec.
+#> ℹ It holds values of 2 different types: <integer> and <double>.
+#> ℹ Models need values of a single type. Convert it first, e.g. with
+#>   `unvecvec()`.
+coef(lm(c(1, 2, 3) ~ unvecvec(z)))
+#> (Intercept) unvecvec(z) 
+#>   2.5000000  -0.4285714
 ```

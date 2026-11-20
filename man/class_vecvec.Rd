@@ -42,6 +42,22 @@ than fit on the index.
 
 Vectors of the same type (with identical attributes) are always combined, so
 a vecvec is single-type exactly when all of its elements share one type.
+
+vctrs treats a single-type vecvec as a vector of its type, and a mixed-type
+vecvec as a vector of any types. So, as for any other vctrs type:
+\itemize{
+\item Combining vecvecs (e.g. with \code{\link[vctrs:vec_c]{vctrs::vec_c()}} or \code{dplyr::bind_rows()})
+gives a single-type vecvec when they all have the same type, and a
+mixed-type vecvec otherwise.
+\item Casting to a single-type vecvec casts the values to its type, so
+\code{\link[vctrs:vec_assign]{vctrs::vec_assign()}} (and functions using it, like \code{tidyr::replace_na()})
+can't put values of another type into a single-type vecvec. Base \verb{[<-}
+can, and gives a mixed-type vecvec.
+}
+
+Subclasses opt in to this with \code{vecvec_register(single_type = TRUE)};
+otherwise all vecvecs of a subclass are one vctrs type (see
+\code{\link[=vecvec_register]{vecvec_register()}}).
 }
 \examples{
 # Create a vecvec prototype

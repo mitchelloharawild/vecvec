@@ -20,6 +20,21 @@
 #' Vectors of the same type (with identical attributes) are always combined, so
 #' a vecvec is single-type exactly when all of its elements share one type.
 #'
+#' vctrs treats a single-type vecvec as a vector of its type, and a mixed-type
+#' vecvec as a vector of any types. So, as for any other vctrs type:
+#'
+#' * Combining vecvecs (e.g. with [vctrs::vec_c()] or `dplyr::bind_rows()`)
+#'   gives a single-type vecvec when they all have the same type, and a
+#'   mixed-type vecvec otherwise.
+#' * Casting to a single-type vecvec casts the values to its type, so
+#'   [vctrs::vec_assign()] (and functions using it, like `tidyr::replace_na()`)
+#'   can't put values of another type into a single-type vecvec. Base `[<-`
+#'   can, and gives a mixed-type vecvec.
+#'
+#' Subclasses opt in to this with `vecvec_register(single_type = TRUE)`;
+#' otherwise all vecvecs of a subclass are one vctrs type (see
+#' [vecvec_register()]).
+#'
 #' @param x An unnamed list of arbitrary vectors. The vectors can be of
 #'   different types and lengths, but they must all be vectors (according to
 #'   [vctrs::vec_is]). Vectors of the same type are combined together into a

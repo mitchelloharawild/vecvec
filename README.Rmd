@@ -89,3 +89,25 @@ If the arguments is differ across replicated indices, the resulting vecvec is [*
 str(rep(x, each = 10) + 1:120)
 ```
 
+## Single-type vecvecs
+
+A vecvec whose elements all share one type is stored as an ordinary vector of
+those values, so it works like the plain vector, including in base R
+modelling functions.
+
+```{r single-type}
+y <- vecvec(c(2.5, 1, 4))
+str(y)
+coef(lm(c(1, 2, 3) ~ y))
+```
+
+Models need values of a single type, so they error for a mixed-type vecvec
+(and for a vecvec of factors, whose class models rely on). Use `unvecvec()` to
+convert it first.
+
+```{r mixed-model, error = TRUE}
+z <- vecvec(1:2, 0.5)
+lm(c(1, 2, 3) ~ z)
+coef(lm(c(1, 2, 3) ~ unvecvec(z)))
+```
+
