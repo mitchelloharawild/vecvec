@@ -5,9 +5,13 @@
 
 /* .Call calls */
 extern SEXP vecvec_group_identity(SEXP x);
+extern SEXP vecvec_rep_list(SEXP x, SEXP n);
+extern SEXP vecvec_index_check(SEXP index, SEXP size);
 
 static const R_CallMethodDef CallEntries[] = {
   {"vecvec_group_identity", (DL_FUNC) &vecvec_group_identity, 1},
+  {"vecvec_rep_list", (DL_FUNC) &vecvec_rep_list, 2},
+  {"vecvec_index_check", (DL_FUNC) &vecvec_index_check, 2},
   {NULL, NULL, 0}
 };
 

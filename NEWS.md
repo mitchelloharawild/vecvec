@@ -9,6 +9,23 @@
   every position that shares a slot combination (in position order), so it must
   be vectorised and element-wise, as documented.
 
+## Bug fixes
+
+* `[<-` now ignores `NA` positions in a numeric index when the value has size
+  1, as base R does (a longer value still errors).
+
+* `[<-` past the end of a `vecvec` now extends it with missing elements, rather
+  than returning an invalid object (or, for mixed types, pointing the gap at
+  stored values).
+
+* `[<-` with a `vecvec` of missing elements no longer leaves index entries
+  pointing past the stored values ("subscript out of bounds" afterwards).
+
+* `vec_detect_complete()` of a mixed-type `vecvec` now flags only its missing
+  elements, rather than every element. This fixes `vec_rank(incomplete =
+  "na")`, `dplyr::min_rank()` and friends (which gave all `NA`) and
+  `tidyr::drop_na()` (which dropped every row).
+
 # vecvec 1.5.0
 
 ## Improvements
@@ -24,7 +41,59 @@
 
 * A `vecvec` of mixed types keeps the integer index into its stored vectors as
   its data, but modelling functions (anything using `model.frame()`) now error
-  for it rather than fitting on the index.
+  for it rather than fitting on the index. They also error for a `vecvec` of
+  factors, since models treat factors by their class, which a `vecvec` doesn't
+  have; convert it with `unvecvec()` first.
+
+* vctrs equality now compares the values of different `vecvec`s, so
+  `vec_match()`, `vec_in()`, `vec_equal()` and joins no longer give wrong
+  results (or errors) when the `vecvec`s hold different types, or the same
+  types in a different order.
+
+* `vec_detect_missing()` now detects missing values in a `vecvec` (so
+  `dplyr::coalesce()`, `vec_fill_missing()` and friends work). All missing
+  elements are equal to one another, whatever their type.
+
+* `vec_compare()` (and so `vec_rank()`) now compares the values of two
+  single-type `vecvec`s, rather than their ranks within each.
+
+* vctrs now treats a single-type `vecvec` as a vector of its type, and a
+  mixed-type `vecvec` as a vector of any types. vctrs operations on a
+  single-type `vecvec` (`vec_slice()`, `vec_c()`, `vec_match()`, joins, ...)
+  are now about as fast as on the plain vector, and those on mixed-type
+  `vecvec`s are also faster. As for any other vctrs type:
+  * the common type of two `vecvec`s is single-type only when both have that
+    type;
+  * casting to a single-type `vecvec` casts the values to its type, so
+    `vec_assign()` (and functions using it, like `tidyr::replace_na()`) can't
+    put values of another type into a single-type `vecvec`. Base `[<-` still
+    can.
+
+* New `vecvec_cast()` casts a `vecvec` to the vctrs type of another, and
+  `vecvec_register()` gains `single_type`, so a subclass can opt in to
+  single-type vctrs types (its own casts between vectors of the subclass must
+  then use `vecvec_cast()`). By default, all vectors of a subclass are one
+  vctrs type, as before.
+
+* A mixed-type `vecvec` whose types have no common type can now be sorted
+  (`sort()`, `order()`, `vec_order()`, ...): by type, in the order the types
+  first appear, then by value. Types with a common type (e.g. integers and
+  doubles) still sort by value, and vctrs now compares the values of two
+  mixed-type `vecvec`s rather than their ranks within each.
+
+* `cumsum()`, `cumprod()`, `cummax()` and `cummin()` now work on single-type
+  `vecvec`s, as on the plain vector.
+
+* Values of a type whose prototype holds functions (such as an S7 class) now
+  combine with the same type read back from a file (e.g. with `readRDS()`),
+  so the result stays single-type rather than holding the type twice.
+
+* `match()` and `%in%` now compare single-type `vecvec`s by their values, as
+  for the plain vector (they were compared as strings), and are much faster.
+
+* Arithmetic and comparisons of a mixed-type `vecvec` with a single value
+  (e.g. `x + 1`, `x == "a"`), `duplicated()` and `unique()` of single-type
+  `vecvec`s, and math functions on single-type `vecvec`s are faster.
 
 * `is.numeric()` is now `TRUE` only for a single-type `vecvec` whose type is
   numeric (so not for mixed numeric types), following the contract of

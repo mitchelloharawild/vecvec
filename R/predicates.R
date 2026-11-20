@@ -51,11 +51,8 @@ method(na.exclude, class_vecvec) <- function(object, ...) na.drop(object, class 
 #   `incomparables`, the ids to pass on to base `duplicated()`.
 vecvec_dup_id <- function(x, incomparables = FALSE) {
   # Find common vector types
-  ptypes <- lapply(x@x, vec_slice, 0L)
-  loc <- lapply(
-    unique(ptypes),
-    function(k) which(vapply(ptypes, identical, logical(1), k))
-  )
+  grp <- vv_group_identical(lapply(x@x, vv_slot_key))
+  loc <- split(seq_along(grp), grp)
 
   slot_len <- list_sizes(x@x)
   offsets <- c(0L, cumsum(slot_len))
@@ -82,11 +79,32 @@ vecvec_dup_id <- function(x, incomparables = FALSE) {
 }
 
 method(duplicated, class_vecvec) <- function(x, incomparables = FALSE, ...) {
+  # A single-type vecvec: its values are stored once each, in order
+  if (vv_is_typed(x)) {
+    return(duplicated(vv_typed_slot(x), incomparables = incomparables, ...))
+  }
   id <- vecvec_dup_id(x, incomparables)
   duplicated(id$id, incomparables = id$incomparables, ...)
 }
 
 method(anyDuplicated, class_vecvec) <- function(x, incomparables = FALSE, ...) {
+  if (vv_is_typed(x)) {
+    return(anyDuplicated(vv_typed_slot(x), incomparables = incomparables, ...))
+  }
   id <- vecvec_dup_id(x, incomparables)
   anyDuplicated(id$id, incomparables = id$incomparables, ...)
+}
+
+# The values match() compares (its mtfrm() method). A single-type vecvec
+# compares as its type, as the plain vector does. A mixed-type vecvec compares
+# its values as strings, as match() does for plain vectors of different types
+# (e.g. match(1L, "1") is 1).
+vv_mtfrm <- function(x) {
+  if (vv_is_typed(x)) {
+    # match() only calls mtfrm() for objects (mtfrm() of a bare vector is
+    # as.character())
+    slot <- vv_typed_slot(x)
+    return(if (is.object(slot)) mtfrm(slot) else slot)
+  }
+  as.character(x)
 }

@@ -20,6 +20,11 @@
     return(e1)
   }
 
+  # A mixed-type vecvec with a single value (as in x + 1 or x == "a"): one call
+  # on each of its stored vectors, keeping its index.
+  res <- vv_ops_scalar(.Generic, e1, e2, bool_op)
+  if (!is.null(res)) return(res)
+
   # Binary operation (complete method on values)
   # Convert to vecvec and recycle indices rather than values, so that repeated
   # values aren't expanded (which would defeat compression).
@@ -100,12 +105,17 @@
 #' @method Math vecvec::vecvec
 #' @export
 `Math.vecvec::vecvec` <- function(x, ...) {
+  # A single-type vecvec: one call on its values, as for the plain vector
+  if (vv_is_typed(x)) {
+    res <- do.call(.Generic, list(vv_typed_slot(x), ...))
+    return(vv_rebuild(x, list(res), vv_index(x)))
+  }
   if (.Generic %in% c("cumsum", "cumprod", "cummax", "cummin")) {
     generic <- .Generic
     cli::cli_abort(
       c(
-        "{.fn {generic}} is not supported for {.cls vecvec} objects.",
-        "i" = "Call {.fn unvecvec} first if the slots share a common type."
+        "{.fn {generic}} is not supported for mixed-type {.cls vecvec} objects.",
+        "i" = "Call {.fn unvecvec} first if the types have a common type."
       )
     )
   }
@@ -134,4 +144,32 @@
 `Complex.vecvec::vecvec` <- function(z) {
   z@x <- lapply(z@x, .Generic)
   unvecvec(z)
+}
+# `op` on a mixed-type vecvec and a single value (a vector of size one, or a
+# single-type vecvec of size one), in either order: one call on each stored
+# vector, keeping the index of the vecvec. NULL if the operands are anything
+# else. The class of the result is that of the vecvec operand(s), as for the
+# general case (the second when both are vecvecs).
+vv_ops_scalar <- function(op, e1, e2, bool_op) {
+  vv1 <- is_vecvec(e1) && !vv_is_typed(e1)
+  vv2 <- is_vecvec(e2) && !vv_is_typed(e2)
+  if (vv1 == vv2) return(NULL)
+  big <- if (vv1) e1 else e2
+  value <- if (vv1) e2 else e1
+  if (vec_size(value) != 1L || vec_size(big) == 1L) return(NULL)
+  if (is_vecvec(value)) {
+    if (!vv_is_typed(value)) return(NULL)
+    class_vv <- S7_class(e2)
+    value <- vv_typed_slot(value)
+  } else {
+    class_vv <- S7_class(big)
+  }
+
+  slots <- lapply(vv_slots(big), function(s) {
+    if (vv1) do.call(op, list(s, value)) else do.call(op, list(value, s))
+  })
+  idx <- vv_index(big)
+  attributes(idx) <- NULL
+  res <- class_vv(slots, idx)
+  if (bool_op) unvecvec(res) else res
 }

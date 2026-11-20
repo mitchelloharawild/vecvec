@@ -280,6 +280,44 @@ test_that("vctrs::vec_detect_complete: all NAs", {
   expect_true(all(!vec_detect_complete(vv)))
 })
 
+rcrd <- function(x) vctrs::new_rcrd(list(a = x))
+
+test_that("vctrs::vec_detect_complete: mixed types only flag missing elements", {
+  vv <- vecvec(1:2, c("a", NA))
+  expect_identical(vec_detect_complete(vv), c(TRUE, TRUE, TRUE, FALSE))
+  expect_identical(vec_detect_complete(vv), !is.na(vv))
+
+  # Record slots
+  vv <- vecvec(rcrd(c(2L, NA, 1L)), c("b", NA))
+  expect_identical(vec_detect_complete(vv), c(TRUE, FALSE, TRUE, TRUE, FALSE))
+  expect_identical(vec_detect_complete(vv), !is.na(vv))
+
+  # Missing (NA index) elements
+  vv <- vecvec(1:2, "a")[c(1L, NA, 3L)]
+  expect_identical(vec_detect_complete(vv), c(TRUE, FALSE, TRUE))
+})
+
+test_that("vctrs::vec_rank: mixed types with incomplete = 'na'", {
+  vv <- vecvec(1:2, c("a", NA))
+  expect_identical(vec_rank(vv), 1:4)
+  expect_identical(vec_rank(vv, incomplete = "na"), c(1L, 2L, 3L, NA))
+
+  vv <- vecvec(rcrd(c(2L, NA, 1L)), c("b", NA))
+  expect_identical(vec_rank(vv, incomplete = "na"), c(2L, NA, 1L, 3L, NA))
+
+  vv <- vecvec(1:2, "a")[c(1L, NA, 3L)]
+  expect_identical(vec_rank(vv, incomplete = "na"), c(1L, NA, 2L))
+})
+
+test_that("tidyr::drop_na keeps complete mixed-type rows", {
+  skip_if_not_installed("tidyr")
+  df <- data.frame(v = vecvec(1:2, c("a", NA)))
+  expect_identical(nrow(tidyr::drop_na(df)), 3L)
+
+  df <- data.frame(v = vecvec(rcrd(c(2L, NA, 1L)), c("b", NA)))
+  expect_identical(nrow(tidyr::drop_na(df)), 3L)
+})
+
 # vec_unique --------------------------------------------------------------
 
 test_that("vctrs::vec_unique removes duplicates", {
@@ -356,17 +394,54 @@ test_that("vctrs::vec_proxy_equal keeps unassigned (NA-index) elements mutually 
   expect_true(all(as.logical(vec_duplicate_detect(vv))))
 })
 
-test_that("vctrs::vec_proxy_equal distinguishes unassigned index from a stored NA value", {
-  vv <- vecvec(c(1, NA, 3), "a")
+test_that("vctrs::vec_proxy_equal treats every missing element as missing", {
+  # Missing values of any type and unassigned (NA-index) elements are all
+  # missing, as vctrs requires for vec_detect_missing() (all columns of a data
+  # frame proxy missing), so they are equal to one another.
+  vv <- vecvec(c(1, NA, 3), "a", NA_character_)
   vv <- vec_c(vv, vec_init(class_vecvec(), 1L))
-  # element 2 (stored NA) and element 5 (unassigned index) must not be
-  # grouped together, even though both are considered `is.na()`.
-  expect_false(vec_group_id(vv)[[2]] == vec_group_id(vv)[[5]])
+  expect_equal(vec_detect_missing(vv), c(FALSE, TRUE, FALSE, FALSE, TRUE, TRUE))
+  g <- vec_group_id(vv)
+  expect_true(g[[2]] == g[[5]] && g[[2]] == g[[6]])
+  expect_equal(vec_detect_complete(vv), !vec_detect_missing(vv))
 
-  # A single-type vecvec has no unassigned indices: they are missing values of
-  # its type
   vv <- vec_c(vecvec(c(1, NA, 3)), vec_init(class_vecvec(), 1L))
-  expect_true(vec_group_id(vv)[[2]] == vec_group_id(vv)[[4]])
+  expect_equal(vec_detect_missing(vv), c(FALSE, TRUE, FALSE, TRUE))
+  expect_equal(vec_equal(vv, vv), c(TRUE, NA, TRUE, NA))
+  expect_equal(vec_equal(vv, vv, na_equal = TRUE), rep(TRUE, 4))
+})
+
+test_that("vctrs equality compares the values of different vecvecs", {
+  a <- vecvec(1, "a")
+  b <- vecvec("a", 1)
+  # Their types are stored in a different order
+  expect_equal(vec_equal(a, b), c(FALSE, FALSE))
+  expect_equal(vec_equal(a, b[2:1]), c(TRUE, TRUE))
+  expect_equal(vec_match(a, b), c(2L, 1L))
+  expect_equal(vec_in(vecvec(5, 1, "z"), a), c(FALSE, TRUE, FALSE))
+
+  # Single-type with mixed-type
+  expect_equal(vec_in(vecvec(c(1, 5)), a), c(TRUE, FALSE))
+  expect_equal(vec_match(vecvec(c("a", "q")), a), c(2L, NA))
+  expect_true(vec_equal(vecvec(1), vecvec(1, "a")[1]))
+
+  # Values of different types are never equal
+  expect_equal(vec_match(vecvec(1L), vecvec(1)), NA_integer_)
+  expect_equal(vec_match(vecvec(factor("a")), vecvec("a")), NA_integer_)
+
+  # Records, whose equality proxies are data frames
+  rc <- vctrs::new_rcrd(list(a = 1:2))
+  expect_equal(vec_match(vecvec(rc), vecvec(1, rc[2:1])), c(3L, 2L))
+
+  # Joins
+  x <- data.frame(k = I(vecvec("a", 2))); x$k <- vecvec("a", 2)
+  y <- data.frame(k = I(vecvec(2, "b"))); y$k <- vecvec(2, "b")
+  expect_equal(vec_match(x, y), c(NA, 1L))
+})
+
+test_that("vctrs comparison of single-type vecvecs compares their values", {
+  expect_equal(vec_compare(vecvec("b"), vecvec("a")), 1L)
+  expect_equal(vec_compare(vecvec(c(1, 3)), vecvec(c(2, 2))), c(-1L, 1L))
 })
 
 test_that("vctrs::vec_proxy_equal handles rcrd-typed slots without destructuring", {
@@ -436,6 +511,33 @@ test_that("same-class vec_cast/vec_c work after a serialisation round trip", {
   expect_no_error(out <- vctrs::vec_c(x, y))
   expect_length(out, 4L)
   expect_equal(unvecvec(out), c(5, 6, 5, 6))
+})
+
+test_that("subclasses opt in to single-type vctrs types", {
+  # By default all vecvecs of a subclass are one vctrs type
+  class_onetype <- S7::new_class("onetype", package = "vecvectest", parent = class_vecvec)
+  vecvec_register(class_onetype)
+  x <- class_onetype(list(1:2))
+  expect_true(is.data.frame(vec_proxy(x)))
+  expect_false(vv_is_typed(vec_ptype2(x, class_onetype(list(3:4)))))
+  expect_identical(vec_cast(x, class_onetype(list("a"))), x)
+  out <- vec_c(x, class_onetype(list("a")))
+  expect_identical(unvecvec(out[1:2]), 1:2)
+  expect_equal(vec_match(x, class_onetype(list(2L, "a"))), c(NA, 1L))
+
+  # With `single_type = TRUE`, as for vecvec()
+  class_single <- S7::new_class("single", package = "vecvectest", parent = class_vecvec)
+  vecvec_register(class_single, single_type = TRUE)
+  x <- class_single(list(1:2))
+  expect_identical(vec_proxy(x), 1:2)
+  expect_true(vv_is_typed(vec_ptype2(x, class_single(list(3:4)))))
+  expect_false(vv_is_typed(vec_ptype2(x, class_single(list("a")))))
+  out <- vec_c(x, class_single(list("a")), x)
+  expect_s3_class(out, "vecvectest::single")
+  expect_identical(unvecvec(out[c(1:2, 4:5)]), c(1:2, 1:2))
+  expect_s3_class(vec_c(x, x), "vecvectest::single")
+  expect_true(vv_is_typed(vec_c(x, x)))
+  expect_equal(vec_match(x, class_single(list(2L, "a"))), c(NA, 1L))
 })
 
 test_that("vec_c/vec_rbind keep row order when storage is interleaved", {

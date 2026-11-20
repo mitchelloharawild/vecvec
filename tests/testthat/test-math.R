@@ -27,3 +27,9 @@ test_that("Non-cumulative Math generics still work on mixed-type vecvecs", {
     sqrt(c(1, 4, 9))
   )
 })
+
+test_that("cumulative functions work on a single type, as on the plain vector", {
+  expect_identical(cumsum(vecvec(1:4)), vecvec(cumsum(1:4)))
+  expect_identical(cummax(vecvec(c(1, 3, 2))), vecvec(c(1, 3, 3)))
+  expect_snapshot(error = TRUE, cumsum(vecvec(1:2, 0.5)))
+})

@@ -10,6 +10,11 @@
   # Treat NA positions in a logical index as FALSE, matching base R behaviour
   if (is.logical(i)) i[is.na(i)] <- FALSE
 
+  # Base R ignores NA positions in a numeric index when the value has size 1
+  # (and errors otherwise). Character NA indices append a new element, which
+  # base subassignment of the index already does.
+  if (is.numeric(i) && anyNA(i) && vec_size(value) == 1L) i <- i[!is.na(i)]
+
   # Recycle `value` to the number of replaced positions
   idx <- vv_index(x)
   n <- length(idx[i, ...])
@@ -20,8 +25,8 @@
   if (vv_is_typed(x)) {
     p <- vv_typed_ptype(x)
     val <- if (is_vecvec(value)) {
-      if (vv_is_typed(value) && identical(vv_typed_ptype(value), p)) vv_data(value)
-    } else if (vv_can_type(value) && identical(vv_atomic_ptype(value), p)) {
+      if (vv_is_typed(value) && vv_same_type(vv_typed_ptype(value), p)) vv_data(value)
+    } else if (vv_can_type(value) && vv_same_type(vv_atomic_ptype(value), p)) {
       value
     }
     if (!is.null(val)) {

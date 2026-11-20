@@ -25,3 +25,13 @@
       i Its values aren't held in an atomic vector, so its data is an index.
       i Convert it first, e.g. with `unvecvec()`.
 
+# models error for a single factor type
+
+    Code
+      lm(y ~ x, df)
+    Condition
+      Error:
+      ! Can't use `x` in a model: it is a vecvec of factors.
+      i Models treat factors by their class, which a vecvec doesn't have.
+      i Convert it first, e.g. with `unvecvec()`.
+

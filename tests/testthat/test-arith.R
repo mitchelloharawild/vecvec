@@ -121,3 +121,13 @@ test_that("Ops doesn't expand a size one operand of a mixed-type vecvec", {
   x <- a + 1L
   expect_equal(lengths(x@x), c(2L, 1L))
 })
+
+test_that("operations of a mixed-type vecvec with a single value keep its index", {
+  x <- vecvec(1:3, c(0.5, 1.5))[c(5, 1, 1, 4)]
+  expect_identical(unvecvec(x + 1), unvecvec(x) + 1)
+  expect_identical(unvecvec(10 - x), 10 - unvecvec(x))
+  expect_identical(unvecvec(x * vecvec(2L)), unvecvec(x) * 2)
+  expect_identical(x > 1, unvecvec(x) > 1)
+  expect_identical(vecvec(1L, "a") == "a", c(FALSE, TRUE))
+  expect_identical(vecvec(1L, "a")[c(NA, 2)] == "a", c(NA, TRUE))
+})

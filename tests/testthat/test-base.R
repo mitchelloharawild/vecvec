@@ -83,9 +83,46 @@ test_that("zero-length and all missing vecvecs keep their type", {
   expect_identical(unvecvec(vec_init(vecvec(letters), 2L)), c(NA_character_, NA))
 })
 
-test_that("vctrs prototypes don't depend on the types a vecvec holds", {
-  expect_identical(vec_ptype(vecvec(1:3)), vec_ptype(vecvec("a", 1)))
-  expect_true(vec_is(vecvec(1:3), vec_ptype(vecvec("a"))))
+test_that("vctrs types are a single type, or any types", {
+  # A single-type vecvec is a vector of its type
+  expect_true(vv_is_typed(vec_ptype(vecvec(1:3))))
+  expect_true(vec_is(vecvec(1:3), vec_ptype(vecvec(4L))))
+  expect_false(vec_is(vecvec(1:3), vec_ptype(vecvec("a"))))
+  # A mixed-type vecvec is a vector of any types
+  expect_identical(vec_ptype(vecvec("a", 1)), vec_ptype(vecvec(TRUE, 2L)))
+  # vec_is() needs the exact type (as vec_is(1L, double()) is FALSE)
+  expect_false(vec_is(vecvec(1:3), vec_ptype(vecvec("a", 1))))
+  expect_true(vec_is(vecvec(1L, "a"), vec_ptype(vecvec("a", 1))))
+
+  # The common type is single-type only when every vecvec has that type
+  expect_true(vv_is_typed(vec_ptype2(vecvec(1), vecvec(2))))
+  expect_true(vv_is_typed(vec_ptype2(vecvec(1), 2)))
+  expect_false(vv_is_typed(vec_ptype2(vecvec(1), vecvec(1L))))
+  expect_false(vv_is_typed(vec_ptype2(vecvec(1), vecvec(1, "a"))))
+  expect_false(vv_is_typed(vec_ptype2(vecvec(1), vecvec())))
+})
+
+test_that("casts give the vctrs type of the target", {
+  # Values are cast to the type of a single-type target
+  expect_identical(vec_cast(vecvec(1:2), vecvec(0.5)), vecvec(c(1, 2)))
+  expect_error(vec_cast(vecvec("a"), vecvec(0.5)), class = "vctrs_error_incompatible_type")
+  expect_error(vec_cast(vecvec(1.5), vecvec(1L)), class = "vctrs_error_cast_lossy")
+  expect_identical(vec_cast(vecvec(1, "a")[1], vecvec(0.5)), vecvec(1))
+
+  # and kept for a mixed-type target, where a single type is held as an index
+  out <- vec_cast(vecvec(1:2), vecvec(1, "a"))
+  expect_false(vv_is_typed(out))
+  expect_identical(unvecvec(out), 1:2)
+  # which any other operation makes single-type again
+  expect_identical(out[1:2], vecvec(1:2))
+
+  # vctrs assignment keeps the type of the vector assigned into, as for any
+  # other type (base assignment mixes types)
+  expect_error(vec_assign(vecvec(1:3), 2L, vecvec("a")), class = "vctrs_error_incompatible_type")
+  x <- vecvec(1:3)
+  x[2] <- "a"
+  expect_false(vv_is_typed(x))
+  expect_identical(vec_assign(vecvec(1, "a"), 1L, vecvec(TRUE))[1], vecvec(TRUE))
 })
 
 test_that("prototypes don't depend on the order their types were combined in", {
@@ -170,6 +207,14 @@ test_that("models error for mixed-type vecvecs", {
 test_that("models error for a single type held as an index", {
   df <- model_data(x = vecvec(vctrs::new_rcrd(list(a = 1:6))))
   expect_snapshot(error = TRUE, lm(y ~ x, df))
+  expect_false(is.numeric(df$x))
+})
+
+test_that("models error for a single factor type", {
+  df <- model_data(x = vecvec(factor(c("a", "b", "a", "c", "b", "a"))))
+  expect_snapshot(error = TRUE, lm(y ~ x, df))
+  df <- model_data(x = vecvec(factor(c("a", "b", "a", "c", "b", "a"), ordered = TRUE)))
+  expect_error(lm(y ~ x, df), class = "rlang_error")
   expect_false(is.numeric(df$x))
 })
 
@@ -278,4 +323,16 @@ test_that("subclasses keep their class in both forms", {
   expect_s3_class(x[1:3], "vv_test_sub")
   expect_true(vv_is_typed(x[1:3]))
   expect_s3_class(c(x[1:3], x[4]), "vv_test_sub")
+})
+
+test_that("values of a type read back from a file are still of that type", {
+  # Types like S7 classes hold functions, whose environments are new copies
+  # when deserialised
+  fn <- local(function() NULL)
+  x <- vecvec(structure(c(1, 2), class = "vv_fn_type", fn = fn))
+  y <- unserialize(serialize(x, NULL))
+  expect_false(identical(attributes(vv_typed_ptype(x)), attributes(vv_typed_ptype(y))))
+  expect_true(vv_is_typed(c(x, y)))
+  expect_true(vv_is_typed(vctrs::vec_c(x, y)))
+  expect_true(vv_is_typed(vctrs::vec_ptype2(x, y)))
 })

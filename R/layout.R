@@ -155,7 +155,16 @@ vv_is_identity <- function(i, n) {
     isFALSE(is.unsorted(i, na.rm = FALSE, strictly = TRUE))
 }
 
-# Group `keys` by identity, numbering groups in order of first appearance.
+# Are `x` and `y` (prototypes) the same type? The constructors of S7 classes in
+# a prototype get new environments when it's deserialised (e.g. with
+# readRDS()), so closure environments are ignored: the same type read back from
+# a file is still the same type.
+vv_same_type <- function(x, y) {
+  identical(x, y) || identical(x, y, ignore.environment = TRUE)
+}
+
+# Group `keys` by type (see vv_same_type()), numbering groups in order of
+# first appearance.
 vv_group_identical <- function(keys) {
   k <- length(keys)
   grp <- integer(k)
@@ -163,7 +172,7 @@ vv_group_identical <- function(keys) {
   for (s in seq_len(k)) {
     g <- 0L
     for (u in seq_along(uniq)) {
-      if (identical(uniq[[u]], keys[[s]])) {
+      if (vv_same_type(uniq[[u]], keys[[s]])) {
         g <- u
         break
       }
@@ -191,6 +200,17 @@ vv_normalise <- function(slots, index) {
     return(list(slots = slots, index = rep_len(NA_integer_, length(index))))
   }
   sizes <- list_sizes(slots)
+
+  if (k == 1L) {
+    # A single slot (as when slicing a single-type vecvec): only indices
+    # outside it need changing.
+    flags <- .Call("vecvec_index_check", index, sizes, PACKAGE = "vecvec")
+    if (bitwAnd(flags, 1L)) index[index < 1L | index > sizes] <- NA_integer_
+    if (bitwAnd(flags, 2L)) {
+      return(vv_normalise_ptypes(slots, index, vv_is_unspecified(slots[[1L]])))
+    }
+    return(list(slots = slots, index = index))
+  }
   bounds <- c(0L, cumsum(sizes))
 
   # Missing values of no particular type (bare logical NAs, as vctrs treats
@@ -203,9 +223,6 @@ vv_normalise <- function(slots, index) {
     # Every stored value is used once, in order (as when constructing)
     slot_of <- NULL
     used <- sizes > 0L
-    if (k == 1L && used) {
-      return(list(slots = slots, index = index))
-    }
   } else {
     slot_of <- findInterval(index, bounds, left.open = TRUE)
     slot_of[slot_of < 1L | slot_of > k] <- NA_integer_
@@ -219,9 +236,6 @@ vv_normalise <- function(slots, index) {
   # Slots used by the index
   if (!any(used)) {
     return(vv_normalise_ptypes(slots, index, unspec))
-  }
-  if (k == 1L) {
-    return(list(slots = slots, index = index))
   }
   keep <- which(used)
 
@@ -276,7 +290,7 @@ vv_compact <- function(slots, index) {
 vv_normalise_ptypes <- function(slots, index, unspec) {
   if (!all(unspec)) slots <- slots[!unspec]
   keys <- lapply(slots, vv_slot_key)
-  if (length(unique(keys)) == 1L && vv_can_type(slots[[1L]])) {
+  if (all(vv_group_identical(keys) == 1L) && vv_can_type(slots[[1L]])) {
     return(list(slots = list(vec_slice(slots[[1L]], 0L)), index = index))
   }
   list(slots = list(), index = index)

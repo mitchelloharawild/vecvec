@@ -413,3 +413,23 @@ test_that("unique() returns correct records for a vecvec with record slots", {
   )
   expect_length(unique(vv), 3L)
 })
+
+test_that("duplicated() and anyDuplicated() of a single type match the plain vector", {
+  x <- c(3, 1, 3, NA, NA, NaN)
+  expect_identical(duplicated(vecvec(x)), duplicated(x))
+  expect_identical(anyDuplicated(vecvec(x)), anyDuplicated(x))
+  expect_identical(duplicated(vecvec(x), incomparables = 3), duplicated(x, incomparables = 3))
+  expect_identical(unique(vecvec(x)), vecvec(unique(x)))
+})
+
+test_that("match() and %in% compare values as the plain vectors would", {
+  skip_if_not(exists("mtfrm", baseenv()))
+  expect_identical(match(vecvec(c(1, 10)), vecvec(c(10, 1))), c(2L, 1L))
+  # Exactly, not as strings
+  expect_identical(match(vecvec(0.1 + 0.2), 0.3), NA_integer_)
+  expect_identical(match(vecvec(as.Date("2024-01-02")), as.Date("2024-01-02")), 1L)
+  expect_identical(match(vecvec(c(1, 10)), c(10, 1)), c(2L, 1L))
+  expect_identical(vecvec(letters[1:3]) %in% "b", c(FALSE, TRUE, FALSE))
+  # As match(1L, "1") is 1, values of mixed types match as strings
+  expect_identical(match(vecvec(1L, "1"), "1"), c(1L, 1L))
+})

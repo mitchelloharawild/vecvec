@@ -41,6 +41,15 @@ register_s3_method <- function(pkg, generic, class, fun = NULL) {
 #' - `vec_cast.*.<class>` methods, so that your vecvec subclass can be cast
 #'   *from* other types.
 #'
+#' With `single_type = TRUE`, vctrs treats a single-type vector of your
+#' subclass as a vector of its type (as for [vecvec()]), which makes vctrs
+#' operations on it (slicing, combining, matching, ...) about as fast as on
+#' the plain vector. The common type of two vectors is then single-type only
+#' when both have that type, vctrs casts to a single-type vector cast the
+#' values to its type, and any `vec_cast()` method you register between two
+#' vectors of your subclass must return the result of [vecvec_cast()].
+#' Otherwise all vectors of your subclass are one vctrs type.
+#'
 #' @param x An S7 class object that extends [class_vecvec]. Typically the
 #'   class object created by [S7::new_class()] in your package, e.g.
 #'   `class_myvec`.
@@ -53,6 +62,9 @@ register_s3_method <- function(pkg, generic, class, fun = NULL) {
 #' @param f_cast_from The function to register as the `vec_cast.*.<class>` 
 #'  methods for this class. Defaults to `vec_cast_from_vecvec`, which attempts 
 #'  to cast vecvec to other types by calling `unvecvec()`.
+#'
+#' @param single_type Whether vctrs treats single-type vectors of the class as
+#'  vectors of their type (see Details).
 #'
 #' @return `NULL`, invisibly. Called for its side effects.
 #'
@@ -74,7 +86,8 @@ register_s3_method <- function(pkg, generic, class, fun = NULL) {
 #' }
 vecvec_register <- function(
   x, f_ptype2 = vec_ptype2_vecvec, 
-  f_cast_to = vec_cast_to_vecvec, f_cast_from = vec_cast_from_vecvec
+  f_cast_to = vec_cast_to_vecvec, f_cast_from = vec_cast_from_vecvec,
+  single_type = FALSE
 ) {
   vctrs_exports <- getNamespaceExports(asNamespace("vctrs"))
 
@@ -91,6 +104,7 @@ vecvec_register <- function(
   pkg <- attr(x, "package", exact = TRUE)
   nm <- attr(x, "name", exact = TRUE)
   cls <- paste0(pkg, "::", nm)
+  vv_single_type_classes[[cls]] <- isTRUE(single_type)
 
 
   # --------------------------------------------------------
@@ -106,13 +120,15 @@ vecvec_register <- function(
     class = cls,
     fun = f_cast_from
   )
-  # Register vec_cast.<class>.* methods
+  # Register vec_cast.<class>.* methods. vctrs needs the result to have the
+  # form of `to` (see vecvec_cast()).
+  cast_to <- function(x, to, ...) vecvec_cast(f_cast_to(x, to, ...), to)
   lapply(
     sub("^vec_cast", cls, vec_cast_generics),
     register_s3_method,
     pkg = "vctrs",
     generic = "vec_cast",
-    fun = f_cast_to
+    fun = cast_to
   )
 
   # Register vec_cast.<class>.<class>.
@@ -127,6 +143,8 @@ vecvec_register <- function(
   # vctrs::vec_ptype2() methods
   # --------------------------------------------------------
   vec_ptype2_generics <- vctrs_exports[startsWith(vctrs_exports, "vec_ptype2.")]
+  # A common type is single-type only when all the vecvecs have that type
+  ptype2 <- function(x, y, ...) vv_ptype2_form(f_ptype2(x, y, ...), x, y)
 
   # Register vec_ptype2.*.<class> methods
   lapply(
@@ -134,7 +152,7 @@ vecvec_register <- function(
     register_s3_method,
     pkg = "vctrs",
     class = cls,
-    fun = f_ptype2
+    fun = ptype2
   )
   # Register vec_ptype2.<class>.* methods
   lapply(
@@ -142,14 +160,14 @@ vecvec_register <- function(
     register_s3_method,
     pkg = "vctrs",
     generic = "vec_ptype2",
-    fun = f_ptype2
+    fun = ptype2
   )
   # Register vec_ptype2.<class>.<class> so s3 fallback is not triggered
   register_s3_method(
     pkg = "vctrs",
     generic = "vec_ptype2",
     class = paste0(cls, ".", cls),
-    fun = f_ptype2
+    fun = ptype2
   )
 
   invisible(NULL)

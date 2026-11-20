@@ -6,7 +6,12 @@
   }
 
   # Register vecvec methods
-  vecvec_register(class_vecvec)
+  vecvec_register(class_vecvec, single_type = TRUE)
+
+  # match() and %in% (mtfrm() is in base R from 4.1.0)
+  if (exists("mtfrm", baseenv(), inherits = FALSE)) {
+    registerS3method("mtfrm", "vecvec::vecvec", vv_mtfrm, envir = baseenv())
+  }
 
   # Register all methods
   # lapply(

@@ -8,7 +8,8 @@ vecvec_register(
   x,
   f_ptype2 = vec_ptype2_vecvec,
   f_cast_to = vec_cast_to_vecvec,
-  f_cast_from = vec_cast_from_vecvec
+  f_cast_from = vec_cast_from_vecvec,
+  single_type = FALSE
 )
 }
 \arguments{
@@ -27,6 +28,9 @@ other types to vecvec by calling \code{vecvec()}.}
 \item{f_cast_from}{The function to register as the \verb{vec_cast.*.<class>}
 methods for this class. Defaults to \code{vec_cast_from_vecvec}, which attempts
 to cast vecvec to other types by calling \code{unvecvec()}.}
+
+\item{single_type}{Whether vctrs treats single-type vectors of the class as
+vectors of their type (see Details).}
 }
 \value{
 \code{NULL}, invisibly. Called for its side effects.
@@ -45,6 +49,15 @@ vecvec subclass.
 \item \verb{vec_cast.*.<class>} methods, so that your vecvec subclass can be cast
 \emph{from} other types.
 }
+
+With \code{single_type = TRUE}, vctrs treats a single-type vector of your
+subclass as a vector of its type (as for \code{\link[=vecvec]{vecvec()}}), which makes vctrs
+operations on it (slicing, combining, matching, ...) about as fast as on
+the plain vector. The common type of two vectors is then single-type only
+when both have that type, vctrs casts to a single-type vector cast the
+values to its type, and any \code{vec_cast()} method you register between two
+vectors of your subclass must return the result of \code{\link[=vecvec_cast]{vecvec_cast()}}.
+Otherwise all vectors of your subclass are one vctrs type.
 }
 \examples{
 \dontrun{

@@ -1,27 +1,65 @@
 # vctrs compatibility methods
 
 # proxy/restore
-# Each row of the proxy holds the (shared) list of stored vectors of the vecvec
-# it came from, and its index into them. Slicing and combining proxies keeps
-# the rows with their stored vectors, so restoring needs no information from
-# `to` other than its class.
+#
+# vctrs treats a single-type vecvec as a vector of its type, and a mixed-type
+# vecvec as a vector of any types (see vec_ptype2_vecvec()), and the two have
+# different proxies:
+#
+# * single-type: its data. vctrs slices and combines this as it would the
+#   plain vector, and restoring puts back the attributes of `to`, which has
+#   the same type.
+# * mixed-type: a data frame. Each row holds the (shared) list of stored
+#   vectors of the vecvec it came from, and its index into them. Slicing and
+#   combining keeps the rows with their stored vectors, so restoring needs only
+#   the class of `to`. (A mixed-type `to` from vctrs is usually an empty
+#   prototype, so the rows can't refer to it instead.)
+#
+# vctrs only combines the proxies of vectors of one type (it casts them to
+# their common type first), so casts between vecvecs give the form of `to`
+# (see vecvec_cast()). A single-type vecvec is held as an index when it's cast
+# to a mixed-type vecvec.
+#
+# Subclasses opt in to single-type vctrs types with vecvec_register()
+# (`single_type = TRUE`), as their own casts and prototypes must then respect
+# them. Vecvecs of other classes are all one vctrs type, with the mixed-type
+# proxy.
+vv_single_type_classes <- new.env(parent = emptyenv())
+
+# Does vctrs treat vecvecs of the class of `x` (a vecvec) as vectors of their
+# type when they're single-type?
+vv_single_type_class <- function(x) {
+  isTRUE(vv_single_type_classes[[class(x)[[1L]]]])
+}
+
+# Is `x` a single-type vecvec that vctrs treats as a vector of its type?
+vv_single_type_vctrs <- function(x) vv_is_typed(x) && vv_single_type_class(x)
+
 method(vec_proxy, class_vecvec) <- function(x, ...) {
+  if (vv_single_type_vctrs(x)) {
+    attributes(x) <- NULL
+    return(x)
+  }
   i <- vv_index(x)
-  attributes(i) <- NULL
-  data_frame(x = list(vv_slots(x)), i = i)
+  if (!is.null(attributes(i))) attributes(i) <- NULL
+  new_data_frame(list(x = vv_rep_list(vv_slots(x), length(i)), i = i))
 }
 method(vec_restore, class_vecvec) <- function(x, to, ...) {
   if (is_vecvec(x)) return(x)
-  # vctrs treats all vecvecs of a class as one type, so a prototype (as from
-  # vec_ptype()) doesn't depend on the types a vecvec holds.
+  # The values of a single-type vecvec
+  if (!is.data.frame(x)) {
+    return(vv_with_data(to, x))
+  }
+  # A mixed-type prototype (as from vec_ptype()) doesn't depend on the types a
+  # vecvec holds.
   if (vec_size(x) == 0L) {
     return(S7_class(to)())
   }
 
   # Group rows by the stored vectors they index into (the same object, so
   # cheap to compare), keeping groups in order of first appearance.
-  grp_id <- .Call("vecvec_group_identity", x$x, PACKAGE = "vecvec")
-  first <- which(!duplicated(grp_id))
+  grp <- .Call("vecvec_group_identity", x$x, PACKAGE = "vecvec")
+  first <- attr(grp, "first", exact = TRUE)
   # Rows initialised by vctrs (e.g. with vec_init()) hold NULL
   val <- lapply(x$x[first], function(s) if (is.null(s)) list() else s)
 
@@ -29,7 +67,8 @@ method(vec_restore, class_vecvec) <- function(x, to, ...) {
   if (length(val) > 1L) {
     # Offset each group's indices past the stored vectors of earlier groups
     len <- vapply(val, function(s) sum(list_sizes(s)), integer(1L))
-    idx <- idx + c(0L, cumsum(len))[grp_id]
+    attributes(grp) <- NULL
+    idx <- idx + c(0L, cumsum(len))[grp]
   }
 
   # Rows that are all missing (e.g. from vec_init()) keep the types of `to`
@@ -40,79 +79,132 @@ method(vec_restore, class_vecvec) <- function(x, to, ...) {
 }
 
 # Comparison proxies
+#
+# vctrs compares the equality proxies of two mixed-type vecvecs (as in
+# vec_match(), vec_in() or joins) column by column, so every mixed-type vecvec
+# has the same proxy layout, whatever types it holds. Each element is
+# described by:
+#
+# * type: the id of its type (see vv_type_id()).
+# * num: its value, if the equality proxy of its type is logical, integer or
+#   double.
+# * chr: its value, if the equality proxy of its type is character.
+# * obj: its value otherwise (e.g. complex values, or rows of a data frame
+#   proxy, such as of a record).
+#
+# Columns an element doesn't use hold a fixed, non-missing filler, so equal
+# elements are equal even with `na_equal = FALSE`. Missing elements (missing
+# values, and missing indices) are missing in every column, as vctrs requires
+# to detect them, so missing values of different types are equal.
 method(vec_proxy_equal, class_vecvec) <- function(x, ...) {
-  # Build the equality proxy slot-wise on same-ptype slots
+  # A single-type vecvec is compared with vecvecs of its type (vctrs casts to
+  # the common type first), so it compares as its type.
+  if (vv_single_type_vctrs(x)) return(vec_proxy_equal(vv_typed_slot(x), ...))
+
   n <- vec_size(x)
-  idx <- vv_index(x)
+  type <- rep_len(NA_integer_, n)
+  num <- rep_len(0, n)
+  chr <- rep_len("", n)
+  obj <- vv_rep_list(FALSE, n)
 
-  # No storage at all -> every element is necessarily an unassigned index.
-  if (length(x@x) == 0L) {
-    return(data_frame(.group = rep(NA_integer_, n)))
+  slots <- vv_slots(x)
+  at <- vecvec_locate(slots, vv_index(x))
+  rows <- split(seq_len(n), factor(at$slot, seq_along(slots)))
+  # Missing indices
+  miss <- which(is.na(at$slot))
+  if (length(miss)) {
+    num[miss] <- NA_real_
+    chr[miss] <- NA_character_
+    obj[miss] <- list(NULL)
   }
 
-  # Map each stored position to (slot, position-within-slot).
-  slot_len <- list_sizes(x@x)
-  at <- vecvec_locate(x@x, idx)
-  slot <- at$slot
-  local_pos <- at$within
+  for (s in seq_along(slots)) {
+    r <- rows[[s]]
+    if (length(r) == 0L) next
+    p <- vec_slice(vec_proxy_equal(slots[[s]], ...), at$within[r])
 
-  # Group slots sharing a common ptype, as `duplicated()` does - only slots
-  # with identical ptypes can ever compare equal to one another.
-  ptypes <- lapply(x@x, vec_slice, 0L)
-  uniq_ptypes <- unique(ptypes)
-  loc <- lapply(
-    uniq_ptypes,
-    function(k) which(vapply(ptypes, identical, logical(1), k))
-  )
-  slot_group <- integer(length(ptypes))
-  for (g in seq_along(loc)) slot_group[loc[[g]]] <- g
+    if (is.data.frame(p) || !typeof(p) %in% c("logical", "integer", "double", "character")) {
+      obj[r] <- vec_chop(p)
+    } else {
+      v <- unclass(p)
+      attributes(v) <- NULL
+      if (is.character(v)) chr[r] <- v else num[r] <- as.double(v)
+    }
+    type[r] <- vv_type_id(vv_slot_key(slots[[s]]))
 
-  # Per-element group id; unassigned indices (NA) get the reserved NA group.
-  elem_group <- ifelse(is.na(slot), NA_integer_, slot_group[slot])
-
-  result <- data_frame(.group = elem_group)
-  for (g in seq_along(loc)) {
-    member_slots <- loc[[g]]
-    rows <- which(elem_group == g)
-    if (length(rows) == 0L) next
-
-    # Compute the proxy once for the whole ptype group
-    proxy_g <- vec_proxy_equal(vec_c(!!!x@x[member_slots]), ...)
-    if (!is.data.frame(proxy_g)) proxy_g <- data_frame(x = proxy_g)
-
-    # Position of each member row within the group's concatenation.
-    member_lens <- slot_len[member_slots]
-    offsets <- c(0L, cumsum(member_lens))
-    member_rank <- match(slot[rows], member_slots)
-    grp_pos <- offsets[member_rank] + local_pos[rows]
-
-    # Scatter the small per-group proxy into `n` rows via one vectorized
-    # slice, leaving non-member rows as NA placeholders.
-    filled <- vec_init(proxy_g, n)
-    filled <- vec_assign(filled, rows, vec_slice(proxy_g, grp_pos))
-    names(filled) <- paste0("g", g, "_", names(filled))
-
-    result <- vec_cbind(result, filled)
+    miss <- which(vec_detect_missing(p))
+    if (length(miss)) {
+      miss <- r[miss]
+      type[miss] <- NA_integer_
+      num[miss] <- NA_real_
+      chr[miss] <- NA_character_
+      obj[miss] <- list(NULL)
+    }
   }
 
-  result
+  new_data_frame(list(type = type, num = num, chr = chr, obj = obj), n = n)
 }
+
+# A list of length `n` whose elements are all `x`.
+vv_rep_list <- function(x, n) .Call("vecvec_rep_list", x, n, PACKAGE = "vecvec")
+
+# Types are numbered in the order they're first seen in the session. Types are
+# the same when their prototypes are identical (as when grouping slots, see
+# vv_normalise()), which hashes can't tell reliably (the functions of an S7
+# class serialize differently once byte-compiled).
+vv_types <- new.env(parent = emptyenv())
+vv_types$ptypes <- list()
+vv_types$labels <- character()
+
+vv_type_id <- function(ptype) {
+  label <- paste(c(typeof(ptype), class(ptype)), collapse = "/")
+  for (i in which(vv_types$labels == label)) {
+    if (vv_same_type(vv_types$ptypes[[i]], ptype)) return(i)
+  }
+  id <- length(vv_types$ptypes) + 1L
+  vv_types$ptypes[[id]] <- ptype
+  vv_types$labels[[id]] <- label
+  id
+}
+
 method(vec_proxy_compare, class_vecvec) <- function(x, ...) {
-  xtfrm(x, ...)
+  # A single-type vecvec compares as its type, so its proxy can be compared
+  # with that of another vecvec of the type.
+  if (vv_single_type_vctrs(x)) return(vec_proxy_compare(vv_typed_slot(x), ...))
+  vv_proxy_compare_mixed(x, ...)
 }
 
 # prototypes
 vec_ptype2_vecvec <- function(x, y, ...) {
-  if (!is_vecvec(x)) {
-    x <- vecvec(x)
-  }
-  if (!is_vecvec(y)) {
-    y <- vecvec(y)
-  }
+  # Combine prototypes rather than values: the prototype of a single-type
+  # vecvec keeps its type, which the common type keeps if it's the same.
+  px <- if (is_vecvec(x)) vv_ptype(x) else vecvec(vec_ptype(x))
+  py <- if (is_vecvec(y)) vv_ptype(y) else vecvec(vec_ptype(y))
+  out <- c(px, py)
+  vv_index(out) <- integer()
+  vv_ptype2_form(out, px, py)
+}
 
-  x <- c(x, y)
-  vv_index(x) <- integer()
-  x
+# The common type of vecvecs is single-type only when all of them have that
+# type: a mixed-type prototype holds no types, so it would otherwise be lost
+# when combined. `out` is the common type found by a vec_ptype2() method
+# (from vecvec or a subclass) for `x` and `y`, which needn't be vecvecs.
+vv_ptype2_form <- function(out, x, y) {
+  if (!is_vecvec(out) || !vv_single_type_vctrs(out)) return(out)
+  p <- vv_typed_ptype(out)
+  for (v in list(x, y)) {
+    if (is_vecvec(v) && !(vv_is_typed(v) && vv_same_type(vv_typed_ptype(v), p))) {
+      return(vv_rebuild(out, list(), integer()))
+    }
+  }
+  out
+}
+
+# A zero-length vecvec like `x`, without copying its values.
+vv_ptype <- function(x) {
+  slots <- vv_slots(x)
+  if (vv_is_typed(x)) slots <- list(vec_slice(slots[[1L]], 0L))
+  vv_rebuild(x, slots, integer())
 }
 #' @export
 `vec_ptype2.vecvec::vecvec.vecvec::vecvec` <- vec_ptype2_vecvec
@@ -139,6 +231,9 @@ vec_ptype2_vecvec <- function(x, y, ...) {
 #' @seealso [unvecvec()], [vctrs::vec_cast()]
 #' @noRd
 vec_cast_to_vecvec <- function(x, to, ...) {
+  vecvec_cast(vec_cast_to_vecvec_impl(x, to, ...), to, ...)
+}
+vec_cast_to_vecvec_impl <- function(x, to, ...) {
   # If input and ptype have incompatible structure, produce flat vecvec type
   if (length(x) != length(to)) return(S7_class(to)(list(x)))
 
@@ -175,11 +270,66 @@ vec_cast_to_vecvec <- function(x, to, ...) {
 
   S7_class(to)(x = new_x, i = new_idx)
 }
-# Cast between two vecvecs of the same class. A vecvec holds any mix of slot
-# types, so any vecvec of the class already is a valid value of its type.
-vec_cast_same_vecvec <- function(x, to, ...) x
+# Cast between two vecvecs of the same class
+vec_cast_same_vecvec <- function(x, to, ...) vecvec_cast(x, to, ...)
 vec_cast_from_vecvec <- function(x, to, ...) {
   unvecvec(x, ptype = to)
+}
+
+#' Cast a vecvec to the form of another
+#'
+#' vctrs treats a single-type vecvec (whose elements all have one type) as a
+#' vector of that type, and a mixed-type vecvec as a vector of any types.
+#' `vecvec_cast()` casts `x` to the vctrs type of `to`, a vecvec of the same
+#' class: the values of `x` are cast to the type of a single-type `to` (with
+#' [vctrs::vec_cast()], so this errors for values that can't be cast), and are
+#' kept as they are for a mixed-type `to`.
+#'
+#' This applies to [vecvec()] and to subclasses registered with
+#' `vecvec_register(single_type = TRUE)`. All vecvecs of other subclasses are
+#' one vctrs type, and `vecvec_cast()` returns `x`.
+#'
+#' A `vec_cast()` method between two vecvecs of a subclass registered with
+#' `single_type = TRUE` must return the result of `vecvec_cast()`, as vctrs
+#' needs the result to have the form of `to` when combining vectors.
+#'
+#' @param x,to Vecvecs of the same class.
+#' @param ... Passed on to [vctrs::vec_cast()].
+#'
+#' @return A vecvec of the class of `x`, of the vctrs type of `to`.
+#'
+#' @examples
+#' # To a single type
+#' vecvec_cast(vecvec(1:3), vecvec(0.5))
+#'
+#' # Any types
+#' vecvec_cast(vecvec(1:3), vecvec(1, "a"))
+#' @export
+vecvec_cast <- function(x, to, ...) {
+  # All vecvecs of the class are one vctrs type
+  if (!vv_single_type_class(to)) return(x)
+  if (!vv_is_typed(to)) return(vv_as_indexed(x))
+
+  ptype <- vec_slice(vv_typed_slot(to), 0L)
+  if (vv_is_typed(x) && vv_same_type(vv_typed_ptype(x), vv_typed_ptype(to))) {
+    return(x)
+  }
+  slots <- lapply(vv_slots(x), function(s) vec_cast(s, ptype, ...))
+  # Missing values only
+  if (length(slots) == 0L) slots <- list(ptype)
+  vv_rebuild(x, slots, vv_index(x))
+}
+
+# A vecvec held as an index (the mixed-type form), even if it has a single
+# type.
+vv_as_indexed <- function(x) {
+  if (!vv_is_typed(x)) return(x)
+  at <- attributes(x)
+  at[[vv_ptype_attr]] <- NULL
+  at[[vv_slots_attr]] <- list(vv_typed_slot(x))
+  i <- seq_len(length(x))
+  attributes(i) <- at
+  i
 }
 #' @method vec_cast vecvec::vecvec
 #' @export

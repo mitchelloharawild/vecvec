@@ -130,6 +130,94 @@ test_that("`[<-` with logical condition containing NAs does not error", {
   expect_true(is.na(result[[10]]))
 })
 
+rcrd <- function(x) vctrs::new_rcrd(list(a = x))
+
+test_that("`[<-` ignores NA in a numeric index when value has size 1", {
+  x <- vecvec(1:3)
+  x[c(1, NA)] <- 9L
+  expect_true(vv_is_typed(x))
+  expect_identical(unvecvec(x), c(9L, 2L, 3L))
+
+  x <- vecvec(1:3, letters[1:2])
+  x[c(1, NA)] <- 9L
+  expect_identical(unvecvec(x[1:3]), c(9L, 2L, 3L))
+  expect_identical(unvecvec(x[4:5]), letters[1:2])
+
+  x <- vecvec(rcrd(1:3))
+  x[c(1, NA)] <- rcrd(9L)
+  expect_identical(unvecvec(x), rcrd(c(9L, 2L, 3L)))
+
+  x <- vecvec(rcrd(1:3), 1:2)
+  x[c(NA, 2)] <- rcrd(9L)
+  expect_identical(unvecvec(x[1:3]), rcrd(c(1L, 9L, 3L)))
+  expect_no_error(S7::validate(x))
+
+  # All-NA index is a no-op
+  x <- vecvec(1:3)
+  x[NA_integer_] <- 9L
+  expect_identical(x, vecvec(1:3))
+})
+
+test_that("`[<-` errors on NA in a numeric index when value is longer", {
+  expect_error({x <- vecvec(1:3); x[c(1, NA)] <- 8:9}, "NAs are not allowed")
+  expect_error({x <- vecvec(1:3, "a"); x[c(1, NA)] <- 8:9}, "NAs are not allowed")
+})
+
+test_that("`[<-` past the end extends with missing elements", {
+  x <- vecvec(1:3)
+  x[5] <- 9L
+  expect_true(vv_is_typed(x))
+  expect_identical(unvecvec(x), c(1L, 2L, 3L, NA, 9L))
+
+  x <- vecvec(1:3, letters[1:2])
+  x[7] <- 9L
+  expect_no_error(S7::validate(x))
+  expect_length(x, 7L)
+  expect_identical(is.na(x), c(rep(FALSE, 5), TRUE, FALSE))
+  expect_identical(unvecvec(x[c(1:3, 7)]), c(1L, 2L, 3L, 9L))
+  expect_identical(unvecvec(x[4:5]), letters[1:2])
+
+  x <- vecvec(rcrd(1:3))
+  x[5] <- rcrd(9L)
+  expect_no_error(S7::validate(x))
+  expect_identical(is.na(x), c(FALSE, FALSE, FALSE, TRUE, FALSE))
+  expect_identical(unvecvec(x[c(1:3, 5)]), rcrd(c(1:3, 9L)))
+
+  x <- vecvec(rcrd(1:3), 1:2)
+  x[7] <- rcrd(9L)
+  expect_no_error(S7::validate(x))
+  expect_identical(is.na(x), c(rep(FALSE, 5), TRUE, FALSE))
+  expect_identical(unvecvec(x[c(1:3, 7)]), rcrd(c(1:3, 9L)))
+})
+
+test_that("`[<-` with missing vecvec elements keeps a valid index", {
+  miss <- vecvec(1:5)[c(NA_integer_, NA_integer_)]
+
+  x <- vecvec(1:5)
+  x[4:5] <- miss
+  expect_identical(unvecvec(x), c(1:3, NA, NA))
+  expect_identical(x[[4]], NA_integer_)
+
+  x <- vecvec(1:5, "a")
+  x[4:5] <- miss
+  expect_no_error(S7::validate(x))
+  expect_identical(is.na(x), c(FALSE, FALSE, FALSE, TRUE, TRUE, FALSE))
+  expect_identical(x[[6]], "a")
+
+  x <- vecvec(rcrd(1:5))
+  x[4:5] <- vecvec(rcrd(1:5))[c(NA_integer_, NA_integer_)]
+  expect_no_error(S7::validate(x))
+  expect_identical(is.na(x), c(FALSE, FALSE, FALSE, TRUE, TRUE))
+  expect_identical(unvecvec(x[1:3]), rcrd(1:3))
+  expect_no_error(x[1:5])
+
+  x <- vecvec(rcrd(1:5), "a")
+  x[4:5] <- vecvec(rcrd(1:5))[c(NA_integer_, NA_integer_)]
+  expect_no_error(S7::validate(x))
+  expect_identical(is.na(x), c(FALSE, FALSE, FALSE, TRUE, TRUE, FALSE))
+  expect_identical(x[[6]], "a")
+})
+
 # `[[<-` -------------------------------------------------------------------
 
 test_that("`[[<-` replaces a single element", {

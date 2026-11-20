@@ -231,7 +231,7 @@ method(c, class_vecvec) <- function(..., recursive = FALSE) {
 
   # Single-type inputs of the same type: combine their values
   ptype <- vv_typed_ptype(dots[[1L]])
-  if (!is.null(ptype) && all(vapply(dots, function(v) identical(vv_typed_ptype(v), ptype), logical(1L)))) {
+  if (!is.null(ptype) && all(vapply(dots, function(v) !is.null(p <- vv_typed_ptype(v)) && vv_same_type(p, ptype), logical(1L)))) {
     data <- lapply(dots, function(v) {
       d <- vv_data(v)
       attr(d, "dim") <- NULL
