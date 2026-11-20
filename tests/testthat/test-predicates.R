@@ -430,6 +430,10 @@ test_that("match() and %in% compare values as the plain vectors would", {
   expect_identical(match(vecvec(as.Date("2024-01-02")), as.Date("2024-01-02")), 1L)
   expect_identical(match(vecvec(c(1, 10)), c(10, 1)), c(2L, 1L))
   expect_identical(vecvec(letters[1:3]) %in% "b", c(FALSE, TRUE, FALSE))
-  # As match(1L, "1") is 1, values of mixed types match as strings
+  # Mixed types match as their common type, as plain vectors combined
+  expect_identical(match(vecvec(1L, 2.5), c(2.5, 1)), c(2L, 1L))
+  expect_identical(match(vecvec(0.1 + 0.2, 1L), 0.3), match(c(0.1 + 0.2, 1), 0.3))
+  # and otherwise as strings, as match(1L, "1") is 1
   expect_identical(match(vecvec(1L, "1"), "1"), c(1L, 1L))
+  expect_identical(vecvec(1L, "a", 2.5) %in% c("a", "2.5"), c(FALSE, TRUE, TRUE))
 })

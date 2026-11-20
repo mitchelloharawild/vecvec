@@ -104,14 +104,18 @@ method(anyDuplicated, class_vecvec) <- function(x, incomparables = FALSE, ...) {
 
 # The values match() compares (its mtfrm() method). A single-type vecvec
 # compares as its type, as the plain vector does. A mixed-type vecvec compares
-# its values as strings, as match() does for plain vectors of different types
+# as the common type of its types (e.g. integers and doubles as doubles), and
+# otherwise as strings, as match() does for plain vectors of different types
 # (e.g. match(1L, "1") is 1).
 vv_mtfrm <- function(x) {
-  if (vv_is_typed(x)) {
-    # match() only calls mtfrm() for objects (mtfrm() of a bare vector is
-    # as.character())
-    slot <- vv_typed_slot(x)
-    return(if (is.object(slot)) mtfrm(slot) else slot)
+  values <- if (vv_is_typed(x)) {
+    vv_typed_slot(x)
+  } else if (!is.null(vv_common_ptype(vv_slots(x)))) {
+    unvecvec(x)
+  } else {
+    return(as.character(x))
   }
-  as.character(x)
+  # match() only calls mtfrm() for objects (mtfrm() of a bare vector is
+  # as.character())
+  if (is.object(values)) mtfrm(values) else values
 }

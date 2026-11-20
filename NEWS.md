@@ -35,10 +35,11 @@
 * `cumsum()`, `cumprod()`, `cummax()` and `cummin()` now work on single-type
   `vecvec`s, as on the plain vector.
 
-* Subsetting, arithmetic, math functions, `c()`, `duplicated()`, `unique()`,
-  `match()` and `%in%` of single-type `vecvec`s are much faster, as are
-  arithmetic and comparisons of a mixed-type `vecvec` with a single value
-  (e.g. `x + 1`, `x == "a"`).
+* Subsetting, arithmetic, math functions, `c()`, `rep()`, `is.na()`,
+  `duplicated()`, `unique()`, `match()` and `%in%` of single-type `vecvec`s are
+  now about as fast as on the plain vector. Operations on mixed-type `vecvec`s
+  are also faster, especially arithmetic and comparisons with a single value
+  (e.g. `x + 1`, `x == "a"`) or with another mixed-type `vecvec`.
 
 * `vecvec_mapply()` and `Ops` now call `.f` / the operator once per distinct
   combination of underlying slots, rather than once per contiguous run of
@@ -104,7 +105,11 @@
   `vecvec`s, rather than their ranks within each.
 
 * `match()` and `%in%` now compare single-type `vecvec`s by their values, as
-  for the plain vector (they were compared as strings).
+  for the plain vector, and mixed-type `vecvec`s as the common type of their
+  types (e.g. integers and doubles as doubles), as for the plain vectors
+  combined. They were compared as strings, so e.g. `0.1 + 0.2` matched `0.3`.
+  Mixed types with no common type are still compared as strings, as
+  `match()` does for plain vectors.
 
 * Values of a type whose prototype holds functions (such as an S7 class) now
   combine with the same type read back from a file (e.g. with `readRDS()`),
