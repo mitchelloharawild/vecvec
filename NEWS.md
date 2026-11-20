@@ -1,31 +1,3 @@
-# vecvec (development version)
-
-## Improvements
-
-* `vecvec_mapply()` and `Ops` now call `.f` / the operator once per distinct
-  combination of underlying slots, rather than once per contiguous run of
-  positions. Interleaved vectors (e.g. from `x[order(...)]`) no longer make one
-  call per element, and `Ops` is no longer quadratic for them. `.f` receives
-  every position that shares a slot combination (in position order), so it must
-  be vectorised and element-wise, as documented.
-
-## Bug fixes
-
-* `[<-` now ignores `NA` positions in a numeric index when the value has size
-  1, as base R does (a longer value still errors).
-
-* `[<-` past the end of a `vecvec` now extends it with missing elements, rather
-  than returning an invalid object (or, for mixed types, pointing the gap at
-  stored values).
-
-* `[<-` with a `vecvec` of missing elements no longer leaves index entries
-  pointing past the stored values ("subscript out of bounds" afterwards).
-
-* `vec_detect_complete()` of a mixed-type `vecvec` now flags only its missing
-  elements, rather than every element. This fixes `vec_rank(incomplete =
-  "na")`, `dplyr::min_rank()` and friends (which gave all `NA`) and
-  `tidyr::drop_na()` (which dropped every row).
-
 # vecvec 1.5.0
 
 ## Improvements
@@ -36,8 +8,6 @@
   prototype. Base R and C code that reads a `vecvec` directly now sees its
   values, so `lm()`, `glm()`, `model.matrix()`, `prcomp()` and `data.matrix()`
   work on single-type `vecvec` columns as they do on the plain vectors.
-  Subsetting, arithmetic, `c()`, `vec_slice()` and `vec_c()` of single-type
-  `vecvec`s are much faster.
 
 * A `vecvec` of mixed types keeps the integer index into its stored vectors as
   its data, but modelling functions (anything using `model.frame()`) now error
@@ -45,29 +15,11 @@
   factors, since models treat factors by their class, which a `vecvec` doesn't
   have; convert it with `unvecvec()` first.
 
-* vctrs equality now compares the values of different `vecvec`s, so
-  `vec_match()`, `vec_in()`, `vec_equal()` and joins no longer give wrong
-  results (or errors) when the `vecvec`s hold different types, or the same
-  types in a different order.
-
-* `vec_detect_missing()` now detects missing values in a `vecvec` (so
-  `dplyr::coalesce()`, `vec_fill_missing()` and friends work). All missing
-  elements are equal to one another, whatever their type.
-
-* `vec_compare()` (and so `vec_rank()`) now compares the values of two
-  single-type `vecvec`s, rather than their ranks within each.
-
 * vctrs now treats a single-type `vecvec` as a vector of its type, and a
-  mixed-type `vecvec` as a vector of any types. vctrs operations on a
-  single-type `vecvec` (`vec_slice()`, `vec_c()`, `vec_match()`, joins, ...)
-  are now about as fast as on the plain vector, and those on mixed-type
-  `vecvec`s are also faster. As for any other vctrs type:
-  * the common type of two `vecvec`s is single-type only when both have that
-    type;
-  * casting to a single-type `vecvec` casts the values to its type, so
-    `vec_assign()` (and functions using it, like `tidyr::replace_na()`) can't
-    put values of another type into a single-type `vecvec`. Base `[<-` still
-    can.
+  mixed-type `vecvec` as a vector of any types (see Breaking changes). vctrs
+  operations on a single-type `vecvec` (`vec_slice()`, `vec_c()`,
+  `vec_match()`, joins, ...) are now about as fast as on the plain vector, and
+  those on mixed-type `vecvec`s are also much faster.
 
 * New `vecvec_cast()` casts a `vecvec` to the vctrs type of another, and
   `vecvec_register()` gains `single_type`, so a subclass can opt in to
@@ -78,22 +30,22 @@
 * A mixed-type `vecvec` whose types have no common type can now be sorted
   (`sort()`, `order()`, `vec_order()`, ...): by type, in the order the types
   first appear, then by value. Types with a common type (e.g. integers and
-  doubles) still sort by value, and vctrs now compares the values of two
-  mixed-type `vecvec`s rather than their ranks within each.
+  doubles) still sort by value.
 
 * `cumsum()`, `cumprod()`, `cummax()` and `cummin()` now work on single-type
   `vecvec`s, as on the plain vector.
 
-* Values of a type whose prototype holds functions (such as an S7 class) now
-  combine with the same type read back from a file (e.g. with `readRDS()`),
-  so the result stays single-type rather than holding the type twice.
+* Subsetting, arithmetic, math functions, `c()`, `duplicated()`, `unique()`,
+  `match()` and `%in%` of single-type `vecvec`s are much faster, as are
+  arithmetic and comparisons of a mixed-type `vecvec` with a single value
+  (e.g. `x + 1`, `x == "a"`).
 
-* `match()` and `%in%` now compare single-type `vecvec`s by their values, as
-  for the plain vector (they were compared as strings), and are much faster.
-
-* Arithmetic and comparisons of a mixed-type `vecvec` with a single value
-  (e.g. `x + 1`, `x == "a"`), `duplicated()` and `unique()` of single-type
-  `vecvec`s, and math functions on single-type `vecvec`s are faster.
+* `vecvec_mapply()` and `Ops` now call `.f` / the operator once per distinct
+  combination of underlying slots, rather than once per contiguous run of
+  positions. Interleaved vectors (e.g. from `x[order(...)]`) no longer make one
+  call per element, and `Ops` is no longer quadratic for them. `.f` receives
+  every position that shares a slot combination (in position order), so it must
+  be vectorised and element-wise, as documented.
 
 * `is.numeric()` is now `TRUE` only for a single-type `vecvec` whose type is
   numeric (so not for mixed numeric types), following the contract of
@@ -109,10 +61,14 @@
   a type (logical `NA`) don't count as another type, so `c(x, NA)` and
   `x[i] <- NA` keep a single-type `vecvec` single-type.
 
-* `identical()` tells `vecvec`s with different values apart. Previously it was
-  `TRUE` for e.g. `vecvec("a")` and `vecvec("b")`.
-
 ## Breaking changes
+
+* As for any other vctrs type, casting to a single-type `vecvec` casts the
+  values to its type, and the common type of two `vecvec`s is single-type only
+  when both have that type. So `vec_assign()` (and functions using it, like
+  `tidyr::replace_na()`) can't put values of another type into a single-type
+  `vecvec`; base `[<-` still can. `vec_ptype()` of a single-type `vecvec` keeps
+  its type.
 
 * `class()` of a `vecvec` no longer includes `"integer"` (or `"double"`), and
   `typeof()` is the type of its values (single-type) or `"integer"` (mixed).
@@ -130,10 +86,48 @@
 
 ## Bug fixes
 
+* vctrs equality now compares the values of different `vecvec`s, so
+  `vec_match()`, `vec_in()`, `vec_equal()` and joins no longer give wrong
+  results (or errors) when the `vecvec`s hold different types, or the same
+  types in a different order.
+
+* `vec_detect_missing()` now detects missing values in a `vecvec` (so
+  `dplyr::coalesce()`, `vec_fill_missing()` and friends work). All missing
+  elements are equal to one another, whatever their type.
+
+* `vec_detect_complete()` of a mixed-type `vecvec` now flags only its missing
+  elements, rather than every element. This fixes `vec_rank(incomplete =
+  "na")`, `dplyr::min_rank()` and friends (which gave all `NA`) and
+  `tidyr::drop_na()` (which dropped every row).
+
+* `vec_compare()` (and so `vec_rank()`) now compares the values of two
+  `vecvec`s, rather than their ranks within each.
+
+* `match()` and `%in%` now compare single-type `vecvec`s by their values, as
+  for the plain vector (they were compared as strings).
+
+* Values of a type whose prototype holds functions (such as an S7 class) now
+  combine with the same type read back from a file (e.g. with `readRDS()`),
+  so the result stays single-type rather than holding the type twice.
+
+* `identical()` tells `vecvec`s with different values apart. Previously it was
+  `TRUE` for e.g. `vecvec("a")` and `vecvec("b")`.
+
+* `[<-` now ignores `NA` positions in a numeric index when the value has size
+  1, as base R does (a longer value still errors).
+
+* `[<-` past the end of a `vecvec` now extends it with missing elements, rather
+  than returning an invalid object (or, for mixed types, pointing the gap at
+  stored values).
+
+* `[<-` with a `vecvec` of missing elements no longer leaves index entries
+  pointing past the stored values ("subscript out of bounds" afterwards).
+
 * Slots that are matrices or data frames are now measured and subset by row
   (with `vec_size()` and `vec_slice()`), instead of by cell or column with
   `length()` and `[`. This fixes subsetting, replacement, `c()` and
   `vecvec_apply()` for `vecvec`s containing these vector types.
+
 * `[<-` on an array `vecvec` (e.g. `x[i, j] <- value`) no longer drops the
   `dimnames`.
 
