@@ -131,3 +131,29 @@ test_that("operations of a mixed-type vecvec with a single value keep its index"
   expect_identical(vecvec(1L, "a") == "a", c(FALSE, TRUE))
   expect_identical(vecvec(1L, "a")[c(NA, 2)] == "a", c(NA, TRUE))
 })
+
+test_that("operations between mixed-type vecvecs match the plain vectors", {
+  set.seed(3)
+  a <- vecvec(c(1.5, NA, 3), 4:6, c(0.5, 2))
+  b <- vecvec(7:9, c(2.5, NA))
+  # Sizes recycle as in vctrs (only size one)
+  for (rep_a in list(sample(8, 20, TRUE), c(NA, 1:8, 8:1, 2:4), 3L)) {
+    for (rep_b in list(sample(5, 20, TRUE), rep(1:5, 4), 2L)) {
+      x <- a[rep_a]
+      y <- b[rep_b]
+      px <- unvecvec(x)
+      py <- unvecvec(y)
+      expect_identical(unvecvec(x + y), px + py)
+      expect_identical(unvecvec(x * y), px * py)
+      expect_identical(x == y, px == py)
+      expect_identical(x < y, px < py)
+      expect_identical(
+        unvecvec(vecvec_mapply(list(x, y), function(u, v) u - v)),
+        px - py
+      )
+    }
+  }
+  # Repeated values are computed once, keeping the result compact
+  r <- rep(vecvec(1:2, 0.5), 1000)
+  expect_identical(sum(lengths(vv_slots(r + r))), 3L)
+})

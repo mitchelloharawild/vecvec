@@ -224,8 +224,7 @@ vv_normalise <- function(slots, index) {
     slot_of <- NULL
     used <- sizes > 0L
   } else {
-    slot_of <- findInterval(index, bounds, left.open = TRUE)
-    slot_of[slot_of < 1L | slot_of > k] <- NA_integer_
+    slot_of <- .Call("vecvec_locate_c", index, sizes, PACKAGE = "vecvec")$slot
     if (drop_unspec) {
       slot_of[unspec[slot_of] %in% TRUE] <- NA_integer_
     }
@@ -274,10 +273,13 @@ vv_compact <- function(slots, index) {
     return(list(slots = slots, index = index))
   }
   index <- cumsum(used)[index]
-  used <- split(used, factor(rep.int(seq_along(slots), sizes), seq_along(slots)))
+  ends <- cumsum(sizes)
   slots <- .mapply(
-    function(s, u) if (all(u)) s else vec_slice(s, u),
-    list(slots, used), NULL
+    function(s, from, to) {
+      u <- used[seq.int(from, length.out = to - from + 1L)]
+      if (all(u)) s else vec_slice(s, u)
+    },
+    list(slots, ends - sizes + 1L, ends), NULL
   )
   list(slots = slots, index = index)
 }

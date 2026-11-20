@@ -88,9 +88,9 @@ overlap_indices <- function(a, b) {
 # @return A list with `slot` (which element of `slots` each position falls
 #   in) and `within` (the corresponding 1-based position inside that slot).
 vecvec_locate <- function(slots, pos) {
-  bounds <- c(0L, cumsum(list_sizes(slots)))
-  slot <- findInterval(pos, bounds, left.open = TRUE)
-  list(slot = slot, within = pos - bounds[slot])
+  if (!is.integer(pos)) pos <- as.integer(pos)
+  if (!is.null(attributes(pos))) attributes(pos) <- NULL
+  .Call("vecvec_locate_c", pos, list_sizes(slots), PACKAGE = "vecvec")
 }
 
 # Encode a pair of per-object slot indices into a single grouping key, such
@@ -146,13 +146,26 @@ vecvec_align <- function(args) {
   if (n == 0L) {
     return(list(slot = slot, within = within, groups = list()))
   }
-  # Group by the combination of slots, wherever the positions are. Positions
-  # with a missing (NA) slot index in some arg share a group per NA pattern;
-  # consumers skip any group whose first position has an NA slot.
-  names(slot) <- paste0("s", seq_along(slot))
-  groups <- vctrs::vec_group_loc(vctrs::new_data_frame(slot, n = n))$loc
+  # Group by the combination of slots, wherever the positions are, in order of
+  # first appearance. Positions with a missing (NA) slot index in some arg
+  # share a group; consumers skip any group whose first position has an NA
+  # slot. The combination is numbered (from 1) as a single integer key.
+  n_slots <- vapply(args, function(a) length(vv_slots(a)), integer(1L))
+  n_keys <- prod(as.double(pmax(n_slots, 1L)))
+  if (n_keys <= .Machine$integer.max) {
+    key <- rep_len(1L, n)
+    mult <- 1L
+    for (j in seq_along(slot)) {
+      key <- key + (slot[[j]] - 1L) * mult
+      mult <- mult * max(n_slots[[j]], 1L)
+    }
+    groups <- .Call("vecvec_group_keys", key, as.integer(n_keys), PACKAGE = "vecvec")
+  } else {
+    names(slot) <- paste0("s", seq_along(slot))
+    groups <- vctrs::vec_group_loc(vctrs::new_data_frame(slot, n = n))$loc
+  }
 
-  list(slot = unname(slot), within = within, groups = groups)
+  list(slot = unname(slot), within = within, groups = groups, index = index)
 }
 
 # Shim for `%||%`, which is only in base R from 4.4.0.

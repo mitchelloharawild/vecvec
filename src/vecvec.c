@@ -122,3 +122,117 @@ SEXP vecvec_materialise(SEXP x) {
   UNPROTECT(1);
   return out;
 }
+
+// Group positions by an integer key in 1..n_keys (or NA), in order of first
+// appearance, by counting. Returns a list of 1-based positions per group; all
+// NA keys form one group.
+SEXP vecvec_group_keys(SEXP key, SEXP n_keys) {
+  if (TYPEOF(key) != INTSXP) Rf_error("`key` must be an integer vector.");
+  R_xlen_t n = XLENGTH(key);
+  int k = Rf_asInteger(n_keys);
+  const int *p = INTEGER_RO(key);
+
+  // Counts per key, with key 0 for NA
+  R_xlen_t *count = (R_xlen_t *) R_alloc((size_t) k + 1, sizeof(R_xlen_t));
+  int *group = (int *) R_alloc((size_t) k + 1, sizeof(int));
+  for (int j = 0; j <= k; j++) {
+    count[j] = 0;
+    group[j] = -1;
+  }
+  int n_groups = 0;
+  for (R_xlen_t i = 0; i < n; i++) {
+    int v = p[i] == NA_INTEGER ? 0 : p[i];
+    if (v < 0 || v > k) Rf_error("`key` must be in 1..n_keys.");
+    if (group[v] < 0) group[v] = n_groups++;
+    count[v]++;
+  }
+
+  SEXP out = PROTECT(Rf_allocVector(VECSXP, n_groups));
+  int **fill = (int **) R_alloc((size_t) k + 1, sizeof(int *));
+  for (int j = 0; j <= k; j++) {
+    if (group[j] < 0) continue;
+    SEXP pos = Rf_allocVector(INTSXP, count[j]);
+    SET_VECTOR_ELT(out, group[j], pos);
+    fill[j] = INTEGER(pos);
+  }
+  for (R_xlen_t i = 0; i < n; i++) {
+    int v = p[i] == NA_INTEGER ? 0 : p[i];
+    *(fill[v]++) = (int) i + 1;
+  }
+  UNPROTECT(1);
+  return out;
+}
+
+// Does an integer index (into 1..size, or NA) use any position more than once?
+SEXP vecvec_index_has_dups(SEXP index, SEXP size) {
+  if (TYPEOF(index) != INTSXP) Rf_error("`index` must be an integer vector.");
+  R_xlen_t n = XLENGTH(index);
+  int m = Rf_asInteger(size);
+  if (n > m) return Rf_ScalarLogical(TRUE);
+  const int *p = INTEGER_RO(index);
+  unsigned char *seen = (unsigned char *) R_alloc((size_t) m + 1, 1);
+  memset(seen, 0, (size_t) m + 1);
+  for (R_xlen_t i = 0; i < n; i++) {
+    int v = p[i];
+    if (v == NA_INTEGER || v < 1 || v > m) continue;
+    if (seen[v]) return Rf_ScalarLogical(TRUE);
+    seen[v] = 1;
+  }
+  return Rf_ScalarLogical(FALSE);
+}
+
+// For each position into the concatenation of vectors of the given sizes, the
+// vector it falls in and its position within that vector (1-based; NA for
+// missing positions or positions outside the vectors). As
+// findInterval(pos, c(0, cumsum(sizes)), left.open = TRUE) in one pass.
+SEXP vecvec_locate_c(SEXP pos, SEXP sizes) {
+  if (TYPEOF(pos) != INTSXP || TYPEOF(sizes) != INTSXP) {
+    Rf_error("`pos` and `sizes` must be integer vectors.");
+  }
+  R_xlen_t n = XLENGTH(pos);
+  int k = LENGTH(sizes);
+  const int *p = INTEGER_RO(pos), *sz = INTEGER_RO(sizes);
+
+  // Start of each vector (0-based offsets)
+  double *start = (double *) R_alloc((size_t) k + 1, sizeof(double));
+  start[0] = 0;
+  for (int j = 0; j < k; j++) start[j + 1] = start[j] + sz[j];
+
+  SEXP slot = PROTECT(Rf_allocVector(INTSXP, n));
+  SEXP within = PROTECT(Rf_allocVector(INTSXP, n));
+  int *ps = INTEGER(slot), *pw = INTEGER(within);
+  int last = 0;
+  for (R_xlen_t i = 0; i < n; i++) {
+    int v = p[i];
+    if (v == NA_INTEGER || v < 1 || v > start[k]) {
+      ps[i] = NA_INTEGER;
+      pw[i] = NA_INTEGER;
+      continue;
+    }
+    // Positions usually fall in the same vector as the one before
+    int j = last;
+    if (!(v > start[j] && v <= start[j + 1])) {
+      int lo = 0, hi = k - 1;
+      while (lo < hi) {
+        int mid = lo + (hi - lo) / 2;
+        if (v > start[mid + 1]) lo = mid + 1; else hi = mid;
+      }
+      j = lo;
+      // Skip empty vectors
+      while (j < k - 1 && v > start[j + 1]) j++;
+    }
+    last = j;
+    ps[i] = j + 1;
+    pw[i] = v - (int) start[j];
+  }
+
+  SEXP out = PROTECT(Rf_allocVector(VECSXP, 2));
+  SET_VECTOR_ELT(out, 0, slot);
+  SET_VECTOR_ELT(out, 1, within);
+  SEXP nms = PROTECT(Rf_allocVector(STRSXP, 2));
+  SET_STRING_ELT(nms, 0, Rf_mkChar("slot"));
+  SET_STRING_ELT(nms, 1, Rf_mkChar("within"));
+  Rf_setAttrib(out, R_NamesSymbol, nms);
+  UNPROTECT(4);
+  return out;
+}

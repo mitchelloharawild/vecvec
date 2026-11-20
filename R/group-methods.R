@@ -48,6 +48,16 @@
   groups <- al$groups
   n_slots <- length(groups)
 
+  # Each pair of stored values is computed once, so repeated values aren't
+  # expanded. When either operand uses each of its stored values at most once,
+  # every pair is distinct.
+  distinct <- any(vapply(seq_along(args), function(j) {
+    !.Call(
+      "vecvec_index_has_dups", al$index[[j]], sum(list_sizes(vv_slots(args[[j]]))),
+      PACKAGE = "vecvec"
+    )
+  }, logical(1L)))
+
   # For each output slot: compute the op on unique (w$e1, w$e2) pairs and record val_idx.
   # Returns list(vals, val_idx) so result_i can be built without a second pass.
   # A group whose slot is NA (e1 or e2 is missing at that position) isn't
@@ -61,12 +71,18 @@
     }
 
     w <- lapply(within, `[`, pos)
-    # Key in doubles: integer arithmetic overflows (to NA) once
-    # (w1 - 1) * size(e2's slot) passes .Machine$integer.max, which would
-    # collapse every later pair onto one value. Doubles are exact to 2^53.
-    pair_key <- (as.double(w[[1L]]) - 1) * vec_size(vv_slots(args[[2L]])[[s_idx[[2L]]]]) + w[[2L]]
-    unique_keys <- unique(pair_key)
-    first_of <- match(unique_keys, pair_key)
+    if (distinct) {
+      first_of <- seq_along(pos)
+      val_idx <- first_of
+    } else {
+      # Key in doubles: integer arithmetic overflows (to NA) once
+      # (w1 - 1) * size(e2's slot) passes .Machine$integer.max, which would
+      # collapse every later pair onto one value. Doubles are exact to 2^53.
+      pair_key <- (as.double(w[[1L]]) - 1) * vec_size(vv_slots(args[[2L]])[[s_idx[[2L]]]]) + w[[2L]]
+      unique_keys <- unique(pair_key)
+      first_of <- match(unique_keys, pair_key)
+      val_idx <- match(pair_key, unique_keys)
+    }
 
     list(
       vals = do.call(
@@ -76,11 +92,22 @@
           list(args, s_idx, w), NULL
         )
       ),
-      val_idx = match(pair_key, unique_keys)
+      val_idx = val_idx
     )
   })
 
   is_na_group <- vapply(computed, function(cs) is.null(cs$vals), logical(1L))
+
+  # Comparisons give plain logical values: put them in place directly
+  if (bool_op && all(vapply(computed[!is_na_group], function(cs) is.logical(cs$vals) && is.null(attributes(cs$vals)), logical(1L)))) {
+    res <- rep(NA, n)
+    for (s in seq_len(n_slots)) {
+      if (is_na_group[[s]]) next
+      res[groups[[s]]] <- computed[[s]]$vals[computed[[s]]$val_idx]
+    }
+    return(res)
+  }
+
   result_x <- unname(lapply(computed[!is_na_group], `[[`, "vals"))
 
   # Precompute per-slot offsets once, then scatter val_idx into result_i.
@@ -94,7 +121,7 @@
   }
 
   # TODO - use a method to identify if a better class can be returned.
-  res <- class_vv(result_x, result_i)
+  res <- vv_construct(class_vv, result_x, result_i)
 
   if (bool_op) {
     res <- unvecvec(res)
