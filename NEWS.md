@@ -21,11 +21,7 @@
   `vec_match()`, joins, ...) are now about as fast as on the plain vector, and
   those on mixed-type `vecvec`s are also much faster.
 
-* New `vecvec_cast()` casts a `vecvec` to the vctrs type of another, and
-  `vecvec_register()` gains `single_type`, so a subclass can opt in to
-  single-type vctrs types (its own casts between vectors of the subclass must
-  then use `vecvec_cast()`). By default, all vectors of a subclass are one
-  vctrs type, as before.
+* New `vecvec_cast()` casts a `vecvec` to the vctrs type of another.
 
 * A mixed-type `vecvec` whose types have no common type can now be sorted
   (`sort()`, `order()`, `vec_order()`, ...): by type, in the order the types
@@ -70,6 +66,12 @@
   `tidyr::replace_na()`) can't put values of another type into a single-type
   `vecvec`; base `[<-` still can. `vec_ptype()` of a single-type `vecvec` keeps
   its type.
+
+* This applies to subclasses of `class_vecvec` too. A subclass's empty
+  prototype meaning "any vector of the subclass" must hold no types (an empty
+  vector holding a type is a vector of that type), and a `vec_cast()` method
+  that a subclass registers itself between two of its vectors must return the
+  result of `vecvec_cast()`. mixtime >= 0.5.1 does this.
 
 * `class()` of a `vecvec` no longer includes `"integer"` (or `"double"`), and
   `typeof()` is the type of its values (single-type) or `"integer"` (mixed).

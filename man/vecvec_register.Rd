@@ -8,8 +8,7 @@ vecvec_register(
   x,
   f_ptype2 = vec_ptype2_vecvec,
   f_cast_to = vec_cast_to_vecvec,
-  f_cast_from = vec_cast_from_vecvec,
-  single_type = FALSE
+  f_cast_from = vec_cast_from_vecvec
 )
 }
 \arguments{
@@ -28,9 +27,6 @@ other types to vecvec by calling \code{vecvec()}.}
 \item{f_cast_from}{The function to register as the \verb{vec_cast.*.<class>}
 methods for this class. Defaults to \code{vec_cast_from_vecvec}, which attempts
 to cast vecvec to other types by calling \code{unvecvec()}.}
-
-\item{single_type}{Whether vctrs treats single-type vectors of the class as
-vectors of their type (see Details).}
 }
 \value{
 \code{NULL}, invisibly. Called for its side effects.
@@ -50,14 +46,18 @@ vecvec subclass.
 \emph{from} other types.
 }
 
-With \code{single_type = TRUE}, vctrs treats a single-type vector of your
-subclass as a vector of its type (as for \code{\link[=vecvec]{vecvec()}}), which makes vctrs
-operations on it (slicing, combining, matching, ...) about as fast as on
-the plain vector. The common type of two vectors is then single-type only
-when both have that type, vctrs casts to a single-type vector cast the
-values to its type, and any \code{vec_cast()} method you register between two
-vectors of your subclass must return the result of \code{\link[=vecvec_cast]{vecvec_cast()}}.
-Otherwise all vectors of your subclass are one vctrs type.
+As for \code{\link[=vecvec]{vecvec()}}, vctrs treats a single-type vector of your subclass as a
+vector of its type, and a mixed-type vector as a vector of any types. The
+common type of two vectors is single-type only when both have that type,
+and casts to a single-type vector cast the values to its type. So:
+\itemize{
+\item An empty prototype meaning "any vector of the subclass" (e.g. from
+\code{f_ptype2}) must hold no types, as from \code{class_myvec()}. An empty vector
+holding a type is a vector of that type.
+\item Any \code{vec_cast()} method you register yourself between two vectors of your
+subclass must return the result of \code{\link[=vecvec_cast]{vecvec_cast()}}. (The methods
+registered here do this already.)
+}
 }
 \examples{
 \dontrun{

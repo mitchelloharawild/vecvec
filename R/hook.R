@@ -41,14 +41,17 @@ register_s3_method <- function(pkg, generic, class, fun = NULL) {
 #' - `vec_cast.*.<class>` methods, so that your vecvec subclass can be cast
 #'   *from* other types.
 #'
-#' With `single_type = TRUE`, vctrs treats a single-type vector of your
-#' subclass as a vector of its type (as for [vecvec()]), which makes vctrs
-#' operations on it (slicing, combining, matching, ...) about as fast as on
-#' the plain vector. The common type of two vectors is then single-type only
-#' when both have that type, vctrs casts to a single-type vector cast the
-#' values to its type, and any `vec_cast()` method you register between two
-#' vectors of your subclass must return the result of [vecvec_cast()].
-#' Otherwise all vectors of your subclass are one vctrs type.
+#' As for [vecvec()], vctrs treats a single-type vector of your subclass as a
+#' vector of its type, and a mixed-type vector as a vector of any types. The
+#' common type of two vectors is single-type only when both have that type,
+#' and casts to a single-type vector cast the values to its type. So:
+#'
+#' - An empty prototype meaning "any vector of the subclass" (e.g. from
+#'   `f_ptype2`) must hold no types, as from `class_myvec()`. An empty vector
+#'   holding a type is a vector of that type.
+#' - Any `vec_cast()` method you register yourself between two vectors of your
+#'   subclass must return the result of [vecvec_cast()]. (The methods
+#'   registered here do this already.)
 #'
 #' @param x An S7 class object that extends [class_vecvec]. Typically the
 #'   class object created by [S7::new_class()] in your package, e.g.
@@ -62,9 +65,6 @@ register_s3_method <- function(pkg, generic, class, fun = NULL) {
 #' @param f_cast_from The function to register as the `vec_cast.*.<class>` 
 #'  methods for this class. Defaults to `vec_cast_from_vecvec`, which attempts 
 #'  to cast vecvec to other types by calling `unvecvec()`.
-#'
-#' @param single_type Whether vctrs treats single-type vectors of the class as
-#'  vectors of their type (see Details).
 #'
 #' @return `NULL`, invisibly. Called for its side effects.
 #'
@@ -86,8 +86,7 @@ register_s3_method <- function(pkg, generic, class, fun = NULL) {
 #' }
 vecvec_register <- function(
   x, f_ptype2 = vec_ptype2_vecvec, 
-  f_cast_to = vec_cast_to_vecvec, f_cast_from = vec_cast_from_vecvec,
-  single_type = FALSE
+  f_cast_to = vec_cast_to_vecvec, f_cast_from = vec_cast_from_vecvec
 ) {
   vctrs_exports <- getNamespaceExports(asNamespace("vctrs"))
 
@@ -104,7 +103,6 @@ vecvec_register <- function(
   pkg <- attr(x, "package", exact = TRUE)
   nm <- attr(x, "name", exact = TRUE)
   cls <- paste0(pkg, "::", nm)
-  vv_single_type_classes[[cls]] <- isTRUE(single_type)
 
 
   # --------------------------------------------------------

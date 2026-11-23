@@ -20,23 +20,11 @@
 # (see vecvec_cast()). A single-type vecvec is held as an index when it's cast
 # to a mixed-type vecvec.
 #
-# Subclasses opt in to single-type vctrs types with vecvec_register()
-# (`single_type = TRUE`), as their own casts and prototypes must then respect
-# them. Vecvecs of other classes are all one vctrs type, with the mixed-type
-# proxy.
-vv_single_type_classes <- new.env(parent = emptyenv())
-
-# Does vctrs treat vecvecs of the class of `x` (a vecvec) as vectors of their
-# type when they're single-type?
-vv_single_type_class <- function(x) {
-  isTRUE(vv_single_type_classes[[class(x)[[1L]]]])
-}
-
-# Is `x` a single-type vecvec that vctrs treats as a vector of its type?
-vv_single_type_vctrs <- function(x) vv_is_typed(x) && vv_single_type_class(x)
+# This holds for subclasses too: a vec_cast() method a subclass registers
+# itself between its vectors must return the result of vecvec_cast().
 
 method(vec_proxy, class_vecvec) <- function(x, ...) {
-  if (vv_single_type_vctrs(x)) {
+  if (vv_is_typed(x)) {
     attributes(x) <- NULL
     return(x)
   }
@@ -99,7 +87,7 @@ method(vec_restore, class_vecvec) <- function(x, to, ...) {
 method(vec_proxy_equal, class_vecvec) <- function(x, ...) {
   # A single-type vecvec is compared with vecvecs of its type (vctrs casts to
   # the common type first), so it compares as its type.
-  if (vv_single_type_vctrs(x)) return(vec_proxy_equal(vv_typed_slot(x), ...))
+  if (vv_is_typed(x)) return(vec_proxy_equal(vv_typed_slot(x), ...))
 
   n <- vec_size(x)
   type <- rep_len(NA_integer_, n)
@@ -170,7 +158,7 @@ vv_type_id <- function(ptype) {
 method(vec_proxy_compare, class_vecvec) <- function(x, ...) {
   # A single-type vecvec compares as its type, so its proxy can be compared
   # with that of another vecvec of the type.
-  if (vv_single_type_vctrs(x)) return(vec_proxy_compare(vv_typed_slot(x), ...))
+  if (vv_is_typed(x)) return(vec_proxy_compare(vv_typed_slot(x), ...))
   vv_proxy_compare_mixed(x, ...)
 }
 
@@ -190,7 +178,7 @@ vec_ptype2_vecvec <- function(x, y, ...) {
 # when combined. `out` is the common type found by a vec_ptype2() method
 # (from vecvec or a subclass) for `x` and `y`, which needn't be vecvecs.
 vv_ptype2_form <- function(out, x, y) {
-  if (!is_vecvec(out) || !vv_single_type_vctrs(out)) return(out)
+  if (!is_vecvec(out) || !vv_is_typed(out)) return(out)
   p <- vv_typed_ptype(out)
   for (v in list(x, y)) {
     if (is_vecvec(v) && !(vv_is_typed(v) && vv_same_type(vv_typed_ptype(v), p))) {
@@ -285,13 +273,11 @@ vec_cast_from_vecvec <- function(x, to, ...) {
 #' [vctrs::vec_cast()], so this errors for values that can't be cast), and are
 #' kept as they are for a mixed-type `to`.
 #'
-#' This applies to [vecvec()] and to subclasses registered with
-#' `vecvec_register(single_type = TRUE)`. All vecvecs of other subclasses are
-#' one vctrs type, and `vecvec_cast()` returns `x`.
-#'
-#' A `vec_cast()` method between two vecvecs of a subclass registered with
-#' `single_type = TRUE` must return the result of `vecvec_cast()`, as vctrs
-#' needs the result to have the form of `to` when combining vectors.
+#' This applies to [vecvec()] and to every subclass. A `vec_cast()` method
+#' that a subclass registers itself between two of its vectors must return the
+#' result of `vecvec_cast()`, as vctrs needs the result to have the form of
+#' `to` when combining vectors. (Methods registered by [vecvec_register()] do
+#' this already.)
 #'
 #' @param x,to Vecvecs of the same class.
 #' @param ... Passed on to [vctrs::vec_cast()].
@@ -306,8 +292,6 @@ vec_cast_from_vecvec <- function(x, to, ...) {
 #' vecvec_cast(vecvec(1:3), vecvec(1, "a"))
 #' @export
 vecvec_cast <- function(x, to, ...) {
-  # All vecvecs of the class are one vctrs type
-  if (!vv_single_type_class(to)) return(x)
   if (!vv_is_typed(to)) return(vv_as_indexed(x))
 
   ptype <- vec_slice(vv_typed_slot(to), 0L)

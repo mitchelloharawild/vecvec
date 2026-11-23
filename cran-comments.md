@@ -18,8 +18,6 @@ We checked the 2 reverse dependencies, comparing R CMD check results across
 CRAN and dev versions of this package.
 
 * ggtime: no changes.
-* mixtime: one test fails, which checks that `lm()` and `prcomp()` read
-  mixtime's cyclical times as `as.numeric()` does. With this version they read
-  the times' own data, as they do for a plain cyclical time vector. I maintain
-  mixtime and will submit an update with the corrected test as soon as this
-  version is accepted.
+* mixtime: needs the update submitted before this version (0.5.1), which
+  works with this and earlier versions of vecvec. mixtime 0.5.0 relies on
+  how vecvec's vctrs methods worked before. I maintain mixtime.

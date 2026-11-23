@@ -55,9 +55,7 @@ can't put values of another type into a single-type vecvec. Base \verb{[<-}
 can, and gives a mixed-type vecvec.
 }
 
-Subclasses opt in to this with \code{vecvec_register(single_type = TRUE)};
-otherwise all vecvecs of a subclass are one vctrs type (see
-\code{\link[=vecvec_register]{vecvec_register()}}).
+The same holds for subclasses (see \code{\link[=vecvec_register]{vecvec_register()}}).
 }
 \examples{
 # Create a vecvec prototype

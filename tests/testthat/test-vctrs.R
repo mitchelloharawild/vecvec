@@ -513,31 +513,26 @@ test_that("same-class vec_cast/vec_c work after a serialisation round trip", {
   expect_equal(unvecvec(out), c(5, 6, 5, 6))
 })
 
-test_that("subclasses opt in to single-type vctrs types", {
-  # By default all vecvecs of a subclass are one vctrs type
-  class_onetype <- S7::new_class("onetype", package = "vecvectest", parent = class_vecvec)
-  vecvec_register(class_onetype)
-  x <- class_onetype(list(1:2))
-  expect_true(is.data.frame(vec_proxy(x)))
-  expect_false(vv_is_typed(vec_ptype2(x, class_onetype(list(3:4)))))
-  expect_identical(vec_cast(x, class_onetype(list("a"))), x)
-  out <- vec_c(x, class_onetype(list("a")))
-  expect_identical(unvecvec(out[1:2]), 1:2)
-  expect_equal(vec_match(x, class_onetype(list(2L, "a"))), c(NA, 1L))
-
-  # With `single_type = TRUE`, as for vecvec()
+test_that("subclasses have single-type vctrs types", {
   class_single <- S7::new_class("single", package = "vecvectest", parent = class_vecvec)
-  vecvec_register(class_single, single_type = TRUE)
+  vecvec_register(class_single)
   x <- class_single(list(1:2))
   expect_identical(vec_proxy(x), 1:2)
   expect_true(vv_is_typed(vec_ptype2(x, class_single(list(3:4)))))
   expect_false(vv_is_typed(vec_ptype2(x, class_single(list("a")))))
+  # An empty vector without types is any vector of the subclass
+  expect_false(vv_is_typed(vec_ptype2(x, class_single())))
   out <- vec_c(x, class_single(list("a")), x)
   expect_s3_class(out, "vecvectest::single")
   expect_identical(unvecvec(out[c(1:2, 4:5)]), c(1:2, 1:2))
   expect_s3_class(vec_c(x, x), "vecvectest::single")
   expect_true(vv_is_typed(vec_c(x, x)))
   expect_equal(vec_match(x, class_single(list(2L, "a"))), c(NA, 1L))
+
+  # Casts give the form of their target
+  expect_identical(vec_cast(x, class_single(list(0.5))), class_single(list(c(1, 2))))
+  expect_false(vv_is_typed(vec_cast(x, class_single(list(1L, "a")))))
+  expect_error(vec_cast(class_single(list(1.5)), class_single(list(1L))))
 })
 
 test_that("vec_c/vec_rbind keep row order when storage is interleaved", {

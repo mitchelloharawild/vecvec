@@ -31,9 +31,7 @@
 #'   can't put values of another type into a single-type vecvec. Base `[<-`
 #'   can, and gives a mixed-type vecvec.
 #'
-#' Subclasses opt in to this with `vecvec_register(single_type = TRUE)`;
-#' otherwise all vecvecs of a subclass are one vctrs type (see
-#' [vecvec_register()]).
+#' The same holds for subclasses (see [vecvec_register()]).
 #'
 #' @param x An unnamed list of arbitrary vectors. The vectors can be of
 #'   different types and lengths, but they must all be vectors (according to

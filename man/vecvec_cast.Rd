@@ -23,13 +23,11 @@ class: the values of \code{x} are cast to the type of a single-type \code{to} (w
 kept as they are for a mixed-type \code{to}.
 }
 \details{
-This applies to \code{\link[=vecvec]{vecvec()}} and to subclasses registered with
-\code{vecvec_register(single_type = TRUE)}. All vecvecs of other subclasses are
-one vctrs type, and \code{vecvec_cast()} returns \code{x}.
-
-A \code{vec_cast()} method between two vecvecs of a subclass registered with
-\code{single_type = TRUE} must return the result of \code{vecvec_cast()}, as vctrs
-needs the result to have the form of \code{to} when combining vectors.
+This applies to \code{\link[=vecvec]{vecvec()}} and to every subclass. A \code{vec_cast()} method
+that a subclass registers itself between two of its vectors must return the
+result of \code{vecvec_cast()}, as vctrs needs the result to have the form of
+\code{to} when combining vectors. (Methods registered by \code{\link[=vecvec_register]{vecvec_register()}} do
+this already.)
 }
 \examples{
 # To a single type

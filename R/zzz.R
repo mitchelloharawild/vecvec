@@ -6,7 +6,7 @@
   }
 
   # Register vecvec methods
-  vecvec_register(class_vecvec, single_type = TRUE)
+  vecvec_register(class_vecvec)
 
   # match() and %in% (mtfrm() is in base R from 4.1.0)
   if (exists("mtfrm", baseenv(), inherits = FALSE)) {
