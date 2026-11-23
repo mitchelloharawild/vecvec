@@ -35,9 +35,10 @@ vv_model_problem <- function(x) {
   n_types <- length(types)
   if (n_types == 1L) {
     # A single type that isn't held in an atomic vector (e.g. a record), or
-    # one held as an index (from a cast to a mixed-type vecvec)
+    # one held as an index in the layout of vecvec <= 1.4.0 (as read from a
+    # saved file)
     why <- if (vv_can_type(vv_slots(x)[[1L]])) {
-      "It's held as an index into its values, as when cast to a mixed-type vecvec."
+      "It's held as an index into its values, as by vecvec 1.4.0 and earlier."
     } else {
       "Its values aren't held in an atomic vector, so its data is an index."
     }

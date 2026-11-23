@@ -21,7 +21,9 @@
   `vec_match()`, joins, ...) are now about as fast as on the plain vector, and
   those on mixed-type `vecvec`s are also much faster.
 
-* New `vecvec_cast()` casts a `vecvec` to the vctrs type of another.
+* New `vecvec_cast()` casts a `vecvec` to the vctrs type of another. A
+  single-type `vecvec` cast to a mixed-type `vecvec` is still stored as its
+  values, so models and `is.numeric()` see them.
 
 * A mixed-type `vecvec` whose types have no common type can now be sorted
   (`sort()`, `order()`, `vec_order()`, ...): by type, in the order the types

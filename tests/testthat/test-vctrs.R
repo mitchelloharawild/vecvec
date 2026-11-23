@@ -531,7 +531,8 @@ test_that("subclasses have single-type vctrs types", {
 
   # Casts give the form of their target
   expect_identical(vec_cast(x, class_single(list(0.5))), class_single(list(c(1, 2))))
-  expect_false(vv_is_typed(vec_cast(x, class_single(list(1L, "a")))))
+  expect_false(vv_is_single(vec_cast(x, class_single(list(1L, "a")))))
+  expect_true(vv_is_typed(vec_cast(x, class_single(list(1L, "a")))))
   expect_error(vec_cast(class_single(list(1.5)), class_single(list(1L))))
 })
 

@@ -16,15 +16,17 @@
 #   prototype, so the rows can't refer to it instead.)
 #
 # vctrs only combines the proxies of vectors of one type (it casts them to
-# their common type first), so casts between vecvecs give the form of `to`
-# (see vecvec_cast()). A single-type vecvec is held as an index when it's cast
-# to a mixed-type vecvec.
+# their common type first), so casts between vecvecs give the vctrs type of
+# `to` (see vecvec_cast()). A single-type vecvec cast to a mixed-type vecvec
+# keeps its values (so models still read them), marked with the
+# `vecvec_mixed` attribute to have the mixed-type proxy. Anything rebuilt from
+# it (slices, combinations, arithmetic, ...) is single-type again.
 #
 # This holds for subclasses too: a vec_cast() method a subclass registers
 # itself between its vectors must return the result of vecvec_cast().
 
 method(vec_proxy, class_vecvec) <- function(x, ...) {
-  if (vv_is_typed(x)) {
+  if (vv_is_single(x)) {
     attributes(x) <- NULL
     return(x)
   }
@@ -87,7 +89,7 @@ method(vec_restore, class_vecvec) <- function(x, to, ...) {
 method(vec_proxy_equal, class_vecvec) <- function(x, ...) {
   # A single-type vecvec is compared with vecvecs of its type (vctrs casts to
   # the common type first), so it compares as its type.
-  if (vv_is_typed(x)) return(vec_proxy_equal(vv_typed_slot(x), ...))
+  if (vv_is_single(x)) return(vec_proxy_equal(vv_typed_slot(x), ...))
 
   n <- vec_size(x)
   type <- rep_len(NA_integer_, n)
@@ -158,7 +160,7 @@ vv_type_id <- function(ptype) {
 method(vec_proxy_compare, class_vecvec) <- function(x, ...) {
   # A single-type vecvec compares as its type, so its proxy can be compared
   # with that of another vecvec of the type.
-  if (vv_is_typed(x)) return(vec_proxy_compare(vv_typed_slot(x), ...))
+  if (vv_is_single(x)) return(vec_proxy_compare(vv_typed_slot(x), ...))
   vv_proxy_compare_mixed(x, ...)
 }
 
@@ -178,10 +180,10 @@ vec_ptype2_vecvec <- function(x, y, ...) {
 # when combined. `out` is the common type found by a vec_ptype2() method
 # (from vecvec or a subclass) for `x` and `y`, which needn't be vecvecs.
 vv_ptype2_form <- function(out, x, y) {
-  if (!is_vecvec(out) || !vv_is_typed(out)) return(out)
+  if (!is_vecvec(out) || !vv_is_single(out)) return(out)
   p <- vv_typed_ptype(out)
   for (v in list(x, y)) {
-    if (is_vecvec(v) && !(vv_is_typed(v) && vv_same_type(vv_typed_ptype(v), p))) {
+    if (is_vecvec(v) && !(vv_is_single(v) && vv_same_type(vv_typed_ptype(v), p))) {
       return(vv_rebuild(out, list(), integer()))
     }
   }
@@ -191,7 +193,7 @@ vv_ptype2_form <- function(out, x, y) {
 # A zero-length vecvec like `x`, without copying its values.
 vv_ptype <- function(x) {
   slots <- vv_slots(x)
-  if (vv_is_typed(x)) slots <- list(vec_slice(slots[[1L]], 0L))
+  if (vv_is_single(x)) slots <- list(vec_slice(slots[[1L]], 0L))
   vv_rebuild(x, slots, integer())
 }
 #' @export
@@ -292,11 +294,11 @@ vec_cast_from_vecvec <- function(x, to, ...) {
 #' vecvec_cast(vecvec(1:3), vecvec(1, "a"))
 #' @export
 vecvec_cast <- function(x, to, ...) {
-  if (!vv_is_typed(to)) return(vv_as_indexed(x))
+  if (!vv_is_single(to)) return(vv_as_mixed(x))
 
   ptype <- vec_slice(vv_typed_slot(to), 0L)
   if (vv_is_typed(x) && vv_same_type(vv_typed_ptype(x), vv_typed_ptype(to))) {
-    return(x)
+    return(vv_with_data(x, vv_data(x)))
   }
   slots <- lapply(vv_slots(x), function(s) vec_cast(s, ptype, ...))
   # Missing values only
@@ -304,16 +306,11 @@ vecvec_cast <- function(x, to, ...) {
   vv_rebuild(x, slots, vv_index(x))
 }
 
-# A vecvec held as an index (the mixed-type form), even if it has a single
-# type.
-vv_as_indexed <- function(x) {
-  if (!vv_is_typed(x)) return(x)
-  at <- attributes(x)
-  at[[vv_ptype_attr]] <- NULL
-  at[[vv_slots_attr]] <- list(vv_typed_slot(x))
-  i <- seq_len(length(x))
-  attributes(i) <- at
-  i
+# A vecvec of the mixed vctrs type. A single-type vecvec keeps its values,
+# marked to have the mixed-type proxy (see vec_proxy()).
+vv_as_mixed <- function(x) {
+  if (vv_is_single(x)) attr(x, vv_mixed_attr) <- TRUE
+  x
 }
 #' @method vec_cast vecvec::vecvec
 #' @export

@@ -109,12 +109,21 @@ test_that("casts give the vctrs type of the target", {
   expect_error(vec_cast(vecvec(1.5), vecvec(1L)), class = "vctrs_error_cast_lossy")
   expect_identical(vec_cast(vecvec(1, "a")[1], vecvec(0.5)), vecvec(1))
 
-  # and kept for a mixed-type target, where a single type is held as an index
+  # and kept for a mixed-type target, still stored as the values of their type
   out <- vec_cast(vecvec(1:2), vecvec(1, "a"))
-  expect_false(vv_is_typed(out))
+  expect_true(vv_is_typed(out))
+  expect_false(vv_is_single(out))
   expect_identical(unvecvec(out), 1:2)
-  # which any other operation makes single-type again
+  expect_true(is.numeric(out))
+  expect_equal(unname(coef(lm(c(2, 4) ~ out))), c(0, 2))
+  # combining with other types uses the mixed-type proxy
+  expect_identical(vec_c(out, vecvec("a")), vecvec(1:2, "a"))
+  # and anything rebuilt from it is single-type again
   expect_identical(out[1:2], vecvec(1:2))
+  expect_identical(vec_slice(out, 1:2), vecvec(1:2))
+  expect_identical(out + 1L, vecvec(2:3))
+  expect_identical(vec_cast(out, vecvec(1L)), vecvec(1:2))
+  expect_identical(vec_ptype(out), vecvec())
 
   # vctrs assignment keeps the type of the vector assigned into, as for any
   # other type (base assignment mixes types)

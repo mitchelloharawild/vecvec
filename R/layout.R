@@ -30,9 +30,17 @@
 vv_layout_attrs <- c("dim", "dimnames", "names")
 vv_ptype_attr <- "vecvec_ptype"
 vv_slots_attr <- "vecvec_x"
+vv_mixed_attr <- "vecvec_mixed"
 
 # Is `x` stored in the single-type form?
 vv_is_typed <- function(x) !is.null(attr(x, vv_ptype_attr, exact = TRUE))
+
+# Is `x` a single-type vecvec to vctrs (see R/vctrs.R)? A single-type vecvec
+# cast to a mixed-type vecvec keeps its values, with the `vecvec_mixed`
+# attribute marking it as a vector of any types until it is next rebuilt.
+vv_is_single <- function(x) {
+  vv_is_typed(x) && is.null(attr(x, vv_mixed_attr, exact = TRUE))
+}
 
 # The data of a vecvec: its values (single-type) or index (mixed-type), with
 # only the layout attributes (dim, dimnames and names). Changing attributes
@@ -47,6 +55,7 @@ vv_data <- function(x) {
 # type, keeping its dim, dimnames and names (not those of `x`).
 vv_with_data <- function(x, data) {
   at <- attributes(x)
+  at[[vv_mixed_attr]] <- NULL
   ad <- attributes(data)
   attributes(data) <- c(
     ad[names(ad) %in% vv_layout_attrs],
@@ -343,7 +352,7 @@ vv_rebuild <- function(x, slots, index = vv_index(x)) {
     at[["x"]] <- NULL
     if (identical(class(x)[[1L]], "vecvec::vecvec")) at[["S7_class"]] <- class_vecvec
   }
-  at <- at[!names(at) %in% c(vv_layout_attrs, vv_ptype_attr, vv_slots_attr)]
+  at <- at[!names(at) %in% c(vv_layout_attrs, vv_ptype_attr, vv_slots_attr, vv_mixed_attr)]
   out <- vv_new_data(slots, index)
   attributes(out) <- c(attributes(out), at)
   out
