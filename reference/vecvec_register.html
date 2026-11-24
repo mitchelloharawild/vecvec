@@ -20,7 +20,7 @@ vctrs vector system."><meta property="og:image" content="/logo.svg"><!-- mathjax
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">vecvec</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.5.0</span>
       </span>
     </div>
 
@@ -47,7 +47,7 @@ vctrs vector system."><meta property="og:image" content="/logo.svg"><!-- mathjax
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Register methods for a vecvec subclass</h1>
-    <small class="dont-index">Source: <a href="https://github.com/mitchelloharawild/vecvec/blob/main/R/hook.R" class="external-link"><code>R/hook.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/mitchelloharawild/vecvec/blob/v1.5.0/R/hook.R" class="external-link"><code>R/hook.R</code></a></small>
     <div class="hidden name"><code>vecvec_register.Rd</code></div>
     </div>
 
@@ -105,15 +105,6 @@ to cast vecvec to other types by calling <code><a href="unvecvec.html">unvecvec(
 vecvec subclass.</p></li>
 <li><p><code>vec_cast.*.&lt;class&gt;</code> methods, so that your vecvec subclass can be cast
 <em>from</em> other types.</p></li>
-</ul><p>As for <code><a href="vecvec.html">vecvec()</a></code>, vctrs treats a single-type vector of your subclass as a
-vector of its type, and a mixed-type vector as a vector of any types. The
-common type of two vectors is single-type only when both have that type,
-and casts to a single-type vector cast the values to its type. So:</p><ul><li><p>An empty prototype meaning "any vector of the subclass" (e.g. from
-<code>f_ptype2</code>) must hold no types, as from <code>class_myvec()</code>. An empty vector
-holding a type is a vector of that type.</p></li>
-<li><p>Any <code>vec_cast()</code> method you register yourself between two vectors of your
-subclass must return the result of <code><a href="vecvec_cast.html">vecvec_cast()</a></code>. (The methods
-registered here do this already.)</p></li>
 </ul></div>
 
     <div id="ref-examples">
