@@ -1,16 +1,17 @@
-## Resubmission
-
-This replaces the pending submission of vecvec 1.5.0 (submitted 2026-11-18).
-That version made the base of a `vecvec` an ALTREP vector; this one stores a
-`vecvec` of a single type as an ordinary vector of its values instead, and
-drops ALTREP entirely.
-
 ## Test environments
 * local ubuntu 24.04 install, R 4.6.2 and R-devel (r90655)
 
 ## R CMD check results
 
-0 errors | 0 warnings | 0 notes
+0 errors | 0 warnings | 1 note
+
+* Days since last update: 3
+
+  This release comes soon after 1.5.0 because it replaces the ALTREP base
+  vector introduced there, which broke code that copies vectors in C (such as
+  `tidyr::gather()` in the ggtime package). A `vecvec` of a single type is now
+  stored as an ordinary vector of its values, and ALTREP is no longer used. The
+  major version reflects breaking changes to how vctrs treats `vecvec`s.
 
 ## Reverse dependencies
 

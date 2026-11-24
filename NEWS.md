@@ -1,17 +1,20 @@
-# vecvec 1.5.0
+# vecvec 2.0.0
 
 ## Improvements
 
-* A `vecvec` whose elements all share one type is now stored as the data of
-  that type: a single-type `vecvec` of numbers, strings or dates is an ordinary
-  vector of those values, with the type's attributes kept in a zero-length
-  prototype. Base R and C code that reads a `vecvec` directly now sees its
-  values, so `lm()`, `glm()`, `model.matrix()`, `prcomp()` and `data.matrix()`
-  work on single-type `vecvec` columns as they do on the plain vectors.
+* The ALTREP base vector of vecvec 1.5.0 is gone. A `vecvec` whose elements
+  all share one type is now stored as the data of that type: a single-type
+  `vecvec` of numbers, strings or dates is an ordinary vector of those values,
+  with the type's attributes kept in a zero-length prototype. Base R and C code
+  that reads a `vecvec` directly sees its values in their own type (not
+  converted to doubles), so `lm()`, `glm()`, `model.matrix()`, `prcomp()` and
+  `data.matrix()` work on single-type `vecvec` columns as they do on the plain
+  vectors.
 
-* A `vecvec` of mixed types keeps the integer index into its stored vectors as
-  its data, but modelling functions (anything using `model.frame()`) now error
-  for it rather than fitting on the index. They also error for a `vecvec` of
+* A `vecvec` of mixed types has the integer index into its stored vectors as
+  its data again (as in vecvec 1.4.0), and modelling functions (anything using
+  `model.frame()`) now error for it rather than fitting on its numeric readings
+  (1.5.0) or the index (1.4.0). They also error for a `vecvec` of
   factors, since models treat factors by their class, which a `vecvec` doesn't
   have; convert it with `unvecvec()` first.
 
@@ -38,13 +41,6 @@
   now about as fast as on the plain vector. Operations on mixed-type `vecvec`s
   are also faster, especially arithmetic and comparisons with a single value
   (e.g. `x + 1`, `x == "a"`) or with another mixed-type `vecvec`.
-
-* `vecvec_mapply()` and `Ops` now call `.f` / the operator once per distinct
-  combination of underlying slots, rather than once per contiguous run of
-  positions. Interleaved vectors (e.g. from `x[order(...)]`) no longer make one
-  call per element, and `Ops` is no longer quadratic for them. `.f` receives
-  every position that shares a slot combination (in position order), so it must
-  be vectorised and element-wise, as documented.
 
 * `is.numeric()` is now `TRUE` only for a single-type `vecvec` whose type is
   numeric (so not for mixed numeric types), following the contract of
@@ -87,8 +83,6 @@
   (e.g. after `rep()`), as their data is their values. Mixed-type `vecvec`s
   still do.
 
-* Updates for compatibility with S7 > 0.2.2.
-
 ## Bug fixes
 
 * vctrs equality now compares the values of different `vecvec`s, so
@@ -119,9 +113,6 @@
   combine with the same type read back from a file (e.g. with `readRDS()`),
   so the result stays single-type rather than holding the type twice.
 
-* `identical()` tells `vecvec`s with different values apart. Previously it was
-  `TRUE` for e.g. `vecvec("a")` and `vecvec("b")`.
-
 * `[<-` now ignores `NA` positions in a numeric index when the value has size
   1, as base R does (a longer value still errors).
 
@@ -132,11 +123,43 @@
 * `[<-` with a `vecvec` of missing elements no longer leaves index entries
   pointing past the stored values ("subscript out of bounds" afterwards).
 
+# vecvec 1.5.0
+
+## Improvements
+
+* The base vector of a `vecvec` is now an ALTREP double vector that resolves to
+  the stored values, instead of an integer index. Base R and C code that reads a
+  `vecvec` directly, such as `lm()`, `data.matrix()` and `prcomp()` on data
+  frames with `vecvec` columns, now uses the values rather than the indices.
+  Stored values with no numeric reading (e.g. character) resolve to `NA`.
+  Classed numeric vectors (e.g. cyclical time) resolve through their
+  `as.double()` method, so the base agrees with `as.numeric()`.
+  `is.integer()` is now `FALSE`.
+
+* `identical()` now tells `vecvec`s with different values or indices apart. The
+  stored vectors and index are mirrored in a `_vecvec` attribute (the same
+  object as the ALTREP data, so it uses no extra memory and is serialized once),
+  as `identical()` can't see ALTREP data and the base resolves non-numeric slots
+  to `NA`. Previously it was `TRUE` for e.g. `vecvec("a")` and `vecvec("b")`.
+
+* `vecvec_mapply()` and `Ops` now call `.f` / the operator once per distinct
+  combination of underlying slots, rather than once per contiguous run of
+  positions. Interleaved vectors (e.g. from `x[order(...)]`) no longer make one
+  call per element, and `Ops` is no longer quadratic for them. `.f` receives
+  every position that shares a slot combination (in position order), so it must
+  be vectorised and element-wise, as documented.
+
+* Merging adjacent same-type slots (in `class_vecvec()`, `c()`, etc.) is now
+  linear in the number of slots rather than quadratic.
+
+* Updates for compatibility with S7 > 0.2.2.
+
+## Bug fixes
+
 * Slots that are matrices or data frames are now measured and subset by row
   (with `vec_size()` and `vec_slice()`), instead of by cell or column with
   `length()` and `[`. This fixes subsetting, replacement, `c()` and
   `vecvec_apply()` for `vecvec`s containing these vector types.
-
 * `[<-` on an array `vecvec` (e.g. `x[i, j] <- value`) no longer drops the
   `dimnames`.
 
