@@ -18,7 +18,7 @@ vecvec vectors."><meta property="og:image" content="/logo.svg"><!-- mathjax --><
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">vecvec</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.0</span>
       </span>
     </div>
 
@@ -77,7 +77,8 @@ vecvec vectors."><meta property="og:image" content="/logo.svg"><!-- mathjax --><
     <div id="value">
     <h2>Value</h2>
     <p>A vecvec data type with the same structure as <code>x</code> but with each
-vector transformed by <code>.f</code>.</p>
+vector transformed by <code>.f</code>. If <code>.f</code> returns a <code>vecvec</code>, its vectors are
+spliced into the result rather than nested within it.</p>
     </div>
 
   </div>

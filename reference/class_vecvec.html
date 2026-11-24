@@ -20,7 +20,7 @@ use vecvec() to create vecvec objects."><meta property="og:image" content="/logo
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">vecvec</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.0</span>
       </span>
     </div>
 
@@ -69,8 +69,8 @@ use <code><a href="vecvec.html">vecvec()</a></code> to create vecvec objects.</p
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>An unnamed list of arbitrary vectors. The vectors can be of
 different types and lengths, but they must all be vectors (according to
-<a href="https://vctrs.r-lib.org/reference/vec_assert.html" class="external-link">vctrs::vec_is</a>). Adjacent vectors of the same type will be combined
-together into a single vector.</p></dd>
+<a href="https://vctrs.r-lib.org/reference/vec_assert.html" class="external-link">vctrs::vec_is</a>). Vectors of the same type are combined together into a
+single vector.</p></dd>
 
 
 <dt id="arg-i">i<a class="anchor" aria-label="anchor" href="#arg-i"></a></dt>
@@ -84,6 +84,28 @@ number of elements across all vectors in <code>x</code>.</p></dd>
     <div id="value">
     <h2>Value</h2>
     <p>A vector of vectors of S7 object of class <code>class_vecvec</code>.</p>
+    </div>
+    <div id="details">
+    <h2>Details</h2>
+    <p>A vecvec is stored in one of two forms, chosen automatically from its
+contents:</p><ul><li><p><strong>single-type</strong>: every element has the same type, held in an atomic
+vector (numbers, strings, dates, ...). The vecvec's data <em>is</em> that vector's
+data, so base R code that reads it directly (such as <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code> or
+<code><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">model.matrix()</a></code>) sees its values.</p></li>
+<li><p><strong>mixed-type</strong>: anything else. The vecvec's data is an integer index into
+the stored vectors. Modelling functions error for mixed-type vecvecs rather
+than fit on the index.</p></li>
+</ul><p>Vectors of the same type (with identical attributes) are always combined, so
+a vecvec is single-type exactly when all of its elements share one type.</p>
+<p>vctrs treats a single-type vecvec as a vector of its type, and a mixed-type
+vecvec as a vector of any types. So, as for any other vctrs type:</p><ul><li><p>Combining vecvecs (e.g. with <code><a href="https://vctrs.r-lib.org/reference/vec_c.html" class="external-link">vctrs::vec_c()</a></code> or <code><a href="https://dplyr.tidyverse.org/reference/bind_rows.html" class="external-link">dplyr::bind_rows()</a></code>)
+gives a single-type vecvec when they all have the same type, and a
+mixed-type vecvec otherwise.</p></li>
+<li><p>Casting to a single-type vecvec casts the values to its type, so
+<code><a href="https://vctrs.r-lib.org/reference/vec_slice.html" class="external-link">vctrs::vec_assign()</a></code> (and functions using it, like <code><a href="https://tidyr.tidyverse.org/reference/replace_na.html" class="external-link">tidyr::replace_na()</a></code>)
+can't put values of another type into a single-type vecvec. Base <code>[&lt;-</code>
+can, and gives a mixed-type vecvec.</p></li>
+</ul><p>The same holds for subclasses (see <code><a href="vecvec_register.html">vecvec_register()</a></code>).</p>
     </div>
 
     <div id="ref-examples">

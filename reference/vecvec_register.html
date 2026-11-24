@@ -20,7 +20,7 @@ vctrs vector system."><meta property="og:image" content="/logo.svg"><!-- mathjax
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">vecvec</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.0.0</span>
       </span>
     </div>
 
@@ -105,6 +105,15 @@ to cast vecvec to other types by calling <code><a href="unvecvec.html">unvecvec(
 vecvec subclass.</p></li>
 <li><p><code>vec_cast.*.&lt;class&gt;</code> methods, so that your vecvec subclass can be cast
 <em>from</em> other types.</p></li>
+</ul><p>As for <code><a href="vecvec.html">vecvec()</a></code>, vctrs treats a single-type vector of your subclass as a
+vector of its type, and a mixed-type vector as a vector of any types. The
+common type of two vectors is single-type only when both have that type,
+and casts to a single-type vector cast the values to its type. So:</p><ul><li><p>An empty prototype meaning "any vector of the subclass" (e.g. from
+<code>f_ptype2</code>) must hold no types, as from <code>class_myvec()</code>. An empty vector
+holding a type is a vector of that type.</p></li>
+<li><p>Any <code>vec_cast()</code> method you register yourself between two vectors of your
+subclass must return the result of <code><a href="vecvec_cast.html">vecvec_cast()</a></code>. (The methods
+registered here do this already.)</p></li>
 </ul></div>
 
     <div id="ref-examples">
@@ -118,7 +127,7 @@ vecvec subclass.</p></li>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Then register it in .onLoad():</span></span></span>
 <span class="r-in"><span><span class="va">.onLoad</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">libname</span>, <span class="va">pkgname</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/methods_register.html" class="external-link">methods_register</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/S7_on_load.html" class="external-link">methods_register</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="fu">vecvec</span><span class="fu">::</span><span class="fu">vecvec_register</span><span class="op">(</span><span class="va">class_myvec</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
